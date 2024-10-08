@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Background from "@components/ui/Background";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,6 +17,7 @@ const RootLayout = ({
       <body
         className={`antialiased`}
       >
+        <Background image={"bridge"} />
         {children}
       </body>
     </html>
