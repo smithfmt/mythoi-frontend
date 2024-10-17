@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await axios.post(`${process.env.EXPRESS_API_URL}/signup`, {
+    const response = await axios.post(`${process.env.EXPRESS_API_URL}/api/users/signup`, {
       name,
       email,
       password,
