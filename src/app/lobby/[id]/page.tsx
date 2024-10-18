@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { getAuthToken } from "@utils/getAuthToken";
 
 const LobbyPage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -13,7 +14,7 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
         const fetchLobby = async () => {
             try {
                 console.log(id)
-                const response = await axios.get(`/api/lobby/${id}`);
+                const response = await axios.get(`/api/lobby/${id}`,{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
                 setLobby(response.data);
             } catch (error: unknown) {
                 if (axios.isAxiosError(error)) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+// import { getAuthToken } from '@utils/getAuthToken';
 
 const EXPRESS_API_URL = process.env.EXPRESS_API_URL;
 if (!EXPRESS_API_URL) throw new Error('No Express API URL');
@@ -23,6 +24,11 @@ export async function POST(req: NextRequest) {
         break;
       case 'join':
         response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/join`, data, {
+          headers: getAuthHeaders(req),
+        });
+        break;
+      case 'leave': // New leave lobby action
+        response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/leave`, data, {
           headers: getAuthHeaders(req),
         });
         break;

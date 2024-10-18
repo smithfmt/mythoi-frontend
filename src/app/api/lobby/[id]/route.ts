@@ -6,7 +6,7 @@ if (!EXPRESS_API_URL) throw new Error('No Express API URL');
 
 const getAuthHeaders = (req: NextRequest) => {
   const token = req.headers.get('authorization') || '';
-  return token ? { Authorization: token.replace('Bearer ', '') } : {};
+  return token ? { Authorization: `Bearer ${token.replace('Bearer ', '')}` } : {};
 };
 
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -14,9 +14,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   try {
     const response = await axios.get(`${EXPRESS_API_URL}/api/lobbies/${id}`, {
-      headers: {
-        Authorization: `Bearer ${getAuthHeaders(req).Authorization}`,
-      },
+      headers: getAuthHeaders(req),
     });
     return NextResponse.json(response.data, { status: 200 });
   } catch (error: unknown) {
@@ -29,9 +27,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
   try {
     await axios.delete(`${EXPRESS_API_URL}/api/lobbies/${id}`, {
-      headers: {
-        Authorization: `Bearer ${getAuthHeaders(req).Authorization}`,
-      },
+      headers: getAuthHeaders(req),
     });
     return NextResponse.json({ message: 'Lobby deleted' }, { status: 200 });
   } catch (error: unknown) {
@@ -39,7 +35,6 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   }
 }
 
-// Error handler for Axios
 function handleAxiosError(error: unknown) {
   if (axios.isAxiosError(error)) {
     return NextResponse.json(
