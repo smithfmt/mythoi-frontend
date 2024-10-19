@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { getAuthToken } from "@utils/getAuthToken";
 
 const Profile = () => {
   const router = useRouter();
@@ -19,12 +20,9 @@ const Profile = () => {
       }
 
       try {
-        const response = await axios.get("/api/users/profile", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        setUser(response.data.user); 
+        const response = await axios.get("/api/users/profile", { headers: {Authorization: `Bearer ${getAuthToken()}`} });
+        console.log(response)
+        setUser(response.data.profile); 
       } catch (err: unknown) {
         if (axios.isAxiosError(err)) {
           setError(err.response?.data?.message || "An error occurred while fetching user data");
@@ -43,8 +41,8 @@ const Profile = () => {
   }, [router]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
-  if (!user) return <p className="text-red-500">User Not Found</p>;
+  if (error) return <p className="text-red-500 relative z-50">{error}</p>;
+  if (!user) return <p className="text-red-500 relative z-50">User Not Found</p>;
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
       <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">

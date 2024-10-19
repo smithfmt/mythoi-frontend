@@ -9,7 +9,6 @@ const UserList = () => {
 
   useEffect(() => {
     socket.on("userListUpdate", (names) => {
-        console.log("WE HEAR YOU!")
       setUserNames(names);
     });
     return () => {

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Background from "@components/ui/Background";
 import "./globals.css";
+import Navbar from "@components/ui/Navbar";
 
 export const metadata: Metadata = {
   title: "Mythoi Stratgos",
@@ -17,6 +18,7 @@ const RootLayout = ({
       <body
         className={`antialiased`}
       >
+        <Navbar />
         <Background image={"bridge"} />
         {children}
       </body>
