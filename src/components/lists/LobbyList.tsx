@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
 import axios from "axios";
 import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "@utils/getAuthToken";
-
-const socket = io(process.env.NEXT_PUBLIC_EXPRESS_API_URL || "http://localhost:5000");
+import socket from "@utils/socketClient"
 
 type Players = {
     id: number,

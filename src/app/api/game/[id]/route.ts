@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { handleAxiosError } from '@utils/handleAxiosError';
 
 const EXPRESS_API_URL = process.env.EXPRESS_API_URL;
 if (!EXPRESS_API_URL) throw new Error('No Express API URL');
@@ -21,15 +22,6 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-function handleAxiosError(error: unknown) {
-    if (axios.isAxiosError(error)) {
-        return NextResponse.json(
-            { message: error.response?.data?.message || 'An error occurred' },
-            { status: error.response?.status || 500 }
-        );
-    }
-    if (error instanceof Error) {
-        return NextResponse.json({ message: error.message }, { status: 500 });
-    }
-    return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
-}
+
+
+

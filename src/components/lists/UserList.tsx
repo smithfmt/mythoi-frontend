@@ -1,8 +1,6 @@
 "use client"
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
-
-const socket = io(process.env.EXPRESS_API_URL || "http://localhost:5000");
+import socket from "@utils/socketClient"
 
 const UserList = () => {
   const [userNames, setUserNames] = useState([]);

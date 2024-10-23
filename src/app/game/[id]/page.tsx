@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { getAuthToken } from "@utils/getAuthToken"; // Assuming you have a utility to get the token
+import socket from "@utils/socketClient"
 import useUserId from "@hooks/useUserId";
+
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;

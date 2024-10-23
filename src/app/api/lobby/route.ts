@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { handleAxiosError } from '@utils/handleAxiosError';
 // import { getAuthToken } from '@utils/getAuthToken';
 
 const EXPRESS_API_URL = process.env.EXPRESS_API_URL;
@@ -37,6 +38,16 @@ export async function POST(req: NextRequest) {
           headers: getAuthHeaders(req),
         });
         break;
+      case 'deleteAll':
+        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies`, {
+          headers: getAuthHeaders(req),
+        });
+        break;
+      case 'deleteStarted':
+        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteStarted`, {
+          headers: getAuthHeaders(req),
+        });
+        break;
       default:
         return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
     }
@@ -58,43 +69,4 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const { action } = await req.json();
 
-  try {
-    let response;
-
-    switch (action) {
-      case 'deleteAll':
-        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteAll`, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'deleteStarted':
-        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteStarted`, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      default:
-        return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
-    }
-
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: unknown) {
-    return handleAxiosError(error);
-  }
-}
-
-// Error handler for Axios
-function handleAxiosError(error: unknown) {
-  if (axios.isAxiosError(error)) {
-    return NextResponse.json(
-      { message: error.response?.data?.message || 'An error occurred' },
-      { status: error.response?.status || 500 }
-    );
-  }
-  if (error instanceof Error) {
-    return NextResponse.json({ message: error.message }, { status: 500 });
-  }
-  return NextResponse.json({ message: 'An unknown error occurred' }, { status: 500 });
-}
