@@ -22,6 +22,50 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-
+export async function POST(req: NextRequest) {
+    const { action, ...data } = await req.json();
+  
+    try {
+      let response;
+      switch (action) {
+        case 'updateGeneral':
+          response = await axios.post(`${EXPRESS_API_URL}/api/games/create`, data, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        case 'join':
+          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/join`, data, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        case 'leave': // New leave lobby action
+          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/leave`, data, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        case 'start':
+          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/start`, data, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        case 'deleteAll':
+          response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies`, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        case 'deleteStarted':
+          response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteStarted`, {
+            headers: getAuthHeaders(req),
+          });
+          break;
+        default:
+          return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
+      }
+  
+      return NextResponse.json(response.data, { status: 200 });
+    } catch (error: unknown) {
+      return handleAxiosError(error);
+    }
+  }
 
 

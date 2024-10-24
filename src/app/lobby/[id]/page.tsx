@@ -44,13 +44,14 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
     const startLobby = async () => {
         try {
             // Call the start lobby API
-            await axios.post(
+            const response = await axios.post(
                 "/api/lobby",
                 { action: 'start', lobbyId: id }, // Pass the lobby ID
                 { headers: { Authorization: `Bearer ${getAuthToken()}` } }
             );
 
             // TODO Redirect everyone to the game page
+            console.log("THIS GAME JUST STARTED",response.data.game)
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 setError(error.response?.data?.message || "Failed to start the game");
