@@ -100,3 +100,16 @@ export const generals = [
     {id: 7, img : "Cadmus", name : "Cadmus", atk : 2, hp : 10, connect : 4, red : 1, green : 2, blue : 1, type : "general", ability : "Founder's Spirit", style : "passive", cost : 0, desc : "When all connections are filled, deal x2 dmg",},
     {id: 8, img : "Aeneas", name : "Aeneas", atk : 2, hp : 10, connect : 4, red : 2, green : 1, blue :1, type : "general", ability : "Divine Protection", style : "passive", cost : 0, desc : "The first unit to die is resurrected at half hp",},
 ];
+
+export const cards = {
+    general: {
+        1: {id: 1, img : "Agamemnon", name : "Agamemnon", atk : 2, hp : 10, connect : 4, red : 4, green : 0, blue : 0, type : "general", ability : "Leader of the Greeks", style : "passive", cost : 0, desc : "All soldiers deal +1 dmg",},
+        2: {id: 2, img : "Pericles", name : "Pericles", atk : 1, hp : 10, connect : 4, red : 0, green : 1, blue : 3, type : "general", ability : "Voice of Democracy", style : "passive", cost : 0, desc : "Connected soldiers deal +2 dmg",},
+        3: {id: 3, img : "Leonidas", name : "Leonidas", atk : 2, hp : 10, connect : 4, red : 3, green : 1, blue : 0, type : "general", ability : "Spartan Warcry", style : "passive", cost : 0, desc : "Leonidas must be killed first by the enemy",},
+        4: {id: 4, img : "Priam", name : "Priam", atk : 1, hp : 10, connect : 4, red : 1, green : 1, blue : 2, type : "general", ability : "Royal Wealth", style : "bolt", cost : 0, desc : "Draw 5 basic cards on your first turn",},
+        5: {id: 5, img : "Alexander", name : "Alexander", atk : 2, hp : 10, connect : 4, red : 0, green : 2, blue : 2, type : "general", ability : "Overwhelming Odds", style : "passive", cost : 0, desc : "The last unit in the army has x2 attack",},
+        6: {id: 6, img : "Dido", name : "Dido", atk : 2, hp : 10, connect : 4, red : 2, green : 0, blue : 2, type : "general", ability : "Ill-Fated Queen", style : "passive", cost : 0, desc : "On death, Dido's killer dies as well",},
+        7: {id: 7, img : "Cadmus", name : "Cadmus", atk : 2, hp : 10, connect : 4, red : 1, green : 2, blue : 1, type : "general", ability : "Founder's Spirit", style : "passive", cost : 0, desc : "When all connections are filled, deal x2 dmg",},
+        8: {id: 8, img : "Aeneas", name : "Aeneas", atk : 2, hp : 10, connect : 4, red : 2, green : 1, blue :1, type : "general", ability : "Divine Protection", style : "passive", cost : 0, desc : "The first unit to die is resurrected at half hp",},
+    }
+}
