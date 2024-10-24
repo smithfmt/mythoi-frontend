@@ -22,39 +22,14 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     }
 }
 
-export async function POST(req: NextRequest) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
     const { action, ...data } = await req.json();
-  
+    const { id } = params;
     try {
       let response;
       switch (action) {
-        case 'updateGeneral':
-          response = await axios.post(`${EXPRESS_API_URL}/api/games/create`, data, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        case 'join':
-          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/join`, data, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        case 'leave': // New leave lobby action
-          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/leave`, data, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        case 'start':
-          response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/start`, data, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        case 'deleteAll':
-          response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies`, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        case 'deleteStarted':
-          response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteStarted`, {
+        case 'selectGeneral':
+          response = await axios.put(`${EXPRESS_API_URL}/api/games/game/${id}`, {action, ...data}, {
             headers: getAuthHeaders(req),
           });
           break;

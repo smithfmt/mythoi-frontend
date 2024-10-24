@@ -42,6 +42,29 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         fetchGame();
     }, [id, setGameData]);
 
+    const handleSelection = async (genId:number) => {
+        try {
+            const response = await axios.put(`/api/game/${id}`, {
+                action: "selectGeneral",
+                data: {
+                    generalId: genId, 
+                }
+            }, {
+                headers: { Authorization: `Bearer ${getAuthToken()}` },  
+            });
+            console.log("GENERAL SELECTED",response);
+            toggleSelectGeneral(false);
+        } catch (error: unknown) {
+            if (axios.isAxiosError(error)) {
+                setError(error.response?.data?.message || "An error occurred while fetching the game");
+            } else if (error instanceof Error) {
+                setError(error.message);
+            } else {
+                setError("An unknown error occurred");
+            }
+        }
+    };
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
@@ -70,6 +93,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                         {currentPlayerData?.generals.choices.map(genId => <div 
                             key={"gen"+genId}
                             className="p-16 text-2xl outline-2 rounded-lg outline-blue-700 hover:bg-neutral-300 hover:cursor-pointer transition-all active:bg-blue-300"
+                            onClick={() => handleSelection(genId)}
                             >
                             {"Card: "+genId}
                             </div>)}
