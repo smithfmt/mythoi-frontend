@@ -11,15 +11,12 @@ import GameBoard from "@components/game/board";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true);   
     const [error, setError] = useState<string | null>(null);
     const userId = useUserId();
-    const [gameData, setGameData] = useSocket<GameData>("gameDataUpdate");
+    const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const playerData:PlayerData[] | null = gameData?.playerData ? JSON.parse(gameData.playerData) : null;
     const currentPlayerData = playerData?.filter(p => p.player===userId)[0];
-    const [selectGeneral,toggleSelectGeneral] = useState(false);
-    if (!selectGeneral && currentPlayerData?.generals.selected===false) toggleSelectGeneral(true);
-    console.log(currentPlayerData)
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -54,7 +51,6 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 headers: { Authorization: `Bearer ${getAuthToken()}` },  
             });
             console.log("GENERAL SELECTED",response);
-            toggleSelectGeneral(false);
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
                 setError(error.response?.data?.message || "An error occurred while fetching the game");
@@ -90,7 +86,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             ) : (
                 <p className="text-gray-500">No game found.</p>
             )}
-            {selectGeneral&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
+            {!currentPlayerData?.generals.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
                 <div className="bg-neutral-50 p-32 text-neutral-800 flex flex-col gap-32">
                     <h1 className="text-3xl font-black">Select General</h1>
                     <div className="flex gap-16 [&>div]:p-16 [&>div]:text-2xl">

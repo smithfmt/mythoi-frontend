@@ -43,7 +43,7 @@ const UserList = () => {
 
   return (
     <div className="relative z-50 bg-black text-neutral-50 p-16">
-      <h1>User List</h1>
+      <h1 className="font-black">User List</h1>
       <ul>
         {userNames.map((name) => (
           <li key={name}>{name}</li>

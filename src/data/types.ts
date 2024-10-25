@@ -26,3 +26,20 @@ export interface GameData {
     drawnHeroes: string[];
     playerData: string;
 }
+
+export interface CardData {
+    id: number,
+    img: string,
+    name: string,
+    atk: number,
+    hp: number,
+    connect: number,
+    red: number,
+    green: number,
+    blue: number,
+    type: string,
+    ability: string,
+    style: string,
+    cost: number,
+    desc: string,
+}

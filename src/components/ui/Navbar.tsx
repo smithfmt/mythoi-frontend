@@ -45,18 +45,18 @@ const Navbar = () => {
         {navs.map(nav => (
           <li
             key={nav.text + "-key"}
-            className="hover:bg-neutral-700 transition-all h-full flex items-center p-4"
+            className="hover:bg-neutral-700 transition-all h-full flex items-center"
           >
-            <Link href={nav.route}>{nav.text}</Link>
+            <Link className="p-4" href={nav.route}>{nav.text}</Link>
           </li>
         ))}
-        <li className="hover:bg-neutral-700 transition-all h-full flex items-center p-4 cursor-pointer">
-          <button onClick={() => handleDeleteLobbies("deleteAll")}>
+        <li className="hover:bg-neutral-700 transition-all h-full flex items-center cursor-pointer">
+          <button  className="p-4" onClick={() => handleDeleteLobbies("deleteAll")}>
             Delete All Lobbies
           </button>
         </li>
-        <li className="hover:bg-neutral-700 transition-all h-full flex items-center p-4 cursor-pointer">
-          <button onClick={() => handleDeleteGames("deleteAll")}>
+        <li className="hover:bg-neutral-700 transition-all h-full flex items-center cursor-pointer">
+          <button  className="p-4" onClick={() => handleDeleteGames("deleteAll")}>
             Delete All Games
           </button>
         </li>
