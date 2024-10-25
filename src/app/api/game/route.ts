@@ -28,3 +28,14 @@ export async function POST(req: NextRequest) {
         return handleAxiosError(error);
     }
 }
+
+export async function GET(req: NextRequest) {
+  try {
+    const response = await axios.get(`${EXPRESS_API_URL}/api/games/all`, {
+      headers: getAuthHeaders(req),
+    });
+    return NextResponse.json(response.data, { status: 200 });
+  } catch (error: unknown) {
+    return handleAxiosError(error);
+  }
+}

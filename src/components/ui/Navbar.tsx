@@ -6,6 +6,9 @@ import { getAuthToken } from "@utils/getAuthToken"; // Assuming you have this fu
 
 const navs = [
   { text: "Home", route: "/" },
+  { text: "Lobbies", route: "/lobbies" },
+  { text: "Games", route: "/games" },
+  { text: "Users", route: "/users" },
   { text: "Profile", route: "/profile" },
   { text: "Register", route: "/register" }
 ];
