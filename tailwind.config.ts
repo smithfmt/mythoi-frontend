@@ -8,9 +8,14 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        trajan: ['TrajanPro', 'sans-serif'],
+        cinzel: ['Cinzel', 'sans-serif']
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        cardText: "#372B00",
       },
     },
   },
