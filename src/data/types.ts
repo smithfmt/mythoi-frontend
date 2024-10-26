@@ -6,7 +6,7 @@ export type CardType = {
 export interface PlayerData {
     player: number;
     board: {
-        card: CardType,
+        card: PopulatedCardData,
         x: number,
         y: number,
     }[];
@@ -42,4 +42,37 @@ export interface CardData {
     style: string,
     cost: number,
     desc: string,
+}
+
+export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div" | "blank";
+
+export type PopulatedCardData = {
+    id: number;
+    img: string;
+    name: string;
+    atk: number;
+    hp: number;
+    sides: {
+        top: {
+            connect: boolean;
+            attribute: Attribute;
+        };
+        right: {
+            connect: boolean;
+            attribute: Attribute;
+        };
+        bottom: {
+            connect: boolean;
+            attribute: Attribute;
+        };
+        left: {
+            connect: boolean;
+            attribute: Attribute;
+        };
+    };
+    type: string;
+    ability: string;
+    style: string;
+    cost: Attribute[];
+    desc: string;
 }

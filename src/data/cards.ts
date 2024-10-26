@@ -1,3 +1,26 @@
+type Card = {
+    id: number;
+    img: string;
+    name: string;
+    atk: number;
+    hp: number;
+    connect: number;
+    red: number;
+    green: number;
+    blue: number;
+    type: string;
+    ability: string;
+    style: string;
+    cost: number;
+    desc: string;
+};
+  
+type CardsObject = {
+    [key in 'basic' | 'general' | 'hero']: {
+        [key: number]: Card;
+    };
+};
+
 export const basicCards = [
     {img : "Warrior1", name : "Warrior", atk : 1, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Soldier", style : "Passive", cost : 0, desc : "A brave soldier for your army",},
     {img : "Warrior2", name : "Warrior", atk : 1, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Soldier", style : "Passive", cost : 0, desc : "A brave soldier for your army",},
@@ -101,7 +124,13 @@ export const generals = [
     {id: 8, img : "Aeneas", name : "Aeneas", atk : 2, hp : 10, connect : 4, red : 2, green : 1, blue :1, type : "general", ability : "Divine Protection", style : "Passive", cost : 0, desc : "The first unit to die is resurrected at half hp",},
 ];
 
-export const cards = {
+export const cards:CardsObject = {
+    basic: {
+
+    },
+    hero: {
+
+    },
     general: {
         1: {id: 1, img : "Agamemnon", name : "Agamemnon", atk : 2, hp : 10, connect : 4, red : 4, green : 0, blue : 0, type : "general", ability : "Leader of the Greeks", style : "Passive", cost : 0, desc : "All soldiers deal +1 dmg",},
         2: {id: 2, img : "Pericles", name : "Pericles", atk : 1, hp : 10, connect : 4, red : 0, green : 1, blue : 3, type : "general", ability : "Voice of Democracy", style : "Passive", cost : 0, desc : "Connected soldiers deal +2 dmg",},
