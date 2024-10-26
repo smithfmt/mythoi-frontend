@@ -2,13 +2,17 @@ import { PopulatedCardData } from "@data/types";
 import cardComponents from "@assets/card/cardComponents";
 import Image from "next/image";
 import { CardImages } from "@assets/images";
+import Default from "@assets/card/images/Spare 2.jpeg"
 
 // TODO MAKE THE BACKEND GENERATE THE CONNECTIONS and the costs
 
 
 const Card = ({ card } : { card: PopulatedCardData }) => {
     const { img, name, atk, hp, ability, style, cost, sides, desc } = card;
-    const { src, height, width } = CardImages[`${img}.jpeg`].default
+    const imageKey = `${img}.jpeg`;
+    const imageData = CardImages[imageKey]?.default;
+    if (!imageData) console.warn(`Image not found for key: ${imageKey}`)
+    const { src, height, width } = imageData || Default;
 
     const colors = {
         Str: "rgba(255,0,0,0.3)",

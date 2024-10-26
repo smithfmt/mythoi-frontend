@@ -10,7 +10,7 @@ export interface PlayerData {
         x: number,
         y: number,
     }[];
-    hand: CardType[],
+    hand: PopulatedCardData[],
     generals: {
         selected: boolean,
         choices: number[],

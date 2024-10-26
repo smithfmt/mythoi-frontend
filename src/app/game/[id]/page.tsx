@@ -6,7 +6,8 @@ import { getAuthToken } from "@utils/getAuthToken";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
 import { GameData, PlayerData } from "@data/types";
-import GameBoard from "@components/game/board";
+import GameBoard from "@components/game/Board";
+import Hand from "@components/game/Hand";
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -17,6 +18,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const playerData:PlayerData[] | null = gameData?.playerData ? JSON.parse(gameData.playerData) : null;
     const currentPlayerData = playerData?.filter(p => p.player===userId)[0];
+    console.log(currentPlayerData)
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -81,7 +83,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 //     </ul>
                 // </div>
                 <div>
-                    {currentPlayerData&&<GameBoard playerData={currentPlayerData}/>}
+                    {currentPlayerData&&
+                        <div>
+                            <GameBoard playerData={currentPlayerData}/>
+                            {currentPlayerData.hand&&<Hand hand={currentPlayerData.hand}/>}
+                        </div>}
+                    
                 </div>
             ) : (
                 <p className="text-gray-500">No game found.</p>
