@@ -76,3 +76,9 @@ export type PopulatedCardData = {
     cost: Attribute[];
     desc: string;
 }
+
+export type BoardType = {
+    card:PopulatedCardData,
+    x:number,
+    y:number
+}[]

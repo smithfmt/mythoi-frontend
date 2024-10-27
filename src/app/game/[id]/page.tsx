@@ -5,9 +5,12 @@ import axios from "axios";
 import { getAuthToken } from "@utils/getAuthToken"; 
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { GameData, PlayerData } from "@data/types";
+import { GameData, PlayerData, PopulatedCardData } from "@data/types";
 import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
+import { getPlaceableSpaces } from "@utils/gameLogic";
+
+// TODO : CARD NEEDS A UID WHEN GENERATED
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -18,7 +21,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const playerData:PlayerData[] | null = gameData?.playerData ? JSON.parse(gameData.playerData) : null;
     const currentPlayerData = playerData?.filter(p => p.player===userId)[0];
-    console.log(currentPlayerData)
+
+    const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null,spaces:{x:number,y:number}[]}>({selectedCard:null,spaces:[]});
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -67,6 +71,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
+    const handleCardClick = (card: PopulatedCardData) => {
+        if (!currentPlayerData) return console.warn("No player found!");
+        const spaces = getPlaceableSpaces(currentPlayerData.board, card);
+        setSelected({selectedCard:card,spaces});
+    };
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 relative z-40">
             {gameData ? (
@@ -85,8 +95,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 <div>
                     {currentPlayerData&&
                         <div>
-                            <GameBoard playerData={currentPlayerData}/>
-                            {currentPlayerData.hand&&<Hand hand={currentPlayerData.hand}/>}
+                            <GameBoard playerData={currentPlayerData} selected={selected}/>
+                            {currentPlayerData.hand&&<Hand hand={currentPlayerData.hand} handleCardClick={handleCardClick} />}
                         </div>}
                     
                 </div>
