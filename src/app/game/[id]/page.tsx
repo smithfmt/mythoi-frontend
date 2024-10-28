@@ -9,8 +9,10 @@ import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData } fr
 import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
 import { getPlaceableSpaces } from "@utils/gameLogic";
+import Card from "@components/game/Card";
 
 // TODO : INSTEAD OF RESTRICTING WHERE CARDS CAN BE PLACED, JUST HIGHLIGHT WHEN THEY ARE INCORRECTLY PLACED
+// We could even have the card placement be entirely frontend and only validate on "end turn". Also have validation on the frontend that works realtime, (making squares outlined red if card is misplaced)
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -46,12 +48,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         fetchGame();
     }, [id, setGameData]);
 
-    const handleSelection = async (genId:number) => {
+    const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             const response = await axios.put(`/api/game/${id}`, {
                 action: "selectGeneral",
                 data: {
-                    generalId: genId, 
+                    generalCard, 
                 }
             }, {
                 headers: { Authorization: `Bearer ${getAuthToken()}` },  
@@ -126,15 +128,15 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 <p className="text-gray-500">No game found.</p>
             )}
             {!currentPlayerData?.generals.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
-                <div className="bg-neutral-50 p-32 text-neutral-800 flex flex-col gap-32">
-                    <h1 className="text-3xl font-black">Select General</h1>
-                    <div className="flex gap-16 [&>div]:p-16 [&>div]:text-2xl">
-                        {currentPlayerData?.generals.choices.map(genId => <div 
-                            key={"gen"+genId}
-                            className="p-16 text-2xl outline-2 rounded-lg outline-blue-700 hover:bg-neutral-300 hover:cursor-pointer transition-all active:bg-blue-300"
-                            onClick={() => handleSelection(genId)}
+                <div className=" p-32 flex flex-col gap-32">
+                    <h1 className="text-3xl font-black text-neutral-50">Select General</h1>
+                    <div className="flex gap-16">
+                        {currentPlayerData?.generals.choices.map((generalCard,i) => <div 
+                            key={"gen"+i}
+                            className="hover:cursor-pointer transition-all"
+                            onClick={() => handleSelection(generalCard)}
                             >
-                            {"Card: "+genId}
+                            <Card card={generalCard}/>
                             </div>)}
                     </div>
                 </div>

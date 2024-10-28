@@ -8,7 +8,7 @@ export interface PlayerData {
     cards: CardObjectData[];
     generals: {
         selected: boolean,
-        choices: number[],
+        choices: PopulatedCardData[],
     },
     basicCount: number;
 }
