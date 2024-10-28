@@ -5,12 +5,7 @@ export type CardType = {
 
 export interface PlayerData {
     player: number;
-    board: {
-        card: PopulatedCardData,
-        x: number,
-        y: number,
-    }[];
-    hand: PopulatedCardData[],
+    cards: CardObjectData[];
     generals: {
         selected: boolean,
         choices: number[],
@@ -25,6 +20,13 @@ export interface GameData {
     turn: string;
     drawnHeroes: string[];
     playerData: string;
+}
+
+export interface CardObjectData {
+    card: PopulatedCardData,
+    x?: number,
+    y?: number,
+    hand?: boolean
 }
 
 export interface CardData {
@@ -48,6 +50,7 @@ export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div" | "blank";
 
 export type PopulatedCardData = {
     id: number;
+    uid: string;
     img: string;
     name: string;
     atk: number;
@@ -80,5 +83,6 @@ export type PopulatedCardData = {
 export type BoardType = {
     card:PopulatedCardData,
     x:number,
-    y:number
+    y:number,
+    hand?:boolean,
 }[]

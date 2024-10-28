@@ -26,16 +26,9 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const { action, ...data } = await req.json();
     const { id } = params;
     try {
-      let response;
-      switch (action) {
-        case 'selectGeneral':
-          response = await axios.put(`${EXPRESS_API_URL}/api/games/game/${id}`, {action, ...data}, {
-            headers: getAuthHeaders(req),
-          });
-          break;
-        default:
-          return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
-      }
+      const response = await axios.put(`${EXPRESS_API_URL}/api/games/game/${id}`, {action, ...data}, {
+        headers: getAuthHeaders(req),
+      });
   
       return NextResponse.json(response.data, { status: 200 });
     } catch (error: unknown) {

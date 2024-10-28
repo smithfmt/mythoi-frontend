@@ -5,12 +5,12 @@ import axios from "axios";
 import { getAuthToken } from "@utils/getAuthToken"; 
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { GameData, PlayerData, PopulatedCardData } from "@data/types";
+import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData } from "@data/types";
 import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
 import { getPlaceableSpaces } from "@utils/gameLogic";
 
-// TODO : CARD NEEDS A UID WHEN GENERATED
+// TODO : INSTEAD OF RESTRICTING WHERE CARDS CAN BE PLACED, JUST HIGHLIGHT WHEN THEY ARE INCORRECTLY PLACED
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -68,15 +68,37 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         }
     };
 
+    const handlePlaceSelected = async (x:number, y:number, hand:boolean) => {
+        if (!selected.spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return console.warn("Space is not available");
+        const { uid } = selected.selectedCard;
+        if (!uid) return console.warn("No Card Found!");
+        console.log("Trying to place:", uid, x, y, hand);
+        const response = await axios.put(`/api/game/${id}`, {
+            action: "placeCard",
+            data: {
+              uid,
+              space: { x, y, hand },
+            },
+          }, {
+              headers: { Authorization: `Bearer ${getAuthToken()}` },  
+          });
+        console.log(response);
+        setSelected({selectedCard:null,spaces:[]});
+    };
+    console.log(selected)
+
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
-    const handleCardClick = (card: PopulatedCardData) => {
+    const handleCardClick = (cardData: CardObjectData) => {
+        const { card } = cardData;
         if (!currentPlayerData) return console.warn("No player found!");
-        const spaces = getPlaceableSpaces(currentPlayerData.board, card);
+        const spaces = getPlaceableSpaces(cardsInBoard, card);
         setSelected({selectedCard:card,spaces});
     };
-
+    const cardsInBoard:CardObjectData[] = [];
+    const cardsInHand:CardObjectData[] = [];
+    currentPlayerData?.cards?.forEach(c => c.hand?cardsInHand.push(c):cardsInBoard.push(c));
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 relative z-40">
             {gameData ? (
@@ -95,8 +117,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 <div>
                     {currentPlayerData&&
                         <div>
-                            <GameBoard playerData={currentPlayerData} selected={selected}/>
-                            {currentPlayerData.hand&&<Hand hand={currentPlayerData.hand} handleCardClick={handleCardClick} />}
+                            <GameBoard board={cardsInBoard as BoardType} selected={selected} handlePlaceSelected={handlePlaceSelected} handleCardClick={handleCardClick} />
+                            {<Hand hand={cardsInHand} handleCardClick={handleCardClick} />}
                         </div>}
                     
                 </div>

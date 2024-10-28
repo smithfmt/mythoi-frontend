@@ -1,5 +1,4 @@
-import { BoardType, PopulatedCardData } from "@data/types";
-
+import { BoardType, CardObjectData, PopulatedCardData } from "@data/types";
 
 
 const getMinMaxCoordinates = (board: BoardType): [[number, number], [number, number]] => {
@@ -26,7 +25,8 @@ const dirMap = {
     bottom: "top",
 };
 
-export const getPlaceableSpaces = (board:BoardType, selectedCard:PopulatedCardData) => {
+export const getPlaceableSpaces = (cards:CardObjectData[], selectedCard:PopulatedCardData) => {
+    const board = cards.filter(c => c.x!==undefined&&c.y!==undefined) as BoardType;
     const [[minX, maxX,], [minY, maxY]] = getMinMaxCoordinates(board)
     const result:{x:number,y:number}[] = [];
     for (let x=minX-1;x<maxX+2;x++) {
