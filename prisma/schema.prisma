@@ -1,0 +1,52 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  lobbyId   Int? 
+  lobby     Lobby?   @relation(fields: [lobbyId], references: [id])
+  gameId    Int?
+  game      Game?    @relation(fields: [gameId], references: [id]) 
+}
+
+model Lobby {
+  id        Int      @id @default(autoincrement())
+  name      String   @default("lobby")
+  createdAt DateTime @default(now())
+  started   Boolean  @default(false)
+  players   User[]
+  maxPlayers Int     @default(2)
+  host      Int
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  name       String
+  createdAt  DateTime @default(now())
+  players    User[]
+  host       String
+  turn       Int
+  playerData Json
+  heroDeck   Int[]
+  discardPile String[]
+  finished   Boolean  @default(false)
+}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getAuthToken } from "@utils/getAuthToken"; 
+import { getAuthToken } from "@app/lib/auth/getAuthToken"; 
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
 import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData } from "@data/types";

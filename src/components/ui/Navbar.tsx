@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import axios from "axios";
-import { getAuthToken } from "@utils/getAuthToken"; // Assuming you have this function
+import { getAuthToken } from "@app/lib/auth/getAuthToken"; // Assuming you have this function
 
 const navs = [
   { text: "Home", route: "/" },

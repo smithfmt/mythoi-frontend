@@ -1,30 +1,38 @@
-import { NextRequest, NextResponse } from "next/server";
-import axios from "axios";
+import { NextRequest } from "next/server";
 
-export async function GET(req: NextRequest) {
-  
-  const token = req.headers.get("authorization")?.replace("Bearer ", "");
-  if (!token) {
-    return NextResponse.json({ message: "No token provided" }, { status: 401 });
+import prisma from "@prisma/prismaClient";
+import { verifyToken } from "@app/lib/auth/verifyToken";
+import { handleResponse } from "@utils/handleResponse";
+import { nextErrorHandler } from "@utils/nextErrorHandler";
+
+const getUserProfile = async (user) => {
+  if (!user) {
+    return { message: "Unauthorized", status: 401 };
   }
 
   try {
-    const response = await axios.get(`${process.env.EXPRESS_API_URL}/api/users/profile`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+    const profile = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
       },
     });
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error)) {
-      return NextResponse.json(
-        { message: error.response?.data?.message || "An error occurred" },
-        { status: error.response?.status || 500 }
-      );
-    } else if (error instanceof Error) {
-      return NextResponse.json({ message: error.message }, { status: 500 });
-    } else {
-      return NextResponse.json({ message: "An unknown error occurred" }, { status: 500 });
+
+    if (!profile) {
+      return { message: "User not found", status: 404 };
     }
+
+    return { message: "User profile retrieved", data: { profile }, status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
   }
+};
+
+
+export async function GET(req: NextRequest) {
+  const user = await verifyToken(req);
+  const response = await getUserProfile(user);
+  return handleResponse(response);
 }

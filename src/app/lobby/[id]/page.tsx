@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getAuthToken } from "@utils/getAuthToken"; // Assuming you have a way to get the current user ID
+import { getAuthToken } from "@app/lib/auth/getAuthToken"; // Assuming you have a way to get the current user ID
 import useUserId from "@hooks/useUserId";
 import Link from "next/link";
 import socket from "@utils/socketClient";
