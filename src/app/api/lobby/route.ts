@@ -1,72 +1,109 @@
-import { NextRequest, NextResponse } from 'next/server';
-import axios from 'axios';
-import { handleAxiosError } from '@utils/handleAxiosError';
-// import { getAuthToken } from '@utils/getAuthToken';
+import { NextRequest } from 'next/server';
+import prisma from '@prisma/prismaClient';
+import { handleResponse } from '@utils/handleResponse';
+import { nextErrorHandler } from '@utils/nextErrorHandler';
+import { verifyToken } from '@app/lib/auth/verifyToken';
+import { ApiResponse, UserType } from '@app/api/types';
 
-const EXPRESS_API_URL = process.env.EXPRESS_API_URL;
-if (!EXPRESS_API_URL) throw new Error('No Express API URL');
+const getAllLobbies = async () => {
+  try {
+    const lobbies = await prisma.lobby.findMany({
+      where: { started: false },
+      include: { 
+        players: {
+          select: {
+            id: true,
+            name: true,
+          },
+        }, 
+      },
+    });
 
-const getAuthHeaders = (req: NextRequest) => {
-  const token = req.headers.get('authorization') || '';
-  return token ? { Authorization: `Bearer ${token.replace('Bearer ', '')}` } : {};
+    return { message: "Successfully fetched all lobbies", data: { lobbies: lobbies||[] }, status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
+};
+
+const deleteAllLobbies = async () => {
+  try {
+    await prisma.lobby.deleteMany();
+
+    // updateLobbyList(io);
+
+    return { message: "All lobbies deleted", status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
+};
+
+const deleteStartedLobbies = async () => {
+  try {
+    await prisma.lobby.deleteMany({
+      where: { started: true },
+    });
+
+    // updateLobbyList(io);
+
+    return { message: "Started lobbies deleted", status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
+};
+
+const createLobby = async (user:UserType, name:string) => {
+  try {
+    // Check if the user is already in a lobby
+    const userInLobby = await prisma.lobby.findFirst({
+      where: { players: { some: { id: user.id } } },
+    });
+
+    if (userInLobby) {
+      return { message: "User is already in a lobby", status: 400 };
+    }
+
+    // Create a new lobby and add the user
+    const lobby = await prisma.lobby.create({
+      data: {
+        players: { connect: { id: user.id } },
+        name,
+        started: false,
+        host: user.id,
+      },
+    });
+
+    // updateLobbyList(io);
+
+    return { message: "Lobby created", data: { lobby } , status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
 };
 
 export async function POST(req: NextRequest) {
-  const { action, ...data } = await req.json();
+  const { user, error } = await verifyToken(req);
+  if (error) return handleResponse(error);
+  const { action, name } = await req.json();
+  let response: ApiResponse;
 
-  try {
-    let response;
-
-    switch (action) {
-      case 'create':
-        response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/create`, data, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'join':
-        response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/join`, data, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'leave': // New leave lobby action
-        response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/leave`, data, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'start':
-        response = await axios.post(`${EXPRESS_API_URL}/api/lobbies/start`, data, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'deleteAll':
-        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies`, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      case 'deleteStarted':
-        response = await axios.delete(`${EXPRESS_API_URL}/api/lobbies/deleteStarted`, {
-          headers: getAuthHeaders(req),
-        });
-        break;
-      default:
-        return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
-    }
-
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: unknown) {
-    return handleAxiosError(error);
+  switch (action) {
+    case 'create':
+      response = await createLobby(user, name);
+      break;
+    case 'deleteAll':
+      response = await deleteAllLobbies();
+      break;
+    case 'deleteStarted':
+      response = await deleteStartedLobbies();
+      break;
+    default:
+      return { message: 'Invalid action', status: 400 };
   }
+  console.log(response)
+  return handleResponse(response);
 }
 
-export async function GET(req: NextRequest) {
-  try {
-    const response = await axios.get(`${EXPRESS_API_URL}/api/lobbies/all`, {
-      headers: getAuthHeaders(req),
-    });
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: unknown) {
-    return handleAxiosError(error);
-  }
+export async function GET() {
+  const response = await getAllLobbies();
+  return handleResponse(response);
 }
-
-

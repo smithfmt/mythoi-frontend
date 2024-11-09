@@ -23,7 +23,7 @@ const LobbyList = () => {
     const fetchLobbies = async () => {
       try {
         const response = await axios.get(`/api/lobby`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
-        setLobbies(response.data);
+        setLobbies(response.data.lobbies);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           alert("Error fetching lobbies: " + (error.response?.data?.message || "Something went wrong"));
@@ -64,7 +64,6 @@ const LobbyList = () => {
       const response = await axios.post(`/api/lobby`, {
         action: 'create',
         name: newLobbyName,
-        userId,
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       setNewLobbyName("");
       router.push(`/lobby/${response.data.lobby.id}`);
@@ -83,10 +82,8 @@ const LobbyList = () => {
 
   const joinLobby = async (lobbyId: number) => {
     try {
-      const response = await axios.post(`/api/lobby`, {
+      const response = await axios.post(`/api/lobby/${lobbyId}`, {
         action: 'join',
-        lobbyId,
-        userId,
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Joined lobby:", response.data);
       router.push(`/lobby/${lobbyId}`);

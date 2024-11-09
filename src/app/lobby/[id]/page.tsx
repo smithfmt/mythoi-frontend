@@ -21,10 +21,10 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
         const fetchLobby = async () => {
             try {
                 const response = await axios.get(`/api/lobby/${id}`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
-                setLobby(response.data);
+                setLobby(response.data.lobby);
 
                 // Check if the current user is the host
-                if (response.data.host === userId) {
+                if (response.data.lobby.host === userId) {
                     setIsHost(true);
                 }
             } catch (error: unknown) {
@@ -57,8 +57,8 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
         try {
             // Call the start lobby API
             const response = await axios.post(
-                "/api/lobby",
-                { action: 'start', lobbyId: id }, // Pass the lobby ID
+                `/api/lobby/${id}`,
+                { action: 'start' }, // Pass the lobby ID
                 { headers: { Authorization: `Bearer ${getAuthToken()}` } }
             );
 

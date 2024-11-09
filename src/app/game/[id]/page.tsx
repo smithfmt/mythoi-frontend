@@ -28,10 +28,10 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     useEffect(() => {
         const fetchGame = async () => {
             try {
-                const response:{data:GameData} = await axios.get(`/api/game/${id}`, {
+                const response:{data:{game:GameData}} = await axios.get(`/api/game/${id}`, {
                     headers: { Authorization: `Bearer ${getAuthToken()}` },
                 });
-                setGameData(response.data);
+                setGameData(response.data.game);
             } catch (error: unknown) {
                 if (axios.isAxiosError(error)) {
                     setError(error.response?.data?.message || "An error occurred while fetching the game");
@@ -87,7 +87,6 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         console.log(response);
         setSelected({selectedCard:null,spaces:[]});
     };
-    console.log(selected)
 
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;

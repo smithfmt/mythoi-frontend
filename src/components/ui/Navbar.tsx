@@ -29,7 +29,7 @@ const Navbar = () => {
 
   const handleDeleteGames = async (action: string) => {
     try {
-      await axios.post("/api/game", { action }, {
+      await axios.delete("/api/game", {
         headers: { Authorization: `Bearer ${getAuthToken()}` }
       });
       alert(`Action '${action}' Games completed successfully`);

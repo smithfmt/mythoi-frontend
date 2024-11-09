@@ -1,5 +1,6 @@
+import { UserType } from "@app/api/types";
 import jwt from "jsonwebtoken";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -7,25 +8,23 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable must be defined");
 }
 
-interface DecodedToken {
-  id: number;
-  email: string;
+interface TokenResponse {
+  error?: { message: string, status: number },
+  user: { id: number, email: string },
 }
 
-export const verifyToken = async (req: NextRequest): Promise<DecodedToken | null> => {
+export const verifyToken = async (req: NextRequest): Promise<TokenResponse> => {
   const token = req.headers.get("authorization")?.replace("Bearer ", "");
   if (!token) {
     console.log("NO TOKEN");
-    NextResponse.json({ error: 'Unauthorized: Invalid token format' }, { status: 401 });
-    return null;
+    return { error: { message: 'Unauthorized: Invalid token format', status: 401 }, user: { id: 0, email: "" }};
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as DecodedToken;
-    return decoded;
-  } catch (err) {
-    console.log("ERROR VERIFYING TOKEN", err);
-    NextResponse.json({ error: 'Unauthorized: Token verification failed'}, { status: 401 });
-    return null;
+    const { id, email } = jwt.verify(token, JWT_SECRET) as UserType;
+    return { user: { id, email } };
+  } catch {
+    console.log("ERROR VERIFYING TOKEN");
+    return { error: {message: 'Unauthorized: Token verification failed', status: 401 }, user: { id: 0, email: "" }};
   }
 };

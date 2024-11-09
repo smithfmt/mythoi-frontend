@@ -20,7 +20,8 @@ const getAllUsers = async () => {
 };
 
 export async function GET(req: NextRequest) {
-  await verifyToken(req);
+  const { error } = await verifyToken(req);
+  if (error) return handleResponse(error);
   const response = await getAllUsers();
   return handleResponse(response);
 };

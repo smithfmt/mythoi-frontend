@@ -32,7 +32,8 @@ const getUserProfile = async (user) => {
 
 
 export async function GET(req: NextRequest) {
-  const user = await verifyToken(req);
+  const { user, error } = await verifyToken(req);
+  if (error) return handleResponse(error);
   const response = await getUserProfile(user);
   return handleResponse(response);
 }
