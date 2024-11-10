@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import prisma from '@prisma/prismaClient';
 import { handleResponse } from '@utils/handleResponse';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
-import { verifyToken } from '@app/lib/auth/verifyToken';
+import { verifyToken } from 'src/lib/auth/verifyToken';
 import { ApiResponse, UserType } from '@app/api/types';
 
 const getAllLobbies = async () => {

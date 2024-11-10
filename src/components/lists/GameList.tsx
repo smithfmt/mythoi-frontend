@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
-import { getAuthToken } from "@app/lib/auth/getAuthToken";
+import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
 
 type Players = {

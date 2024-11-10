@@ -1,15 +1,16 @@
 import { NextRequest } from 'next/server';
-import { generatePlayerGenerals } from '@app/lib/game/generation';
-import { generateCard } from '@app/lib/game/cardUtils';
+import { generatePlayerGenerals } from 'src/lib/game/generation';
+import { generateCard } from 'src/lib/game/cardUtils';
 import { findIndexByParam, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { LobbyType, UserType } from '@app/api/types';
 import { cards } from '@data/cards';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
-import { verifyToken } from '@app/lib/auth/verifyToken';
+import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
-import { drawRandomCard } from '@app/lib/game/gameplay';
+import { drawRandomCard } from 'src/lib/game/gameplay';
+import { updateGameData } from '@lib/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
@@ -137,7 +138,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
       default:
         return { message: "Invalid action", status: 400 };
     }
-    // updateGameData(io, gameId)
+    updateGameData(gameId)
     return { message: "Successfully updated game", data: { game: updatedGame }, status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

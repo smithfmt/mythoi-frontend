@@ -1,6 +1,8 @@
 import { Server } from "socket.io";
 import prisma from "@prisma/prismaClient";
 
+
+
 export const updateUserList = async (io: Server) => {
     const users = await prisma.user.findMany();
     const userNames = users.map((user) => user.name);

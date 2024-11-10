@@ -1,4 +1,4 @@
-import { verifyToken } from "@app/lib/auth/verifyToken";
+import { verifyToken } from "src/lib/auth/verifyToken";
 import { nextErrorHandler } from "@utils/nextErrorHandler";
 import prisma from "@prisma/prismaClient";
 import { NextRequest } from "next/server";

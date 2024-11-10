@@ -25,6 +25,7 @@
       "@styles/*": ["src/styles/*"],
       "@assets/*": ["src/assets/*"],
       "@utils/*": ["src/utils/*"],
+      "@lib/*": ["src/lib/*"],
       "@scripts/*": ["src/scripts/*"],
       "@data/*": ["src/data/*"],
       "@hooks/*": ["src/hooks/*"],
