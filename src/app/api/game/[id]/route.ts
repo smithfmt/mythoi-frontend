@@ -10,7 +10,7 @@ import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawRandomCard } from 'src/lib/game/gameplay';
-import { updateGameData } from '@lib/sockets';
+import { updateGameData } from '@lib/sockets/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
@@ -97,10 +97,10 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
       case "selectGeneral":
         if (currentPlayerData.generals.selected) return { message: "Already Selected General", status: 401 };
         const { generalCard } = data;
-        // Update the player's generals selected field and add the general to their board
+        
         currentPlayerData.generals.selected = true;
         currentPlayerData.cards.push({
-          card: generalCard,  // Add the generalId as the card
+          card: generalCard, 
           x: 5,
           y: 5,
         });
@@ -138,7 +138,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
       default:
         return { message: "Invalid action", status: 400 };
     }
-    updateGameData(gameId)
+    updateGameData(parseInt(id))
     return { message: "Successfully updated game", data: { game: updatedGame }, status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

@@ -4,6 +4,8 @@
       "titleBar.activeForeground": "#FFFFFF",  // White text
       "activityBar.background": "#061e4d",
       "activityBar.foreground": "#FFFFFF"
-    }
+    },
+    "WillLuke.nextjs.addTypesOnSave": true,
+    "WillLuke.nextjs.hasPrompted": true
   }
   

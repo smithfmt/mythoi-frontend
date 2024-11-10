@@ -4,6 +4,7 @@ import { handleResponse } from '@utils/handleResponse';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { ApiResponse, UserType } from '@app/api/types';
+import { updateLobbyList } from '@lib/sockets/sockets';
 
 const getAllLobbies = async () => {
   try {
@@ -29,7 +30,7 @@ const deleteAllLobbies = async () => {
   try {
     await prisma.lobby.deleteMany();
 
-    // updateLobbyList(io);
+    updateLobbyList();
 
     return { message: "All lobbies deleted", status: 200 };
   } catch (error: unknown) {
@@ -43,7 +44,7 @@ const deleteStartedLobbies = async () => {
       where: { started: true },
     });
 
-    // updateLobbyList(io);
+    updateLobbyList();
 
     return { message: "Started lobbies deleted", status: 200 };
   } catch (error: unknown) {
@@ -72,7 +73,7 @@ const createLobby = async (user:UserType, name:string) => {
       },
     });
 
-    // updateLobbyList(io);
+    updateLobbyList();
 
     return { message: "Lobby created", data: { lobby } , status: 200 };
   } catch (error: unknown) {
@@ -99,7 +100,6 @@ export async function POST(req: NextRequest) {
     default:
       return { message: 'Invalid action', status: 400 };
   }
-  console.log(response)
   return handleResponse(response);
 }
 

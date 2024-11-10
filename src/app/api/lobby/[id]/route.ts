@@ -5,6 +5,7 @@ import { handleResponse } from '@utils/handleResponse';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { createGame } from '@app/api/game/[id]/route';
 import { ApiResponse, UserType } from '@app/api/types';
+import { updateGameList, updateLobbyData, updateLobbyList } from '@lib/sockets/sockets';
 
 
 
@@ -37,8 +38,8 @@ const joinLobby = async (user:UserType, id:string) => {
       },
     });
 
-    // updateLobbyList(io);
-    // updateLobbyData(io, lobbyId);
+    updateLobbyList();
+    updateLobbyData(parseInt(id));
 
     return { message: "Joined lobby successfully", status: 200 };
   } catch (error: unknown) {
@@ -69,7 +70,7 @@ const deleteLobby = async (user:UserType, id:string) => {
       where: { id: Number(id), host: user.id },
     });
 
-    // updateLobbyList(io);
+    updateLobbyList();
 
     return { message: "Lobby deleted", status: 200 };
   } catch (error: unknown) {
@@ -106,8 +107,8 @@ const leaveLobby = async (user:UserType, id:string) => {
       });
     }
 
-    // updateLobbyList(io); // Update the lobby list for all clients
-    // updateLobbyData(io, userLobby.id)
+    updateLobbyList();
+    updateLobbyData(parseInt(id));
 
     return { message: "Left the lobby successfully", status: 200 };
   } catch (error: unknown) {
@@ -127,15 +128,15 @@ const startLobby = async (user:UserType, id:string) => {
     // Create the game using the players in the lobby
     const game = await createGame(lobby);  
     
-    // await updateLobbyData(io, lobby.id, game.id);
+    await updateLobbyData(lobby.id, game.id);
 
     // After creating the game, delete the lobby
     await prisma.lobby.delete({
       where: { id: parseInt(id) },
     });
     
-    // updateLobbyList(io);
-    // updateGameList(io);
+    updateLobbyList();
+    updateGameList();
     
     return { message: "Lobby started and game created", data: { game: game.id }, status: 200 };
   } catch (error: unknown) {

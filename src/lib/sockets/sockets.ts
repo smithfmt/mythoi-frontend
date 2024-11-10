@@ -1,15 +1,15 @@
-import { Server } from "socket.io";
 import prisma from "@prisma/prismaClient";
+import { getSocket } from "./socket-config";
 
-
-
-export const updateUserList = async (io: Server) => {
+export const updateUserList = async () => {
+    const io = getSocket();
     const users = await prisma.user.findMany();
     const userNames = users.map((user) => user.name);
     io.emit("userListUpdate", userNames);
 };
 
-export const updateLobbyList = async (io: Server) => {
+export const updateLobbyList = async () => {
+    const io = getSocket();
     const lobbyData = await prisma.lobby.findMany({
         include: {
             players: {
@@ -24,7 +24,8 @@ export const updateLobbyList = async (io: Server) => {
     io.emit("lobbyListUpdate", lobbies);
 };
 
-export const updateLobbyData = async (io: Server, lobbyId: number, gameId?:number) => {
+export const updateLobbyData = async (lobbyId: number, gameId?:number) => {
+    const io = getSocket();
     const lobbyData = await prisma.lobby.findUnique({
         where: {
             id: lobbyId,
@@ -41,12 +42,14 @@ export const updateLobbyData = async (io: Server, lobbyId: number, gameId?:numbe
     io.emit(`lobbyDataUpdate-${lobbyId}`, {...lobbyData, gameId});
 }
 
-export const updateGameList = async (io: Server) => {
+export const updateGameList = async () => {
+    const io = getSocket();
     const games = await prisma.game.findMany();
     io.emit("gameListUpdate", games);
 };
 
-export const updateGameData = async (io: Server, gameId:number) => {
+export const updateGameData = async (gameId:number) => {
+    const io = getSocket();
     const gameData = await prisma.game.findUnique({
         where: {
             id: gameId

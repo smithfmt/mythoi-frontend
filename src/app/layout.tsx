@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Background from "@components/ui/Background";
 import "./globals.css";
 import Navbar from "@components/ui/Navbar";
+import SocketWorker from "@components/SocketWorker";
 
 export const metadata: Metadata = {
   title: "Mythoi Stratgos",
@@ -13,6 +14,9 @@ const RootLayout = ({
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
+
+  
+  
   return (
     <html lang="en">
       <body
@@ -20,6 +24,7 @@ const RootLayout = ({
       >
         <Navbar />
         <Background image={"bridge"} />
+        <SocketWorker />
         {children}
       </body>
     </html>
