@@ -4,7 +4,7 @@ import { handleResponse } from '@utils/handleResponse';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { ApiResponse, UserType } from '@app/api/types';
-import { updateLobbyList } from '@lib/sockets/sockets';
+// import { updateLobbyList } from '@lib/sockets/sockets';
 
 const getAllLobbies = async () => {
   try {
@@ -30,7 +30,7 @@ const deleteAllLobbies = async () => {
   try {
     await prisma.lobby.deleteMany();
 
-    updateLobbyList();
+    // updateLobbyList();
 
     return { message: "All lobbies deleted", status: 200 };
   } catch (error: unknown) {
@@ -44,7 +44,7 @@ const deleteStartedLobbies = async () => {
       where: { started: true },
     });
 
-    updateLobbyList();
+    // updateLobbyList();
 
     return { message: "Started lobbies deleted", status: 200 };
   } catch (error: unknown) {
@@ -73,7 +73,7 @@ const createLobby = async (user:UserType, name:string) => {
       },
     });
 
-    updateLobbyList();
+    // updateLobbyList();
 
     return { message: "Lobby created", data: { lobby } , status: 200 };
   } catch (error: unknown) {

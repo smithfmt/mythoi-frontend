@@ -37,10 +37,14 @@ const LobbyList = () => {
 
     fetchLobbies();
 
-    socket.on("lobbyListUpdate", (lobbyList) => {
-      console.log("Lobby List Updated:", lobbyList);
-      setLobbies(lobbyList);
-    });
+    // socket.on("lobbyListUpdate", (lobbyList) => {
+    //   console.log("Lobby List Updated:", lobbyList);
+    //   setLobbies(lobbyList);
+    // });
+
+    socket.on("lobby_changes", (data) => {
+      console.log("LOBBY CHANGES", data)
+    })
 
     return () => {
       socket.off("lobbyListUpdate");
@@ -60,7 +64,6 @@ const LobbyList = () => {
 
     try {
       setLoading(true);
-      console.log(getAuthToken())
       const response = await axios.post(`/api/lobby`, {
         action: 'create',
         name: newLobbyName,

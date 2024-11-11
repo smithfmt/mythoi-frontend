@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from "@prisma/prismaClient";
 import { handleResponse } from "@utils/handleResponse";
 import { nextErrorHandler } from "@utils/nextErrorHandler";
-import { updateUserList } from "@lib/sockets/sockets";
+// import { updateUserList } from "@lib/sockets/sockets";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -24,7 +24,7 @@ const signupUser = async (name: string, email: string, password: string) => {
       },
     });
 
-    updateUserList();
+    // updateUserList();
 
     const token = jwt.sign(
       {

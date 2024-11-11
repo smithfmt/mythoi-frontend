@@ -14,3 +14,5 @@ Blank connection can be placed against Blank
 Equipment is displaying atk & hp values
 
 SORT OUT REALTIME STUFF
+
+?? WE WANT TO MAYBE HAVE A SOCKETS SERVER INDEPENDENT FROM THE NEXT ONE WHICH WATCHES THE DATABASE FOR CHANGES ??

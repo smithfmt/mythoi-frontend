@@ -10,7 +10,7 @@ import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawRandomCard } from 'src/lib/game/gameplay';
-import { updateGameData } from '@lib/sockets/sockets';
+// import { updateGameData } from '@lib/sockets/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
@@ -138,7 +138,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
       default:
         return { message: "Invalid action", status: 400 };
     }
-    updateGameData(parseInt(id))
+    // updateGameData(parseInt(id))
     return { message: "Successfully updated game", data: { game: updatedGame }, status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

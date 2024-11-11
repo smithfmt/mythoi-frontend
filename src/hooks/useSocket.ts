@@ -1,20 +1,23 @@
-import { io } from "socket.io-client";
-import { useEffect } from "react";
+import { useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
 
-export default function useSocket() {
+const useSocket = <T>(event: string, initialState: T | null = null): [T | null, React.Dispatch<React.SetStateAction<T | null>>] => {
+  const [data, setData] = useState<T | null>(initialState);
+
   useEffect(() => {
-    const socket = io(process.env.FRONTEND_URL || "http://localhost:3000", {
-      withCredentials: true,
-    });
+    const socket: Socket = io(process.env.EXPRESS_API_URL || 'http://localhost:5000');
 
-    socket.on("connect", () => {
-      console.log("Connected to Socket.IO server");
+    socket.on(event, (receivedData: T) => {
+      console.log(`${event} received:`, receivedData);
+      setData(receivedData);
     });
-
-    // Define other event listeners here
 
     return () => {
-      socket.disconnect();
+      socket.off(event);
     };
-  }, []);
-}
+  }, [event]);
+
+  return [data, setData];
+};
+
+export default useSocket;
