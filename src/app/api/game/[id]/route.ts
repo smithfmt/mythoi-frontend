@@ -73,6 +73,7 @@ interface UpdateData {
     y?: number;
     hand?: boolean;
   }
+  playerData: PlayerData;
 }
 
 const updateGame = async (user: UserType, id: string, action: string, data:UpdateData) => {
@@ -135,6 +136,16 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
           },
         });
         break
+      case "endTurn":
+        const { playerData: updatedPlayerData } = data;
+        playerData[playerIndex] = updatedPlayerData;
+        updatedGame = await prisma.game.update({
+          where: { id: parseInt(id) },
+          data: {
+            playerData: JSON.stringify(playerData),  // Save the updated playerData back as JSON
+          },
+        });
+        break;
       default:
         return { message: "Invalid action", status: 400 };
     }

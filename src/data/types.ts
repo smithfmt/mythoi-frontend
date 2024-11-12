@@ -89,12 +89,17 @@ export interface GameData {
     playerData: string;
 }
 
-export interface CardObjectData {
-    card: PopulatedCardData,
-    x?: number,
-    y?: number,
-    hand?: boolean
+export type Space = {
+    x?: number;
+    y?: number;
+    hand?: boolean;
 }
+
+export interface CardObjectData extends Space {
+    card: PopulatedCardData;
+}
+
+
 
 export type BoardType = {
     card:PopulatedCardData,

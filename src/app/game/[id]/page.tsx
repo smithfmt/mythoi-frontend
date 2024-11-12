@@ -10,9 +10,13 @@ import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
 import { getPlaceableSpaces } from "@utils/gameLogic";
 import Card from "@components/game/Card";
+import GameHud from "@components/game/GameHud";
+import { placeCard } from "@lib/game/gameplay";
 
 // TODO : INSTEAD OF RESTRICTING WHERE CARDS CAN BE PLACED, JUST HIGHLIGHT WHEN THEY ARE INCORRECTLY PLACED
-// We could even have the card placement be entirely frontend and only validate on "end turn". Also have validation on the frontend that works realtime, (making squares outlined red if card is misplaced)
+// ADD Validation to Frontend placement
+// Reorg the way player data is stored so that each player has their own JSON string
+
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -22,7 +26,10 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const playerData:PlayerData[] | null = gameData?.playerData ? JSON.parse(gameData.playerData) : null;
-    const currentPlayerData = playerData?.filter(p => p.player===userId)[0];
+    console.log(gameData)
+
+    let currentPlayerIndex:number;
+    const currentPlayerData = playerData?.filter((p,i) => {currentPlayerIndex=i; return p.player===userId})[0];
 
     const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null,spaces:{x:number,y:number}[]}>({selectedCard:null,spaces:[]});
     useEffect(() => {
@@ -48,6 +55,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         fetchGame();
     }, [id, setGameData]);
 
+    if (!gameData || !playerData) return <p>No Data found</p>;
+
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             const response = await axios.put(`/api/game/${id}`, {
@@ -70,21 +79,22 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         }
     };
 
+    // If moving cards is entirely client-side, then we need to watch out for the sockets overriding the card positions
+
     const handlePlaceSelected = async (x:number, y:number, hand:boolean) => {
+        if (!currentPlayerData) return console.warn("No Player Data");
         if (!selected.spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return console.warn("Space is not available");
         const { uid } = selected.selectedCard;
         if (!uid) return console.warn("No Card Found!");
+
         console.log("Trying to place:", uid, x, y, hand);
-        const response = await axios.put(`/api/game/${id}`, {
-            action: "placeCard",
-            data: {
-              uid,
-              space: { x, y, hand },
-            },
-          }, {
-              headers: { Authorization: `Bearer ${getAuthToken()}` },  
-          });
-        console.log(response);
+        const [currentPlayerUpdates, error] = placeCard(currentPlayerData, uid, {x,y,hand})
+        if (error || !currentPlayerUpdates) return console.warn(error);
+
+        const updatedPlayerData = [...playerData];
+        updatedPlayerData[currentPlayerIndex] = currentPlayerUpdates;
+
+        setGameData({...gameData, playerData: JSON.stringify(updatedPlayerData)})
         setSelected({selectedCard:null,spaces:[]});
     };
 
@@ -97,11 +107,26 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         const spaces = getPlaceableSpaces(cardsInBoard, card);
         setSelected({selectedCard:card,spaces});
     };
+
+    const handleEndTurn = async () => {
+        if (!currentPlayerData) return;
+        const response = await axios.put(`/api/game/${id}`, {
+            action: "endTurn",
+            data: {
+                playerData: currentPlayerData, 
+            }
+        }, {
+            headers: { Authorization: `Bearer ${getAuthToken()}` },  
+        });
+        console.log(response)
+    };
+
     const cardsInBoard:CardObjectData[] = [];
     const cardsInHand:CardObjectData[] = [];
     currentPlayerData?.cards?.forEach(c => c.hand?cardsInHand.push(c):cardsInBoard.push(c));
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 relative z-40">
+            <GameHud endTurn={handleEndTurn} />
             {gameData ? (
                 // <div className="bg-white rounded-lg shadow-lg p-6">
                 //     <h1 className="text-3xl font-bold mb-4">{gameData.name}</h1>

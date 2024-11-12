@@ -1,4 +1,6 @@
 import { cards } from "@data/cards";
+import { PlayerData, Space } from "@data/types";
+import { findIndexByParam } from "@utils/helpers";
 
 export const drawRandomCard = () => {
     // Step 1: Calculate the total weight
@@ -41,3 +43,23 @@ export const drawRandomCard = () => {
 
     return result;
 }
+
+export const placeCard = (playerData: PlayerData, uid: string, space: Space,): [PlayerData | null, string | null] => {
+    const { x, y, hand } = space;
+
+    // Check if the Space is filled
+    const isFilled = !!playerData.cards.filter(card => card.x===x&&card.y===y).length;
+    if (isFilled) return [null, "Space is already filled"];
+
+    // Check if Card Exists
+    const cardIndex = findIndexByParam(playerData.cards, ["card", "uid"], uid);
+    if (cardIndex===undefined) return [null, "Card not found"];
+    const currentCard = playerData.cards[cardIndex];
+
+    // Set Card's new position
+    Object.assign(currentCard, { x, y, hand });
+    
+    return [playerData, null];
+}
+
+

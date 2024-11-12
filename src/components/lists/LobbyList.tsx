@@ -12,8 +12,15 @@ type Players = {
     email: string,
 }[];
 
+interface Lobby {
+  id: number; 
+  name: string; 
+  players: Players; 
+  host: string;
+}
+
 const LobbyList = () => {
-  const [lobbies, setLobbies] = useState<{ id: number; name: string, players: Players, host: string }[]>([]);
+  const [lobbies, setLobbies] = useState<Lobby[]>([]);
   const [loading, setLoading] = useState(false);
   const [newLobbyName, setNewLobbyName] = useState("");
   const userId = useUserId();
@@ -37,12 +44,12 @@ const LobbyList = () => {
 
     fetchLobbies();
 
-    // socket.on("lobbyListUpdate", (lobbyList) => {
-    //   console.log("Lobby List Updated:", lobbyList);
-    //   setLobbies(lobbyList);
-    // });
+    socket.on("lobbyListUpdate", ({ data }: { data: { lobbies: Lobby[] }}) => {
+      const { lobbies } = data;
+      setLobbies(lobbies);
+    });
 
-    socket.on("lobby_changes", (data) => {
+    socket.on("lobby_update", (data) => {
       console.log("LOBBY CHANGES", data)
     })
 
