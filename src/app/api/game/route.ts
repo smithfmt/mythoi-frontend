@@ -26,6 +26,16 @@ const getAllGames = async () => {
 const deleteAllGames = async () => {
   try {
     await prisma.game.deleteMany({});
+    await prisma.user.updateMany({
+      where: {
+        gameData: {
+          not: ""
+        }
+      },
+      data: {
+        gameData: ""
+      }
+    })
     return { message: "All games deleted successfully", status: 200 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

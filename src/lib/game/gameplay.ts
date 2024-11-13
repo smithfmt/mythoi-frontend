@@ -1,8 +1,9 @@
 import { cards } from "@data/cards";
 import { PlayerData, Space } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
+import { generateCard } from "./cardUtils";
 
-export const drawRandomCard = () => {
+export const drawBasicCard = () => {
     // Step 1: Calculate the total weight
     const { basic } = cards;
 
@@ -24,8 +25,7 @@ export const drawRandomCard = () => {
         // Fallback in case of rounding errors
         return Object.values(basic)[Object.values(basic).length - 1];
     };
-    const result = findRandomCard();
-    
+    const result = {...findRandomCard()};
     // Add random attributes
     for (let i=0; i<result.connect;i++) {
         switch (Math.floor(Math.random()*3)) {
@@ -41,7 +41,7 @@ export const drawRandomCard = () => {
         };
     };
 
-    return result;
+    return generateCard(result);
 }
 
 export const placeCard = (playerData: PlayerData, uid: string, space: Space,): [PlayerData | null, string | null] => {

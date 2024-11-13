@@ -4,9 +4,6 @@ import Image from "next/image";
 import { CardImages } from "@assets/images";
 import Default from "@assets/card/images/Spare 2.jpeg"
 
-// TODO MAKE THE BACKEND GENERATE THE CONNECTIONS and the costs
-
-
 const Card = ({ card } : { card: PopulatedCardData }) => {
     const { img, name, atk, hp, ability, style, cost, sides, desc } = card;
     const imageKey = `${img}.jpeg`;
@@ -47,7 +44,7 @@ const Card = ({ card } : { card: PopulatedCardData }) => {
             </div>
 
             {/* Stats */}
-            <div className="absolute z-50 bottom-0 w-full flex justify-between text-neutral-50 font-black">
+            {card.ability!=="Equipment"&&<div className="absolute z-50 bottom-0 w-full flex justify-between text-neutral-50 font-black">
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.AtkIcon.src} height={cardComponents.AtkIcon.height} width={cardComponents.AtkIcon.width} alt="atkIcon" />
                     <p className="text-center">{atk}</p>
@@ -56,7 +53,7 @@ const Card = ({ card } : { card: PopulatedCardData }) => {
                     <Image className="w-10 h-10" src={cardComponents.HpIcon.src} height={cardComponents.HpIcon.height} width={cardComponents.HpIcon.width} alt="hpIcon" />
                     <p className="text-center">{hp}</p>
                 </div>
-            </div>
+            </div>}
 
             {/* Cost */}
             <div className="relative z-20 flex gap-1 w-full justify-center pt-4">

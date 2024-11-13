@@ -99,8 +99,6 @@ export interface CardObjectData extends Space {
     card: PopulatedCardData;
 }
 
-
-
 export type BoardType = {
     card:PopulatedCardData,
     x:number,
@@ -108,3 +106,8 @@ export type BoardType = {
     hand?:boolean,
 }[]
 
+export type UserDataType = {
+    name: string;
+    id: number;
+    gameData: string;
+}

@@ -2,21 +2,20 @@
 
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { getAuthToken } from "src/lib/auth/getAuthToken"; 
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData } from "@data/types";
+import { BoardType, CardObjectData, GameData, PopulatedCardData, UserDataType } from "@data/types";
 import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
 import { getPlaceableSpaces } from "@utils/gameLogic";
 import Card from "@components/game/Card";
 import GameHud from "@components/game/GameHud";
 import { placeCard } from "@lib/game/gameplay";
+import { fetchGameById, fetchUserById, updateGameById } from "@app/requests";
 
 // TODO : INSTEAD OF RESTRICTING WHERE CARDS CAN BE PLACED, JUST HIGHLIGHT WHEN THEY ARE INCORRECTLY PLACED
 // ADD Validation to Frontend placement
 // Reorg the way player data is stored so that each player has their own JSON string
-
 
 
 const GamePage = ({ params }: { params: { id: string } }) => {
@@ -25,20 +24,17 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [error, setError] = useState<string | null>(null);
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
-    const playerData:PlayerData[] | null = gameData?.playerData ? JSON.parse(gameData.playerData) : null;
-    console.log(gameData)
-
-    let currentPlayerIndex:number;
-    const currentPlayerData = playerData?.filter((p,i) => {currentPlayerIndex=i; return p.player===userId})[0];
-
+    const [userData, setUserData] = useSocket<UserDataType>(`userDataUpdate-${userId}`);
+    const playerData = userData&&JSON.parse(userData.gameData);
     const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null,spaces:{x:number,y:number}[]}>({selectedCard:null,spaces:[]});
     useEffect(() => {
         const fetchGame = async () => {
             try {
-                const response:{data:{game:GameData}} = await axios.get(`/api/game/${id}`, {
-                    headers: { Authorization: `Bearer ${getAuthToken()}` },
-                });
-                setGameData(response.data.game);
+                const gameResponse = await fetchGameById(id);
+                const userResponse = userId && await fetchUserById(userId);
+                
+                if (userResponse) setUserData(userResponse.data.userData);
+                if (gameResponse) setGameData(gameResponse.data.game);
             } catch (error: unknown) {
                 if (axios.isAxiosError(error)) {
                     setError(error.response?.data?.message || "An error occurred while fetching the game");
@@ -53,20 +49,13 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         };
 
         fetchGame();
-    }, [id, setGameData]);
+    }, [id, setGameData, setUserData, userId]);
 
-    if (!gameData || !playerData) return <p>No Data found</p>;
+    if (!gameData || !userData || !playerData) return <p>No Data found</p>;
 
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
-            const response = await axios.put(`/api/game/${id}`, {
-                action: "selectGeneral",
-                data: {
-                    generalCard, 
-                }
-            }, {
-                headers: { Authorization: `Bearer ${getAuthToken()}` },  
-            });
+            const response = await updateGameById(id, "selectGeneral", { generalCard });
             console.log("GENERAL SELECTED",response);
         } catch (error: unknown) {
             if (axios.isAxiosError(error)) {
@@ -79,83 +68,59 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         }
     };
 
-    // If moving cards is entirely client-side, then we need to watch out for the sockets overriding the card positions
-
     const handlePlaceSelected = async (x:number, y:number, hand:boolean) => {
-        if (!currentPlayerData) return console.warn("No Player Data");
+        if (!playerData) return console.warn("No Player Data");
         if (!selected.spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return console.warn("Space is not available");
         const { uid } = selected.selectedCard;
         if (!uid) return console.warn("No Card Found!");
-
-        console.log("Trying to place:", uid, x, y, hand);
-        const [currentPlayerUpdates, error] = placeCard(currentPlayerData, uid, {x,y,hand})
-        if (error || !currentPlayerUpdates) return console.warn(error);
-
-        const updatedPlayerData = [...playerData];
-        updatedPlayerData[currentPlayerIndex] = currentPlayerUpdates;
-
-        setGameData({...gameData, playerData: JSON.stringify(updatedPlayerData)})
+        const [updatedPlayerData, error] = placeCard(playerData, uid, {x,y,hand})
+        if (error || !updatedPlayerData) return console.warn(error);
+        setUserData({...userData,gameData:JSON.stringify(updatedPlayerData)});
         setSelected({selectedCard:null,spaces:[]});
     };
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-
     const handleCardClick = (cardData: CardObjectData) => {
         const { card } = cardData;
-        if (!currentPlayerData) return console.warn("No player found!");
+        if (!playerData) return console.warn("No player found!");
         const spaces = getPlaceableSpaces(cardsInBoard, card);
         setSelected({selectedCard:card,spaces});
     };
 
     const handleEndTurn = async () => {
-        if (!currentPlayerData) return;
-        const response = await axios.put(`/api/game/${id}`, {
-            action: "endTurn",
-            data: {
-                playerData: currentPlayerData, 
-            }
-        }, {
-            headers: { Authorization: `Bearer ${getAuthToken()}` },  
-        });
+        if (!playerData) return;
+        const response = await updateGameById(id, "endTurn", { playerData });
         console.log(response)
     };
 
+    const handleDrawBasicCard = async () => {
+        if (!playerData) return;
+        const response = await updateGameById(id, "drawCard", { playerData });
+        console.log(response)
+    }
+
     const cardsInBoard:CardObjectData[] = [];
     const cardsInHand:CardObjectData[] = [];
-    currentPlayerData?.cards?.forEach(c => c.hand?cardsInHand.push(c):cardsInBoard.push(c));
+    playerData.cards?.forEach(c => c.hand?cardsInHand.push(c):cardsInBoard.push(c));
+ 
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p className="text-red-500">{error}</p>;
+
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 relative z-40">
-            <GameHud endTurn={handleEndTurn} />
+            <GameHud endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard}/>
             {gameData ? (
-                // <div className="bg-white rounded-lg shadow-lg p-6">
-                //     <h1 className="text-3xl font-bold mb-4">{gameData.name}</h1>
-                //     <h1>Hello {gameData.players.filter(p => p.id===userId)[0].name}</h1>
-                //     <h2 className="text-lg font-semibold mb-2">Players:</h2>
-                //     <ul>
-                //         {gameData.players.map(player => (
-                //             <li key={player.id} className="text-gray-700">
-                //                 {player.name}
-                //             </li>
-                //         ))}
-                //     </ul>
-                // </div>
                 <div>
-                    {currentPlayerData&&
-                        <div>
-                            <GameBoard board={cardsInBoard as BoardType} selected={selected} handlePlaceSelected={handlePlaceSelected} handleCardClick={handleCardClick} />
-                            {<Hand hand={cardsInHand} handleCardClick={handleCardClick} />}
-                        </div>}
-                    
+                    <GameBoard board={cardsInBoard as BoardType} selected={selected} handlePlaceSelected={handlePlaceSelected} handleCardClick={handleCardClick} />
+                    {<Hand hand={cardsInHand} handleCardClick={handleCardClick} />}
                 </div>
             ) : (
                 <p className="text-gray-500">No game found.</p>
             )}
-            {!currentPlayerData?.generals.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
+            {!playerData?.generals?.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
                 <div className=" p-32 flex flex-col gap-32">
                     <h1 className="text-3xl font-black text-neutral-50">Select General</h1>
                     <div className="flex gap-16">
-                        {currentPlayerData?.generals.choices.map((generalCard,i) => <div 
+                        {playerData.generals.choices.map((generalCard,i) => <div 
                             key={"gen"+i}
                             className="hover:cursor-pointer transition-all"
                             onClick={() => handleSelection(generalCard)}

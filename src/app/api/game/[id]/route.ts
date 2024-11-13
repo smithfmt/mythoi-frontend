@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { generatePlayerGenerals } from 'src/lib/game/generation';
 import { generateCard } from 'src/lib/game/cardUtils';
-import { findIndexByParam, shuffle } from '@utils/helpers';
+import { shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { LobbyType, UserType } from '@app/api/types';
 import { cards } from '@data/cards';
@@ -9,34 +9,36 @@ import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
-import { drawRandomCard } from 'src/lib/game/gameplay';
+import { drawBasicCard } from 'src/lib/game/gameplay';
+import { findGameById, findUserById, updateUserById } from '@app/api/requests';
 // import { updateGameData } from '@lib/sockets/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
-    const playerIds = lobby.players.map((player) => player.id);
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(Object.keys(cards.hero).map(str => parseInt(str)));
     const game = await prisma.game.create({
       data: {
         name: `Game for ${lobby.name}`,
-        players: { connect: playerIds.map((id: number) => ({ id })) },
+        players: { connect: lobby.players.map((player) => ({ id: player.id })) },
         host: lobby.host.toString(), 
         turn: lobby.players[0].id, 
         heroDeck,
-        playerData: JSON.stringify(
-          lobby.players.map((player, i) => ({
-            player: player.id,
-            generals: {
-              selected: false,
-              choices: playerGenerals[i],
-            },
-            cards: [],
-            basicCount: 0,
-          }))
-        ),
       },
     });
+    lobby.players.forEach(async (player, i) => {
+      await updateUserById(player.id, {
+        gameData: JSON.stringify({
+          player: player.id,
+          generals: {
+            selected: false,
+            choices: playerGenerals[i],
+          },
+          cards: [],
+          basicCount: 0,
+        })
+      })
+    })
 
     return game;
   } catch (error) {
@@ -79,28 +81,21 @@ interface UpdateData {
 const updateGame = async (user: UserType, id: string, action: string, data:UpdateData) => {
   try {
     // Fetch the current game, including playerData
-    const game = await prisma.game.findUnique({
-      where: { id: parseInt(id) },
-    });
+    const game = await findGameById(parseInt(id));
+    if (!game) return { message: "Game not found", status: 404 }
 
-    if (!game) {
-      return { message: "Game not found", status: 404 };
-    }
+    const userData = await findUserById(user.id);
+    if (!userData) return { message: "User Data not found", status: 404 }
 
-    let updatedGame;
-    const playerData: PlayerData[] = JSON.parse(game.playerData as string);
-
-    const playerIndex = findIndexByParam(playerData,["player"], user.id);
-    if (playerIndex===undefined) return { message: "Player not found", status: 404 };
-    const currentPlayerData = playerData[playerIndex];
+    let playerData: PlayerData = JSON.parse(userData?.gameData as string);
     
     switch (action) {
       case "selectGeneral":
-        if (currentPlayerData.generals.selected) return { message: "Already Selected General", status: 401 };
+        if (playerData.generals.selected) return { message: "Already Selected General", status: 401 };
         const { generalCard } = data;
         
-        currentPlayerData.generals.selected = true;
-        currentPlayerData.cards.push({
+        playerData.generals.selected = true;
+        playerData.cards.push({
           card: generalCard, 
           x: 5,
           y: 5,
@@ -108,49 +103,26 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
 
         const startingCards:CardObjectData[] = [];
         for (let i=0;i<(generalCard.id===4?5:3);i++) {
-          startingCards.push({card: generateCard(drawRandomCard()), hand: true})
+          startingCards.push({card: drawBasicCard(), hand: true});
         }
-        currentPlayerData.cards = [...currentPlayerData.cards, ...startingCards]
-        // Update the game with the modified playerData
-        updatedGame = await prisma.game.update({
-          where: { id: parseInt(id) },
-          data: {
-            playerData: JSON.stringify(playerData),  // Save the updated playerData back as JSON
-          },
-        });
+        playerData.cards = [...playerData.cards, ...startingCards];
         break;
-      case "placeCard":
-        const { uid, space } = data;
-        const { x=null, y=null, hand } = space;
-
-        const cardIndex = findIndexByParam(currentPlayerData.cards, ["card", "uid"], uid)
-        if (cardIndex===undefined) return { message: "Card not found", status: 404 };
-        const currentCard = currentPlayerData.cards[cardIndex];
-
-        Object.assign(currentCard, { x, y, hand });
-
-        updatedGame = await prisma.game.update({
-          where: { id: parseInt(id) },
-          data: {
-            playerData: JSON.stringify(playerData),  // Save the updated playerData back as JSON
-          },
-        });
-        break
       case "endTurn":
         const { playerData: updatedPlayerData } = data;
-        playerData[playerIndex] = updatedPlayerData;
-        updatedGame = await prisma.game.update({
-          where: { id: parseInt(id) },
-          data: {
-            playerData: JSON.stringify(playerData),  // Save the updated playerData back as JSON
-          },
-        });
+        playerData = updatedPlayerData;
+        break;
+      case "drawCard":
+        const { playerData: updatedData } = data;
+        updatedData.cards.push({card: drawBasicCard(), hand: true});
+        playerData = updatedData;
         break;
       default:
         return { message: "Invalid action", status: 400 };
     }
-    // updateGameData(parseInt(id))
-    return { message: "Successfully updated game", data: { game: updatedGame }, status: 201 };
+
+    const updatedGameData = await updateUserById(user.id, { gameData: JSON.stringify(playerData) });
+
+    return { message: "Successfully updated game", data: { gameData: updatedGameData }, status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);
   }

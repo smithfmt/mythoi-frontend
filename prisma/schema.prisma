@@ -26,6 +26,7 @@ model User {
   lobby     Lobby?   @relation(fields: [lobbyId], references: [id])
   gameId    Int?
   game      Game?    @relation(fields: [gameId], references: [id]) 
+  gameData  Json?
 }
 
 model Lobby {
@@ -45,7 +46,6 @@ model Game {
   players    User[]
   host       String
   turn       Int
-  playerData Json
   heroDeck   Int[]
   discardPile String[]
   finished   Boolean  @default(false)

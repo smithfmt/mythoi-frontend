@@ -1,14 +1,15 @@
 Redirect if user is not logged in (from any protected page like the lobbies page)
 
-Add Loading State Everywhere
+Add Loading State Everywhere (Loading Bar)
+
+Add ERROR HANDLER EVERYWHERE (Popup)
 
 Build in the Card placement exclusively on the frontend, with frontend validation which checks if they are correctly placed.
     then have an "end turn" button which sends the new formation to the backend, where validation also occurs.
 
-Some Basic cards are getting too many connections.
-
 When A card is picked up, it should not be considered in the validation
+
+Add a return to hand
 
 Blank connection can be placed against Blank
 
-Equipment is displaying atk & hp values
