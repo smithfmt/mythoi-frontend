@@ -4,12 +4,10 @@ Add Loading State Everywhere (Loading Bar)
 
 Add ERROR HANDLER EVERYWHERE (Popup)
 
-Build in the Card placement exclusively on the frontend, with frontend validation which checks if they are correctly placed.
-    then have an "end turn" button which sends the new formation to the backend, where validation also occurs.
+Add Validation to the backend on End turn
 
-When A card is picked up, it should not be considered in the validation
+Link current validation on frontend to the end turn button
 
-Add a return to hand
+add draw card to end turn button
 
-Blank connection can be placed against Blank
-
+Consider how "Active connections" will be checked - ideally inside the validation

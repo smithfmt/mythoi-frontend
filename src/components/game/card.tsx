@@ -57,7 +57,7 @@ const Card = ({ card } : { card: PopulatedCardData }) => {
 
             {/* Cost */}
             <div className="relative z-20 flex gap-1 w-full justify-center pt-4">
-                {cost.map((cost,i) => cost!=="blank"&&<div className="relative w-fit h-fit saturate-150" key={`cost-${i}`}>
+                {cost.map((cost,i) => <div className="relative w-fit h-fit saturate-150" key={`cost-${i}`}>
                     <Image className="relative z-20 h-6 w-fit object-contain bg-neutral-100" src={cardComponents.Border.src} height={180} width={130} alt="cost"/>
                     <span style={{backgroundColor:colors[cost]}} className="absolute top-0 z-30 w-full h-full"/>
                 </div>)}

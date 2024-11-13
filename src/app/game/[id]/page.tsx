@@ -1,17 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { BoardType, CardObjectData, GameData, PopulatedCardData, UserDataType } from "@data/types";
+import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData, UserDataType } from "@data/types";
 import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
-import { getPlaceableSpaces } from "@utils/gameLogic";
+import { getPlaceableSpaces } from "@lib/game/gameLogic";
 import Card from "@components/game/Card";
 import GameHud from "@components/game/GameHud";
 import { placeCard } from "@lib/game/gameplay";
 import { fetchGameById, fetchUserById, updateGameById } from "@app/requests";
+import useBoardValidation from "@hooks/useBoardValidation";
+import CardCursorTracker from "@components/game/CardCursorTracker";
 
 // TODO : INSTEAD OF RESTRICTING WHERE CARDS CAN BE PLACED, JUST HIGHLIGHT WHEN THEY ARE INCORRECTLY PLACED
 // ADD Validation to Frontend placement
@@ -25,8 +27,21 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const [userData, setUserData] = useSocket<UserDataType>(`userDataUpdate-${userId}`);
-    const playerData = userData&&JSON.parse(userData.gameData);
-    const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null,spaces:{x:number,y:number}[]}>({selectedCard:null,spaces:[]});
+    const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
+    const playerData = useMemo(() => {
+        return userData ? JSON.parse(userData.gameData) as PlayerData : null;
+    }, [userData]);
+    const valid = useBoardValidation(playerData);
+    const { cardsInBoard, cardsInHand } = useMemo(() => {
+        const inBoard: CardObjectData[] = [];
+        const inHand: CardObjectData[] = [];
+        playerData?.cards.forEach(cardData => cardData.hand ? inHand.push(cardData) : inBoard.push(cardData));
+        return { cardsInBoard: inBoard, cardsInHand: inHand };
+    }, [playerData]);
+    const spaces = useMemo(() => {
+        return selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
+    }, [cardsInBoard, selected.selectedCard]);
+    
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -70,20 +85,22 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     const handlePlaceSelected = async (x:number, y:number, hand:boolean) => {
         if (!playerData) return console.warn("No Player Data");
-        if (!selected.spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return console.warn("Space is not available");
+        if (!spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return console.warn("Space is not available");
         const { uid } = selected.selectedCard;
         if (!uid) return console.warn("No Card Found!");
         const [updatedPlayerData, error] = placeCard(playerData, uid, {x,y,hand})
         if (error || !updatedPlayerData) return console.warn(error);
         setUserData({...userData,gameData:JSON.stringify(updatedPlayerData)});
-        setSelected({selectedCard:null,spaces:[]});
+        setSelected({selectedCard:null});
     };
 
     const handleCardClick = (cardData: CardObjectData) => {
-        const { card } = cardData;
-        if (!playerData) return console.warn("No player found!");
-        const spaces = getPlaceableSpaces(cardsInBoard, card);
-        setSelected({selectedCard:card,spaces});
+        // Remove card from the board 
+        // Update User data to change card data // 
+        const updatedPlayerData = { ...playerData };
+        updatedPlayerData.cards = updatedPlayerData.cards.map(data => data.card.uid===cardData.card.uid ? { card: data.card, hand: true } : data);
+        setUserData({...userData, gameData: JSON.stringify(updatedPlayerData)});
+        setSelected({ selectedCard:cardData.card });
     };
 
     const handleEndTurn = async () => {
@@ -98,20 +115,18 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         console.log(response)
     }
 
-    const cardsInBoard:CardObjectData[] = [];
-    const cardsInHand:CardObjectData[] = [];
-    playerData.cards?.forEach(c => c.hand?cardsInHand.push(c):cardsInBoard.push(c));
- 
     if (loading) return <p>Loading...</p>;
     if (error) return <p className="text-red-500">{error}</p>;
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-8 relative z-40">
-            <GameHud endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard}/>
+            <GameHud endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} />
             {gameData ? (
                 <div>
-                    <GameBoard board={cardsInBoard as BoardType} selected={selected} handlePlaceSelected={handlePlaceSelected} handleCardClick={handleCardClick} />
-                    {<Hand hand={cardsInHand} handleCardClick={handleCardClick} />}
+                    <GameBoard invalidCards={valid.invalidCards} board={cardsInBoard as BoardType} selected={{ selectedCard: selected.selectedCard, spaces }} handlePlaceSelected={handlePlaceSelected} handleCardClick={handleCardClick} />
+                    <Hand selectedCard={selected.selectedCard} setSelected={setSelected} hand={cardsInHand} handleCardClick={handleCardClick} />
+                    {/* Card following Mouse */}
+                    <CardCursorTracker selectedCard={selected.selectedCard}/>
                 </div>
             ) : (
                 <p className="text-gray-500">No game found.</p>
