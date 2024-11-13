@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
-import { getAuthToken } from "@utils/getAuthToken";
+import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
 
 type Players = {
@@ -12,8 +12,15 @@ type Players = {
     email: string,
 }[];
 
+interface Lobby {
+  id: number; 
+  name: string; 
+  players: Players; 
+  host: string;
+}
+
 const LobbyList = () => {
-  const [lobbies, setLobbies] = useState<{ id: number; name: string, players: Players, host: string }[]>([]);
+  const [lobbies, setLobbies] = useState<Lobby[]>([]);
   const [loading, setLoading] = useState(false);
   const [newLobbyName, setNewLobbyName] = useState("");
   const userId = useUserId();
@@ -23,7 +30,7 @@ const LobbyList = () => {
     const fetchLobbies = async () => {
       try {
         const response = await axios.get(`/api/lobby`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
-        setLobbies(response.data);
+        setLobbies(response.data.lobbies);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           alert("Error fetching lobbies: " + (error.response?.data?.message || "Something went wrong"));
@@ -37,10 +44,14 @@ const LobbyList = () => {
 
     fetchLobbies();
 
-    socket.on("lobbyListUpdate", (lobbyList) => {
-      console.log("Lobby List Updated:", lobbyList);
-      setLobbies(lobbyList);
+    socket.on("lobbyListUpdate", ({ data }: { data: { lobbies: Lobby[] }}) => {
+      const { lobbies } = data;
+      setLobbies(lobbies);
     });
+
+    socket.on("lobby_update", (data) => {
+      console.log("LOBBY CHANGES", data)
+    })
 
     return () => {
       socket.off("lobbyListUpdate");
@@ -60,11 +71,9 @@ const LobbyList = () => {
 
     try {
       setLoading(true);
-      console.log(getAuthToken())
       const response = await axios.post(`/api/lobby`, {
         action: 'create',
         name: newLobbyName,
-        userId,
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       setNewLobbyName("");
       router.push(`/lobby/${response.data.lobby.id}`);
@@ -83,10 +92,8 @@ const LobbyList = () => {
 
   const joinLobby = async (lobbyId: number) => {
     try {
-      const response = await axios.post(`/api/lobby`, {
+      const response = await axios.post(`/api/lobby/${lobbyId}`, {
         action: 'join',
-        lobbyId,
-        userId,
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Joined lobby:", response.data);
       router.push(`/lobby/${lobbyId}`);

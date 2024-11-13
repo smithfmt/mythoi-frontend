@@ -1,41 +1,57 @@
-import { handleAxiosError } from "@utils/handleAxiosError";
-import axios from "axios";
-import { NextRequest, NextResponse } from "next/server";
+import { verifyToken } from "src/lib/auth/verifyToken";
+import { nextErrorHandler } from "@utils/nextErrorHandler";
+import prisma from "@prisma/prismaClient";
+import { NextRequest } from "next/server";
+import { handleResponse } from "@utils/handleResponse";
 
-const EXPRESS_API_URL = process.env.EXPRESS_API_URL;
-if (!EXPRESS_API_URL) throw new Error('No Express API URL');
+const getAllGames = async () => {
+  try {
+    const games = await prisma.game.findMany({
+      include: {
+        players: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
+      },
+    });
 
-const getAuthHeaders = (req: NextRequest) => {
-  const token = req.headers.get('authorization') || '';
-  return token ? { Authorization: `Bearer ${token.replace('Bearer ', '')}` } : {};
+    return { message: "Successfully fetched games", data: { games }, status: 200};
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
 };
 
-export async function POST(req: NextRequest) {
-    const { action } = await req.json();
-    try {
-        let response;
-        switch (action) {
-            case 'deleteAll':
-                response = await axios.delete(`${EXPRESS_API_URL}/api/games`, {
-                headers: getAuthHeaders(req),
-              });
-              break;
-            default:
-              return NextResponse.json({ message: 'Invalid action' }, { status: 400 });
-          }
-        return NextResponse.json(response.data, { status: 200 });
-    } catch (error: unknown) {
-        return handleAxiosError(error);
-    }
+const deleteAllGames = async () => {
+  try {
+    await prisma.game.deleteMany({});
+    await prisma.user.updateMany({
+      where: {
+        gameData: {
+          not: ""
+        }
+      },
+      data: {
+        gameData: ""
+      }
+    })
+    return { message: "All games deleted successfully", status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
+};
+
+export async function DELETE(req: NextRequest) {
+  const { error } = await verifyToken(req);
+  if (error) return handleResponse(error);
+    const response = await deleteAllGames();
+    return handleResponse(response);
 }
 
 export async function GET(req: NextRequest) {
-  try {
-    const response = await axios.get(`${EXPRESS_API_URL}/api/games/all`, {
-      headers: getAuthHeaders(req),
-    });
-    return NextResponse.json(response.data, { status: 200 });
-  } catch (error: unknown) {
-    return handleAxiosError(error);
-  }
+  const { error } = await verifyToken(req);
+  if (error) return handleResponse(error);
+  const response = await getAllGames();
+  return handleResponse(response);
 }

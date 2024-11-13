@@ -1,4 +1,11 @@
 {
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
   "compilerOptions": {
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
@@ -18,16 +25,18 @@
         "name": "next"
       }
     ],
-    "baseUrl": "./src",
+    "baseUrl": "./",
     "paths": {
-      "@components/*": ["components/*"],
-      "@app/*": ["app/*"],
-      "@styles/*": ["styles/*"],
-      "@assets/*": ["assets/*"],
-      "@utils/*": ["utils/*"],
-      "@scripts/*": ["scripts/*"],
-      "@data/*": ["data/*"],
-      "@hooks/*": ["hooks/*"],
+      "@components/*": ["src/components/*"],
+      "@app/*": ["src/app/*"],
+      "@styles/*": ["src/styles/*"],
+      "@assets/*": ["src/assets/*"],
+      "@utils/*": ["src/utils/*"],
+      "@lib/*": ["src/lib/*"],
+      "@scripts/*": ["src/scripts/*"],
+      "@data/*": ["src/data/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@prisma/*": ["prisma/*"],
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

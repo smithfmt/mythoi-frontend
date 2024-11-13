@@ -5,10 +5,9 @@ const useSocket = <T>(event: string, initialState: T | null = null): [T | null, 
   const [data, setData] = useState<T | null>(initialState);
 
   useEffect(() => {
-    const socket: Socket = io(process.env.NEXT_PUBLIC_EXPRESS_API_URL || 'http://localhost:5000');
+    const socket: Socket = io(process.env.EXPRESS_API_URL || 'http://localhost:5000');
 
     socket.on(event, (receivedData: T) => {
-      console.log(`${event} received:`, receivedData);
       setData(receivedData);
     });
 

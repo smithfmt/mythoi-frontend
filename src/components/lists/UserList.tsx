@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import socket from "@utils/socketClient"
 import axios from "axios";
-import { getAuthToken } from "@utils/getAuthToken";
+import { getAuthToken } from "src/lib/auth/getAuthToken";
 
 const UserList = () => {
   const [userNames, setUserNames] = useState([]);

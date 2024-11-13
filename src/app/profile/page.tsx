@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
-import { getAuthToken } from "@utils/getAuthToken";
+import { getAuthToken } from "src/lib/auth/getAuthToken";
 
 const Profile = () => {
   const router = useRouter();
