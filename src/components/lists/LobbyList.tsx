@@ -6,6 +6,8 @@ import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
+import handleError from "@utils/handleError";
+import { useErrorHandler } from "@components/providers/ErrorContext";
 
 type Players = {
     id: number,
@@ -25,21 +27,16 @@ const LobbyList = () => {
   const [newLobbyName, setNewLobbyName] = useState("");
   const userId = useUserId();
   const router = useRouter();
+  const { addError } = useErrorHandler();
 
   useEffect(() => {
     const fetchLobbies = async () => {
       try {
         const response = await axios.get(`/api/lobby`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
         setLobbies(response.data.lobbies);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          alert("Error fetching lobbies: " + (error.response?.data?.message || "Something went wrong"));
-        } else if (error instanceof Error) {
-          alert("Error fetching lobbies: " + error.message);
-        } else {
-          alert("An unknown error occurred");
-        }
-      }
+      } catch (error: unknown) {
+        addError(handleError(error));
+      } 
     };
 
     fetchLobbies();
@@ -49,14 +46,10 @@ const LobbyList = () => {
       setLobbies(lobbies);
     });
 
-    socket.on("lobby_update", (data) => {
-      console.log("LOBBY CHANGES", data)
-    })
-
     return () => {
       socket.off("lobbyListUpdate");
     };
-  }, []);
+  }, [addError]);
 
   const createLobby = async () => {
     if (!newLobbyName) {
@@ -77,14 +70,8 @@ const LobbyList = () => {
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       setNewLobbyName("");
       router.push(`/lobby/${response.data.lobby.id}`);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        alert("Error creating lobby: " + (error.response?.data?.message || "Something went wrong"));
-      } else if (error instanceof Error) {
-        alert("Error creating lobby: " + error.message);
-      } else {
-        alert("An unknown error occurred");
-      }
+    } catch (error: unknown) {
+      addError(handleError(error));
     } finally {
       setLoading(false);
     }
@@ -97,15 +84,9 @@ const LobbyList = () => {
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Joined lobby:", response.data);
       router.push(`/lobby/${lobbyId}`);
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        alert("Error joining lobby: " + (error.response?.data?.message || "Something went wrong"));
-      } else if (error instanceof Error) {
-        alert("Error joining lobby: " + error.message);
-      } else {
-        alert("An unknown error occurred");
-      }
-    }
+    } catch (error: unknown) {
+      addError(handleError(error));
+    } 
   };
 
   const leaveLobby = async () => {
@@ -115,15 +96,9 @@ const LobbyList = () => {
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Left lobby");
       // Handle lobby update after leaving (fetch updated lobbies, for example)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        alert("Error leaving lobby: " + (error.response?.data?.message || "Something went wrong"));
-      } else if (error instanceof Error) {
-        alert("Error leaving lobby: " + error.message);
-      } else {
-        alert("An unknown error occurred");
-      }
-    }
+    } catch (error: unknown) {
+      addError(handleError(error));
+    } 
   };
 
   const deleteLobby = async (lobbyId: number) => {
@@ -131,15 +106,9 @@ const LobbyList = () => {
       await axios.delete(`/api/lobby/${lobbyId}`,{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Deleted lobby");
       // Handle lobby update after deleting (fetch updated lobbies, for example)
-    } catch (error) {
-      if (axios.isAxiosError(error)) {
-        alert("Error deleting lobby: " + (error.response?.data?.message || "Something went wrong"));
-      } else if (error instanceof Error) {
-        alert("Error deleting lobby: " + error.message);
-      } else {
-        alert("An unknown error occurred");
-      }
-    }
+    } catch (error: unknown) {
+      addError(handleError(error));
+    } 
   };
 
   return (

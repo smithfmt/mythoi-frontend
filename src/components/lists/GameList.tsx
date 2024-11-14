@@ -6,6 +6,8 @@ import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
 import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import handleError from "@utils/handleError";
 
 type Players = {
     id: number,
@@ -17,21 +19,16 @@ const GameList = () => {
   // const [loading, setLoading] = useState(false);
   const userId = useUserId();
   const router = useRouter();
+  const { addError } = useErrorHandler();
 
   useEffect(() => {
     const fetchGames = async () => {
       try {
         const response = await axios.get(`/api/game`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
         setGames(response.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          alert("Error fetching games: " + (error.response?.data?.message || "Something went wrong"));
-        } else if (error instanceof Error) {
-          alert("Error fetching games: " + error.message);
-        } else {
-          alert("An unknown error occurred");
-        }
-      }
+      } catch (error: unknown) {
+        addError(handleError(error));
+      } 
     };
 
     fetchGames();
@@ -43,7 +40,7 @@ const GameList = () => {
     return () => {
       socket.off("gameListUpdate");
     };
-  }, []);
+  }, [addError]);
 
   return (
     <div className="relative z-50 bg-black text-neutral-50 p-16">

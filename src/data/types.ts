@@ -48,6 +48,12 @@ export type CardsObject = {
 
 export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div";
 
+type Connection = {
+    connect: boolean;
+    attribute: Attribute;
+    active?: boolean;
+}
+
 export type PopulatedCardData = {
     id: number;
     uid: string;
@@ -56,22 +62,10 @@ export type PopulatedCardData = {
     atk: number;
     hp: number;
     sides: {
-        top: {
-            connect: boolean;
-            attribute: Attribute;
-        };
-        right: {
-            connect: boolean;
-            attribute: Attribute;
-        };
-        bottom: {
-            connect: boolean;
-            attribute: Attribute;
-        };
-        left: {
-            connect: boolean;
-            attribute: Attribute;
-        };
+        top: Connection;
+        right: Connection;
+        bottom: Connection;
+        left: Connection;
     };
     type: string;
     ability: string;

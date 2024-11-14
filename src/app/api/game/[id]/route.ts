@@ -8,9 +8,10 @@ import { cards } from '@data/cards';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
-import { CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
+import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById } from '@app/api/requests';
+import { addActiveConnections, checkValidBoard } from '@lib/game/gameLogic';
 // import { updateGameData } from '@lib/sockets/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
@@ -109,6 +110,13 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         break;
       case "endTurn":
         const { playerData: updatedPlayerData } = data;
+        // Check that board is valid
+        const { success, error } = checkValidBoard(updatedPlayerData.cards.filter(c => !c.hand) as BoardType);
+        if (!success) return { message: error||"An unknown Validation error occurred", status: 405 };
+        // Add Active Connections
+        updatedPlayerData.cards = addActiveConnections(updatedPlayerData.cards);
+        // Draw a Card
+        updatedPlayerData.cards.push({card: drawBasicCard(), hand: true});
         playerData = updatedPlayerData;
         break;
       case "drawCard":

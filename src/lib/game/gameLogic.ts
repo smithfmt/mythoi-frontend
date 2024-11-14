@@ -134,3 +134,27 @@ export const checkValidBoard = (board:BoardType) => {
     }
     return { success: isValid, invalidCards };
 }
+
+export const addActiveConnections = (cards:CardObjectData[]) => {
+    const board = cards.filter(c => !c.hand) as BoardType;
+    const updatedCards = cards.map(cardData => {
+        const { x,y,hand } = cardData;
+        const sides = Object.keys(dirMap);
+        if (hand||!x||!y) {
+            sides.forEach(side => cardData.card.sides[side].active = false);
+            return cardData;
+        }
+        // Override for Monsters : TODO - add an exception for MELEAGER
+        if (cardData.card.type==="monster") {
+            sides.forEach(side => cardData.card.sides[side].active = false);
+            return cardData;
+        }
+        const adjacentCards = getAdjacentCards(board,x,y);
+        sides.forEach(side => {
+            const adjacentCard = adjacentCards.filter(c => c.dir===side)[0];
+            cardData.card.sides[side].active = (adjacentCard&&adjacentCard.card.sides[dirMap[side]].attribute===cardData.card.sides[side].attribute);
+        });
+        return cardData;
+    })
+    return updatedCards;
+}

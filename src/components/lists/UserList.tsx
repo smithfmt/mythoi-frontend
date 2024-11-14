@@ -3,11 +3,13 @@ import { useEffect, useState } from "react";
 import socket from "@utils/socketClient"
 import axios from "axios";
 import { getAuthToken } from "src/lib/auth/getAuthToken";
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import handleError from "@utils/handleError";
 
 const UserList = () => {
   const [userNames, setUserNames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { addError } = useErrorHandler();
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -17,13 +19,7 @@ const UserList = () => {
 
 
       } catch (error: unknown) {
-          if (axios.isAxiosError(error)) {
-              setError(error.response?.data?.message || "An error occurred while fetching the lobby");
-          } else if (error instanceof Error) {
-              setError(error.message);
-          } else {
-              setError("An unknown error occurred");
-          }
+        addError(handleError(error));
       } finally {
           setLoading(false);
       }
@@ -36,10 +32,9 @@ const UserList = () => {
     return () => {
       socket.off("userListUpdate");
     };
-  }, []);
+  }, [addError]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p className="relative z-50 text-red-500">{error}</p>;
 
   return (
     <div className="relative z-50 bg-black text-neutral-50 p-16">

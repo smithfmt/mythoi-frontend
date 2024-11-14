@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Background from "@components/ui/Background";
 import "./globals.css";
 import Navbar from "@components/ui/Navbar";
+import { ErrorProvider } from "@components/providers/ErrorContext";
 
 export const metadata: Metadata = {
   title: "Mythoi Stratgos",
@@ -20,7 +21,9 @@ const RootLayout = ({
       >
         <Navbar />
         <Background image={"bridge"} />
-        {children}
+        <ErrorProvider>
+          {children}=
+        </ErrorProvider>
       </body>
     </html>
   );

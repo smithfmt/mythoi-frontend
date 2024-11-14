@@ -66,10 +66,18 @@ const Card = ({ card } : { card: PopulatedCardData }) => {
             {/* Border */}
             <Image className="relative z-30 h-full w-full" src={cardComponents.Border.src} width={1300} height={1800} alt="border" />
             <div style={{borderTopColor:`${colors[sides.top.attribute]}`,borderRightColor:`${colors[sides.right.attribute]}`,borderBottomColor:`${colors[sides.bottom.attribute]}`,borderLeftColor:`${colors[sides.left.attribute]}`}} className="relative z-40 w-full h-full border-[1.75rem]"/>
-            {sides.top.connect&&<div className="absolute flex justify-center top-0 w-full z-50"><Image className="h-7 w-7" src={cardComponents[`${sides.top.attribute}Icon`]} width={100} height={100} alt="top-icon" /></div>}
-            {sides.right.connect&&<div className="absolute flex justify-center flex-col right-0 h-full z-50"><Image className="h-7 w-7" src={cardComponents[`${sides.right.attribute}Icon`]} width={100} height={100} alt="right-icon" /></div>}
-            {sides.left.connect&&<div className="absolute flex justify-center flex-col left-0 h-full z-50"><Image className="h-7 w-7" src={cardComponents[`${sides.left.attribute}Icon`]} width={100} height={100} alt="left-icon" /></div>}
-            {sides.bottom.connect&&<div className="absolute flex justify-center bottom-0 w-full z-50"><Image className="h-7 w-7" src={cardComponents[`${sides.bottom.attribute}Icon`]} width={100} height={100} alt="bottom-icon" /></div>}
+            {sides.top.connect&&<div className={`absolute flex items-center justify-center top-0 w-full z-50`}>
+                <div className="relative w-7 h-7">{sides.top.active&&<span className="absolute -top-1 -left-1 h-9 w-9 z-40 rounded-full" style={{background:colors[sides.top.attribute]}} />}<Image className="relative z-30 h-full w-full" src={cardComponents[`${sides.top.attribute}Icon`]} width={100} height={100} alt="top-icon" /></div>
+            </div>}
+            {sides.right.connect&&<div className={`absolute flex items-center justify-center flex-col right-0 h-full z-50`}>
+                <div className="relative w-7 h-7">{sides.right.active&&<span className="absolute -top-1 -left-1 h-9 w-9 z-40 rounded-full" style={{backgroundColor:colors[sides.right.attribute]}} />}<Image className="relative z-30 h-full w-full" src={cardComponents[`${sides.right.attribute}Icon`]} width={100} height={100} alt="right-icon" /></div>
+            </div>}
+            {sides.left.connect&&<div className={`absolute flex items-center justify-center flex-col left-0 h-full z-50`}>
+                <div className="relative w-7 h-7">{sides.left.active&&<span className="absolute -top-1 -left-1 h-9 w-9 z-40 rounded-full" style={{backgroundColor:colors[sides.left.attribute]}} />}<Image className="relative z-30 h-full w-full" src={cardComponents[`${sides.left.attribute}Icon`]} width={100} height={100} alt="left-icon" /></div>
+            </div>}
+            {sides.bottom.connect&&<div className={`absolute flex items-center justify-center bottom-0 w-full z-50`}>
+                <div className="relative w-7 h-7">{sides.bottom.active&&<span className="absolute -top-1 -left-1 h-9 w-9 z-40 rounded-full" style={{backgroundColor:colors[sides.bottom.attribute]}} />}<Image className="relative z-30 h-full w-full" src={cardComponents[`${sides.bottom.attribute}Icon`]} width={100} height={100} alt="bottom-icon" /></div>
+            </div>}
         </div>
     )
 };

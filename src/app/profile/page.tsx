@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { getAuthToken } from "src/lib/auth/getAuthToken";
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import handleError from "@utils/handleError";
 
 const Profile = () => {
   const router = useRouter();
   const [user, setUser] = useState<{ email: string, name: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null); 
+  const { addError } = useErrorHandler();
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -23,14 +25,9 @@ const Profile = () => {
         const response = await axios.get("/api/users/profile", { headers: {Authorization: `Bearer ${getAuthToken()}`} });
         console.log(response)
         setUser(response.data.profile); 
-      } catch (err: unknown) {
-        if (axios.isAxiosError(err)) {
-          setError(err.response?.data?.message || "An error occurred while fetching user data");
-        } else if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError("An unknown error occurred");
-        }
+      } catch (error: unknown) {
+        console.log(error)
+        addError(handleError(error));
         router.push("/register"); 
       } finally {
         setLoading(false); // Stop loading regardless of success or error
@@ -38,10 +35,9 @@ const Profile = () => {
     };
 
     fetchUserProfile();
-  }, [router]);
+  }, [router, addError]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500 relative z-50">{error}</p>;
   if (!user) return <p className="text-red-500 relative z-50">User Not Found</p>;
   return (
     <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">

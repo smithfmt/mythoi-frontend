@@ -17,6 +17,15 @@ const config: Config = {
         foreground: "var(--foreground)",
         cardText: "#372B00",
       },
+      keyframes: {
+        errorEnter: {
+          "0%": {transform:"translateX(-100%)"},
+          "100%": {transform:"translateY(0%)"}
+        }
+      },
+      animation: {
+        errorEnter: "errorEnter 0.1s ease-in-out",
+      },
     },
   },
   plugins: [],

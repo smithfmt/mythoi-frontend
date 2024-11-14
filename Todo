@@ -3,11 +3,3 @@ Redirect if user is not logged in (from any protected page like the lobbies page
 Add Loading State Everywhere (Loading Bar)
 
 Add ERROR HANDLER EVERYWHERE (Popup)
-
-Add Validation to the backend on End turn
-
-Link current validation on frontend to the end turn button
-
-add draw card to end turn button
-
-Consider how "Active connections" will be checked - ideally inside the validation
