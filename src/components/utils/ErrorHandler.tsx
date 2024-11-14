@@ -1,30 +1,21 @@
 "use client"
-
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 const ErrorHandler = ({ errors, deleteError }) => {
     const router = useRouter();
-  
-    const [hasMounted, setHasMounted] = useState(false);
     useEffect(() => {
-        setHasMounted(true);
-    }, []);
-
-    useEffect(() => {
-        if (hasMounted) {
-            errors.forEach((error, index) => {
-                if (error.redirect) {
-                    router.push(error.redirect);
-                } 
-                const timer = setTimeout(() => {
-                    deleteError(index);
-                }, 5000);
-                return () => clearTimeout(timer);
-                
-            });
-        }
-    }, [errors, deleteError, hasMounted]);
+        errors.forEach((error, index) => {
+            if (error.redirect) {
+                router.push(error.redirect);
+            } 
+            const timer = setTimeout(() => {
+                deleteError(index);
+            }, 5000);
+            return () => clearTimeout(timer);
+            
+        });
+    }, [errors, deleteError,]);
     
 
     return (

@@ -3,6 +3,10 @@
 import Link from "next/link";
 import axios from "axios";
 import { getAuthToken } from "src/lib/auth/getAuthToken"; // Assuming you have this function
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import handleError from "@utils/handleError";
+import CustomLink from "./CustomLink";
+import { useLoading } from "@components/providers/LoadingContext";
 
 const navs = [
   { text: "Home", route: "/" },
@@ -15,27 +19,33 @@ const navs = [
 
 const Navbar = () => {
   // Helper function to make delete request with action
+  const { addError } = useErrorHandler();
+  const { startLoading, stopLoading } = useLoading();
   const handleDeleteLobbies = async (action: string) => {
     try {
+      startLoading();
       await axios.post("/api/lobby", { action }, {
         headers: { Authorization: `Bearer ${getAuthToken()}` }
       });
-      alert(`Action '${action}' Lobbies completed successfully`);
-    } catch (error) {
-      console.error(`Failed to perform '${action}'`, error);
-      alert(`Error performing action '${action}'`);
+      addError(handleError({ message: "Successfully deleted all lobbies", status: 200, redirect: "/lobbies" }))
+    } catch (error: unknown) {
+      addError(handleError(error));
+    } finally {
+      stopLoading();
     }
   };
 
   const handleDeleteGames = async (action: string) => {
     try {
+      startLoading();
       await axios.delete("/api/game", {
         headers: { Authorization: `Bearer ${getAuthToken()}` }
       });
-      alert(`Action '${action}' Games completed successfully`);
-    } catch (error) {
-      console.error(`Failed to perform '${action}'`, error);
-      alert(`Error performing action '${action}'`);
+      addError(handleError({ message: "Successfully deleted all games", status: 200, redirect: "/lobbies" }))
+    } catch (error: unknown) {
+      addError(handleError(error));
+    } finally {
+      stopLoading();
     }
   };
 
@@ -47,7 +57,7 @@ const Navbar = () => {
             key={nav.text + "-key"}
             className="hover:bg-neutral-700 transition-all h-full flex items-center"
           >
-            <Link className="p-4" href={nav.route}>{nav.text}</Link>
+            <CustomLink className="p-4" href={nav.route}>{nav.text}</CustomLink>
           </li>
         ))}
         <li className="hover:bg-neutral-700 transition-all h-full flex items-center cursor-pointer">

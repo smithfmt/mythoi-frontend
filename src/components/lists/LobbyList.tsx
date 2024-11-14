@@ -8,6 +8,7 @@ import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
 import handleError from "@utils/handleError";
 import { useErrorHandler } from "@components/providers/ErrorContext";
+import { useLoading } from "@components/providers/LoadingContext";
 
 type Players = {
     id: number,
@@ -23,7 +24,7 @@ interface Lobby {
 
 const LobbyList = () => {
   const [lobbies, setLobbies] = useState<Lobby[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { startLoading, stopLoading } = useLoading();
   const [newLobbyName, setNewLobbyName] = useState("");
   const userId = useUserId();
   const router = useRouter();
@@ -32,11 +33,14 @@ const LobbyList = () => {
   useEffect(() => {
     const fetchLobbies = async () => {
       try {
+        startLoading();
         const response = await axios.get(`/api/lobby`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
         setLobbies(response.data.lobbies);
       } catch (error: unknown) {
         addError(handleError(error));
-      } 
+      } finally {
+        stopLoading();
+      }
     };
 
     fetchLobbies();
@@ -53,17 +57,12 @@ const LobbyList = () => {
 
   const createLobby = async () => {
     if (!newLobbyName) {
-      alert("Please enter a lobby name.");
+      addError({message: "Please enter a lobby name."});
       return;
     }
 
-    if (!userId) {
-        alert("User ID is required."); // Ensure user ID is available
-        return;
-    }
-
     try {
-      setLoading(true);
+      startLoading();
       const response = await axios.post(`/api/lobby`, {
         action: 'create',
         name: newLobbyName,
@@ -73,12 +72,13 @@ const LobbyList = () => {
     } catch (error: unknown) {
       addError(handleError(error));
     } finally {
-      setLoading(false);
+      stopLoading();
     }
   };
 
   const joinLobby = async (lobbyId: number) => {
     try {
+      startLoading();
       const response = await axios.post(`/api/lobby/${lobbyId}`, {
         action: 'join',
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
@@ -86,11 +86,14 @@ const LobbyList = () => {
       router.push(`/lobby/${lobbyId}`);
     } catch (error: unknown) {
       addError(handleError(error));
-    } 
+    } finally {
+      stopLoading();
+    }
   };
 
   const leaveLobby = async () => {
     try {
+      startLoading();
       await axios.post(`/api/lobby`, {
         action: 'leave',
       },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
@@ -98,17 +101,22 @@ const LobbyList = () => {
       // Handle lobby update after leaving (fetch updated lobbies, for example)
     } catch (error: unknown) {
       addError(handleError(error));
-    } 
+    } finally {
+      stopLoading();
+    }
   };
 
   const deleteLobby = async (lobbyId: number) => {
     try {
+      startLoading();
       await axios.delete(`/api/lobby/${lobbyId}`,{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
       console.log("Deleted lobby");
       // Handle lobby update after deleting (fetch updated lobbies, for example)
     } catch (error: unknown) {
       addError(handleError(error));
-    } 
+    } finally {
+      stopLoading();
+    }
   };
 
   return (
@@ -168,9 +176,8 @@ const LobbyList = () => {
         <button
           onClick={createLobby}
           className="bg-green-500 text-white p-2"
-          disabled={loading}
         >
-          {loading ? "Creating..." : "Create Lobby"}
+          Create Lobby
         </button>
       </div>
     </div>

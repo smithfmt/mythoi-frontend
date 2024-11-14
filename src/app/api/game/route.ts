@@ -16,7 +16,6 @@ const getAllGames = async () => {
         },
       },
     });
-
     return { message: "Successfully fetched games", data: { games }, status: 200};
   } catch (error: unknown) {
     return nextErrorHandler(error);

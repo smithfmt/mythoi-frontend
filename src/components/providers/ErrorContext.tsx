@@ -14,7 +14,7 @@ type ErrorContextType = {
 const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const errorsRef = useRef<Error[]>([{ message: "Error Handler Working", status: 200 }]);
+  const errorsRef = useRef<Error[]>([]);
   const [, forceRender] = useState(false); // Dummy state to force re-renders
 
   const addError = useCallback((error: Error) => {

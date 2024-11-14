@@ -2,6 +2,7 @@ import axios from "axios";
 
 const handleError = (error) => {
     try {
+        if (error.status === 200) return error;
         switch (error) {
             case (axios.isAxiosError(error)):
                 return { message: "We're having trouble contacting the server right now", status: 500 };

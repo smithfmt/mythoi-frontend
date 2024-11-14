@@ -1,5 +1,7 @@
-Redirect if user is not logged in (from any protected page like the lobbies page)
+Fix Loading State for Changing Page
 
-Add Loading State Everywhere (Loading Bar)
+Ensure Lobby Starting works correctly for everyone
 
-Add ERROR HANDLER EVERYWHERE (Popup)
+Work on Heroes Shop
+
+Add more movement controls (keyboard & maybe scroll)

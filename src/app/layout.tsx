@@ -3,6 +3,8 @@ import Background from "@components/ui/Background";
 import "./globals.css";
 import Navbar from "@components/ui/Navbar";
 import { ErrorProvider } from "@components/providers/ErrorContext";
+import { LoadingProvider } from "@components/providers/LoadingContext";
+import LoadingManager from "@components/utils/LoadingManager";
 
 export const metadata: Metadata = {
   title: "Mythoi Stratgos",
@@ -19,11 +21,16 @@ const RootLayout = ({
       <body
         className={`antialiased`}
       >
-        <Navbar />
+        
         <Background image={"bridge"} />
-        <ErrorProvider>
-          {children}=
-        </ErrorProvider>
+        <LoadingProvider>
+          <LoadingManager />
+          <ErrorProvider>
+            <Navbar />
+            {children}
+          </ErrorProvider>
+        </LoadingProvider>
+
       </body>
     </html>
   );

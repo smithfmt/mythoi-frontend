@@ -11,7 +11,7 @@ import { handleResponse } from '@utils/handleResponse';
 import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById } from '@app/api/requests';
-import { addActiveConnections, checkValidBoard } from '@lib/game/gameLogic';
+import { addActiveConnections, checkValidBoard, validatePlayerData } from '@lib/game/gameLogic';
 // import { updateGameData } from '@lib/sockets/sockets';
 
 export const createGame = async (lobby: LobbyType) => {
@@ -110,6 +110,8 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         break;
       case "endTurn":
         const { playerData: updatedPlayerData } = data;
+        // Validate that the data has not been tampered with
+        if (!validatePlayerData(playerData, updatedPlayerData)) return { message: "Data mismatch with server", status: 405 }
         // Check that board is valid
         const { success, error } = checkValidBoard(updatedPlayerData.cards.filter(c => !c.hand) as BoardType);
         if (!success) return { message: error||"An unknown Validation error occurred", status: 405 };
@@ -119,7 +121,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         updatedPlayerData.cards.push({card: drawBasicCard(), hand: true});
         playerData = updatedPlayerData;
         break;
-      case "drawCard":
+      case "drawCard": // For Testing
         const { playerData: updatedData } = data;
         updatedData.cards.push({card: drawBasicCard(), hand: true});
         playerData = updatedData;

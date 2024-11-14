@@ -73,18 +73,22 @@ export const generateCard = (card:CardData) => {
         top: {
             connect: connections[0]!=="blank",
             attribute: connections[0]!=="blank"?connections[0]:fillBlankAttribute(0,shuffledAttributes),
+            active:false,
         },
         right: {
             connect: connections[1]!=="blank",
             attribute: connections[1]!=="blank"?connections[1]:fillBlankAttribute(1,shuffledAttributes),
+            active:false,
         },
         bottom: {
             connect: connections[2]!=="blank",
             attribute: connections[2]!=="blank"?connections[2]:fillBlankAttribute(2,shuffledAttributes),
+            active:false,
         },
         left: {
             connect: connections[3]!=="blank",
             attribute: connections[3]!=="blank"?connections[3]:fillBlankAttribute(3,shuffledAttributes),
+            active:false,
         }
     };
 

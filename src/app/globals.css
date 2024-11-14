@@ -56,4 +56,3 @@ body {
     @apply relative box-border bg-[#917E54] border-b-2 border-b-[#6F4C30] border-t-2 border-t-[#75342A] border-opacity-40 after:card-shadow after:absolute after:w-full after:h-full
   }
 }
-

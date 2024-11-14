@@ -5,23 +5,23 @@ import axios from "axios";
 import { getAuthToken } from "src/lib/auth/getAuthToken";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
+import { useLoading } from "@components/providers/LoadingContext";
 
 const UserList = () => {
   const [userNames, setUserNames] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { startLoading, stopLoading } = useLoading();
   const { addError } = useErrorHandler();
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-          const response = await axios.get(`/api/users`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
-          setUserNames(response.data.users.map(u => u.name));
-
-
+        startLoading();
+        const response = await axios.get(`/api/users`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+        setUserNames(response.data.users.map(u => u.name));
       } catch (error: unknown) {
         addError(handleError(error));
       } finally {
-          setLoading(false);
+        stopLoading();
       }
   };
 
@@ -34,14 +34,12 @@ const UserList = () => {
     };
   }, [addError]);
 
-  if (loading) return <p>Loading...</p>;
-
   return (
     <div className="relative z-50 bg-black text-neutral-50 p-16">
       <h1 className="font-black">User List</h1>
       <ul>
-        {userNames.map((name) => (
-          <li key={name}>{name}</li>
+        {userNames.map((name,i) => (
+          <li key={`user-${i}`}>{name}</li>
         ))}
       </ul>
     </div>

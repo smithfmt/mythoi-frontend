@@ -30,3 +30,46 @@ export function findIndexByParam (array:any[], key:string[], param:any) {
     
     return index;
 };
+
+export function deepEqual(obj1, obj2, ignorePaths:string[] = []) {
+    // Helper function to check if a property path should be ignored
+    const shouldIgnore = (path) => ignorePaths.includes(path.join("."));
+
+    // Inner recursive function that keeps track of the current path
+    function compare(obj1, obj2, path:string[] = []) {
+        // Check if both are the same reference (quick exit)
+        if (obj1 === obj2) return true;
+
+        // Check if both are objects, otherwise they’re not equal
+        if (typeof obj1 !== 'object' || obj1 === null ||
+            typeof obj2 !== 'object' || obj2 === null) {
+            return false;
+        }
+
+        // Get keys for both objects
+        const keys1 = Object.keys(obj1);
+        const keys2 = Object.keys(obj2);
+
+        // Check if they have the same number of keys
+        if (keys1.length !== keys2.length) return false;
+
+        // Check each key in obj1 to make sure it’s in obj2 with the same value
+        for (let key of keys1) {
+            const currentPath = [...path, key];
+
+            // Skip if this key path is in the ignore list
+            if (shouldIgnore(currentPath)) continue;
+
+            // Check that obj2 has the same key and recursively compare values
+            if (!obj2.hasOwnProperty(key) || !compare(obj1[key], obj2[key], currentPath)) {
+                return false;
+            }
+        }
+
+        // If no mismatches found, the objects are equal
+        return true;
+    }
+
+    return compare(obj1, obj2);
+}
+

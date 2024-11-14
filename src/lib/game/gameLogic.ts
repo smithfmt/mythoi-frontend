@@ -1,4 +1,5 @@
-import { BoardType, CardObjectData, PopulatedCardData } from "@data/types";
+import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from "@data/types";
+import { deepEqual } from "@utils/helpers";
 
 
 const getMinMaxCoordinates = (board: BoardType): [[number, number], [number, number]] => {
@@ -152,9 +153,33 @@ export const addActiveConnections = (cards:CardObjectData[]) => {
         const adjacentCards = getAdjacentCards(board,x,y);
         sides.forEach(side => {
             const adjacentCard = adjacentCards.filter(c => c.dir===side)[0];
-            cardData.card.sides[side].active = (adjacentCard&&adjacentCard.card.sides[dirMap[side]].attribute===cardData.card.sides[side].attribute);
+            cardData.card.sides[side].active = !!(adjacentCard&&adjacentCard.card.sides[dirMap[side]].attribute===cardData.card.sides[side].attribute);
         });
         return cardData;
     })
     return updatedCards;
 }
+
+export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
+    // if (Old.player!==New.player) return false;
+    let result = true;
+    New.cards.forEach(newCardObj => {
+        const oldCardObj = Old.cards.filter(oldCardObj => oldCardObj.card.uid===newCardObj.card.uid)[0];
+        if (!oldCardObj.card || !deepEqual(oldCardObj.card, newCardObj.card, ["sides.top.active","sides.right.active","sides.left.active","sides.bottom.active"])) {
+            console.log(oldCardObj, newCardObj)
+            console.log(!oldCardObj.card, !deepEqual(oldCardObj.card, newCardObj.card, ["sides.top.active","sides.right.active","sides.left.active","sides.bottom.active"]))
+            result = false;
+        } 
+    });
+    return result;
+}
+
+// player: number;
+// cards: {
+//     card: PopulatedCardData,
+//     x?: number,
+//     y?: number,
+//     hand?: boolean,
+// }[];
+// generals: GeneralsType;
+// basicCount: number;
