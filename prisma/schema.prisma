@@ -47,6 +47,7 @@ model Game {
   host       String
   turn       Int
   heroDeck   Int[]
+  heroShop   Json?
   discardPile String[]
   finished   Boolean  @default(false)
 }

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { CardImages } from "@assets/images";
 import Default from "@assets/card/images/Spare 2.jpeg"
 
-const Card = ({ card } : { card: PopulatedCardData }) => {
+const Card = ({ card, shop=false } : { card: PopulatedCardData, shop?: boolean }) => {
     const { img, name, atk, hp, ability, style, cost, sides, desc } = card;
     const imageKey = `${img}.jpeg`;
     const imageData = CardImages[imageKey]?.default;
@@ -56,12 +56,12 @@ const Card = ({ card } : { card: PopulatedCardData }) => {
             </div>}
 
             {/* Cost */}
-            <div className="relative z-20 flex gap-1 w-full justify-center pt-4">
+            {!shop&&<div className="relative z-20 flex gap-1 w-full justify-center pt-4">
                 {cost.map((cost,i) => <div className="relative w-fit h-fit saturate-150" key={`cost-${i}`}>
                     <Image className="relative z-20 h-6 w-fit object-contain bg-neutral-100" src={cardComponents.Border.src} height={180} width={130} alt="cost"/>
                     <span style={{backgroundColor:colors[cost]}} className="absolute top-0 z-30 w-full h-full"/>
                 </div>)}
-            </div>
+            </div>}
 
             {/* Border */}
             <Image className="relative z-30 h-full w-full" src={cardComponents.Border.src} width={1300} height={1800} alt="border" />

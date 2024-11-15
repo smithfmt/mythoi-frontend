@@ -16,6 +16,7 @@ import CardCursorTracker from "@components/game/CardCursorTracker";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
 import { useLoading } from "@components/providers/LoadingContext";
+import ShopModal from "@components/game/ShopModal";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -24,8 +25,9 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
     const [userData, setUserData] = useSocket<UserDataType>(`userDataUpdate-${userId}`);
-    const [selected,setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
-    const [scale,setScale] = useState(1);
+    const [selected, setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
+    const [scale, setScale] = useState(1);
+    const [shopOpen, setShopOpen] = useState(false);
     const playerData = useMemo(() => {
         return userData?.gameData ? JSON.parse(userData.gameData) as PlayerData : null;
     }, [userData]);
@@ -58,7 +60,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         };
 
         fetchGame();
-    }, [id, setGameData, setUserData, userId, addError]);
+    }, [id, setGameData, setUserData, userId, addError, startLoading,stopLoading]);
 
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
@@ -121,11 +123,14 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         }
     }
 
-    
+    const handleToggleShop = () => {
+        setShopOpen(!shopOpen);
+    }
 
     return (
         <div className="max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
-            {playerData&&<GameHud scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} />}
+            {playerData&&<GameHud scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
+            {gameData&&<ShopModal shopOpen={shopOpen} shopCards={gameData.heroShop} setShopOpen={setShopOpen} hand={cardsInHand}/>}
             {gameData&& (
                 <div>
                     <GameBoard 

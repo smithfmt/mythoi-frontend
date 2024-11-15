@@ -18,6 +18,7 @@ export const createGame = async (lobby: LobbyType) => {
   try {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(Object.keys(cards.hero).map(str => parseInt(str)));
+    const heroShop = heroDeck.slice(0,3).map(cardId => generateCard(cards.hero[cardId]))
     const game = await prisma.game.create({
       data: {
         name: `Game for ${lobby.name}`,
@@ -25,6 +26,7 @@ export const createGame = async (lobby: LobbyType) => {
         host: lobby.host.toString(), 
         turn: lobby.players[0].id, 
         heroDeck,
+        heroShop
       },
     });
     lobby.players.forEach(async (player, i) => {

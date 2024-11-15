@@ -81,6 +81,8 @@ export interface GameData {
     turn: string;
     drawnHeroes: string[];
     playerData: string;
+    heroDeck: number[];
+    heroShop: string;
 }
 
 export type Space = {

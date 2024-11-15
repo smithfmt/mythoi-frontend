@@ -1,6 +1,6 @@
 "use client"
 import LoadingIndicator from '@components/utils/LoadingIndicator';
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useContext, ReactNode, useCallback } from 'react';
 
 type LoadingContextType = {
   isLoading: boolean;
@@ -12,12 +12,12 @@ const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
 export const LoadingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const startLoading = () => {
+  const startLoading = useCallback(() => {
     setIsLoading(true);
-  };
-  const stopLoading = () => {
+  },[]);
+  const stopLoading = useCallback(() => {
     setIsLoading(false);
-  };
+  },[]);
 
   return (
     <LoadingContext.Provider value={{ isLoading, startLoading, stopLoading }}>
