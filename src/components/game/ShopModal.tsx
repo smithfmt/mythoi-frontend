@@ -2,9 +2,13 @@ import { useState } from "react";
 import Card from "./Card";
 import Image from "next/image";
 import cardComponents from "@assets/card/cardComponents";
-import { Attribute, CardObjectData, PopulatedCardData } from "@data/types";
+import { CardObjectData, PopulatedCardData } from "@data/types";
 import { extractCardValue } from "@lib/game/cardUtils";
 import { validatePayment } from "@lib/game/gameLogic";
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import { updateGameById } from "@app/requests";
+import handleError from "@utils/handleError";
+import { useLoading } from "@components/providers/LoadingContext";
 
 const colors = {
     Str: "rgba(255,0,0,0.3)",
@@ -14,11 +18,15 @@ const colors = {
     Div:"rgba(255,229,0,0.2)",
 };
 
-const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand }:{ shopCards:PopulatedCardData[], shopOpen:boolean, setShopOpen: (shopOpen:boolean) => void, hand: CardObjectData[] }) => {
+const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand, gameId }:{ shopCards:PopulatedCardData[], shopOpen:boolean, setShopOpen: (shopOpen:boolean) => void, hand: CardObjectData[], gameId: number }) => {
     const [selected, setSelected] = useState<PopulatedCardData | null>(null);
     const [payment, setPayment] = useState<PopulatedCardData[]>([]);
+    
+    const { startLoading, stopLoading } = useLoading();
+    const { addError } = useErrorHandler();
     const handleClick = (card) => {
         setPayment([]);
+        if (selected?.uid===card.uid) return setSelected(null);
         setSelected(card);
     }
 
@@ -27,9 +35,20 @@ const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand }:{ shopCards:Popula
         setShopOpen(false)
     }
 
-    const handleBuyCard = () => {
-        console.log("buying", selected);
-        checkPayment();
+    const handleBuyCard = async () => {
+        if (!selected) return;
+        const { success } = validatePayment(selected,payment);
+        if (!success) return addError({ message: "Payment unsuccessful" });
+        startLoading()
+        try {
+            await updateGameById(gameId, "buyCard", { payment:payment.map(card => card.uid), card:selected });
+            setSelected(null);
+            setShopOpen(false);
+        } catch (error: unknown) {
+            addError(handleError(error));
+        } finally {
+            stopLoading();
+        }
     }
 
     const handlePaymentClick = (card) => {
@@ -40,13 +59,6 @@ const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand }:{ shopCards:Popula
         setPayment([...payment,card]);
     }
 
-    const checkPayment = () => {
-        if (!selected) return;
-        // Compare selected.cost to payment
-        const { success, match } = validatePayment(selected,payment)
-        console.log(success, match)
-    }
-    console.log(hand)
     const cardsToDisplay = selected&&hand ? ["monster", "god"].includes(selected.type) ? hand.filter(c => c.card.type!=="general") : hand.filter(c => extractCardValue(c.card).filter((atr) => selected.cost.includes(atr)).length) : hand?.filter(c => c.card.type!=="general") || [];
     const { success, match } = selected ? validatePayment(selected,payment) : { success:false, match:[] };
     return (
@@ -64,7 +76,7 @@ const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand }:{ shopCards:Popula
                     </div>
                     {/* Heroes in Shop */}
                     <div className="flex gap-16 justify-center">
-                        {shopCards.map((card, i) => (
+                        {shopCards&&shopCards.map((card, i) => (
                             <div key={`shopCard-${i}`} className="flex flex-col gap-2">
                                 <div className={` ${selected?.uid===card.uid?"outline outline-4  outline-blue-400 -translate-y-4":""} cursor-pointer hover:-translate-y-1 transition-all`} onClick={() => handleClick(card)} >
                                     <Card card={card} shop={true}/>
@@ -100,3 +112,4 @@ const ShopModal = ({ shopCards, shopOpen, setShopOpen, hand }:{ shopCards:Popula
 }
 
 export default ShopModal;
+

@@ -26,3 +26,12 @@ export const findGameById = async (id: number) => {
     });
     return gameData;
 }
+
+export const updateGameById = async (id: number, data) => {
+    console.log("UPDATING", id, data)
+    const gameData = await prisma.game.update({
+        where: { id },
+        data,
+    });
+    return gameData;
+}

@@ -20,7 +20,7 @@ import ShopModal from "@components/game/ShopModal";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
-    const { isLoading, startLoading, stopLoading } = useLoading();
+    const { startLoading, stopLoading } = useLoading();
     const { addError } = useErrorHandler();
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
@@ -127,10 +127,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         setShopOpen(!shopOpen);
     }
 
+    console.log(gameData)
+
     return (
         <div className="max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             {playerData&&<GameHud scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
-            {gameData&&<ShopModal shopOpen={shopOpen} shopCards={gameData.heroShop} setShopOpen={setShopOpen} hand={cardsInHand}/>}
+            {gameData&&<ShopModal shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
             {gameData&& (
                 <div>
                     <GameBoard 

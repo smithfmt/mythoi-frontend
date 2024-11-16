@@ -2,8 +2,14 @@ Fix Loading State for Changing Page
 
 Ensure Lobby Starting works correctly for everyone
 
-Work on Heroes Shop
-
 Add more movement controls (keyboard & maybe scroll)
 
 Add Menu in Game (instead of navbar), which opens on ESC and allows nav & settings
+
+try changing the card images to img tags instead of next
+
+Implement proper Turn System (resetting the shop, only allowing people to buy when it is their turn etc.)
+
+open/close shop with space
+
+setup god connections in active connections function

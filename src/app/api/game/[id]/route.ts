@@ -10,15 +10,14 @@ import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard } from 'src/lib/game/gameplay';
-import { findGameById, findUserById, updateUserById } from '@app/api/requests';
-import { addActiveConnections, checkValidBoard, validatePlayerData } from '@lib/game/gameLogic';
-// import { updateGameData } from '@lib/sockets/sockets';
+import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
+import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(Object.keys(cards.hero).map(str => parseInt(str)));
-    const heroShop = heroDeck.slice(0,3).map(cardId => generateCard(cards.hero[cardId]))
+    const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId]));
     const game = await prisma.game.create({
       data: {
         name: `Game for ${lobby.name}`,
@@ -26,7 +25,7 @@ export const createGame = async (lobby: LobbyType) => {
         host: lobby.host.toString(), 
         turn: lobby.players[0].id, 
         heroDeck,
-        heroShop
+        heroShop: JSON.stringify(heroShop),
       },
     });
     lobby.players.forEach(async (player, i) => {
@@ -79,19 +78,20 @@ interface UpdateData {
     hand?: boolean;
   }
   playerData: PlayerData;
+  payment: string[];
+  card: PopulatedCardData;
 }
 
 const updateGame = async (user: UserType, id: string, action: string, data:UpdateData) => {
   try {
     // Fetch the current game, including playerData
     const game = await findGameById(parseInt(id));
-    if (!game) return { message: "Game not found", status: 404 }
-
+    if (!game) return { message: "Game not found", status: 404 };
+    let gameUpdates;
     const userData = await findUserById(user.id);
-    if (!userData) return { message: "User Data not found", status: 404 }
+    if (!userData) return { message: "User Data not found", status: 404 };
 
     let playerData: PlayerData = JSON.parse(userData?.gameData as string);
-    
     switch (action) {
       case "selectGeneral":
         if (playerData.generals.selected) return { message: "Already Selected General", status: 401 };
@@ -128,10 +128,24 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         updatedData.cards.push({card: drawBasicCard(), hand: true});
         playerData = updatedData;
         break;
+      case "buyCard":
+        const { payment, card } = data;
+        const heroShop = JSON.parse(game.heroShop as string) as PopulatedCardData[];
+        const heroCard = heroShop.filter(c => c.uid===card.uid)[0];
+        if (!heroCard) return { message: "Card not in shop", status: 401 };
+        const paymentCards = playerData.cards.filter(cardObj => payment.includes(cardObj.card.uid)).map(cardObj => cardObj.card);
+        const isValid = validatePayment(heroCard, paymentCards).success;
+        if (!isValid) return { message: "Invalid payment", status: 401 };
+        // Successfuly take payment and add the hero card
+        playerData.cards = playerData.cards.filter(cardObj => !payment.includes(cardObj.card.uid));
+        playerData.cards.push({ card:heroCard, hand:true });
+        // Remove card from the shop
+        gameUpdates = { heroShop: JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid)) };
+        break;
       default:
         return { message: "Invalid action", status: 400 };
     }
-
+    if (gameUpdates) await updateGameById(parseInt(id), gameUpdates)
     const updatedGameData = await updateUserById(user.id, { gameData: JSON.stringify(playerData) });
 
     return { message: "Successfully updated game", data: { gameData: updatedGameData }, status: 201 };
