@@ -101,4 +101,10 @@ export const generateCard = (card:CardData) => {
     return populatedCard;
 };
 
-
+export const extractCardValue = (card: PopulatedCardData) => {
+    const result:Attribute[] = [];
+    Object.keys(card.sides).forEach(side => {
+        if (!result.includes(card.sides[side].attribute)) result.push(card.sides[side].attribute);
+    });
+    return result;
+};

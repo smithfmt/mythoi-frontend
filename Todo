@@ -5,3 +5,5 @@ Ensure Lobby Starting works correctly for everyone
 Work on Heroes Shop
 
 Add more movement controls (keyboard & maybe scroll)
+
+Add Menu in Game (instead of navbar), which opens on ESC and allows nav & settings

@@ -76,7 +76,8 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
           {board.map((item, i) => (
             <div
               key={`card-${i}`}
-              onClick={() => handleCardClick(item)}
+              onMouseDown={(e) => (e.stopPropagation(),handleCardClick(item))}
+              // onClick={(e) => (e.stopPropagation(),handleCardClick(item))}
               style={{ gridColumn: item.x + 1, gridRow: item.y + 1 }}
               className={`${
                 invalidCards?.filter((c) => c.card === item.card.uid).length
@@ -91,6 +92,7 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
             selected.spaces.map(({ x, y }) => (
               <div
                 onClick={() => handlePlaceSelected(x, y, false)}
+                onMouseUp={() => handlePlaceSelected(x, y, false)}
                 key={`blank-${x}-${y}`}
                 style={{ gridColumn: x + 1, gridRow: y + 1 }}
                 className="bg-blue-400 bg-opacity-50 w-full h-full"

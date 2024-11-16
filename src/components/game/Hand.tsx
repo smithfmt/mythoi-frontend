@@ -12,11 +12,11 @@ type Props = {
 const Hand = ({selectedCard, setSelected, hand, handleCardClick}:Props) => {
 
     return (
-        <div className="fixed -bottom-24 w-full flex justify-center gap-2 [&>*]:transition-all hover:[&>*]:-translate-y-24 pb-1 z-50 pointer-events-none [&>div]:pointer-events-auto">
+        <div onMouseUp={() => setSelected({ selectedCard: null })} className="fixed -bottom-24 w-full flex justify-center gap-2 [&>*]:transition-all hover:[&>*]:-translate-y-24 pb-1 z-50 pointer-events-none [&>div]:pointer-events-auto">
             {hand.map((cardData,i) => (
                 selectedCard?.uid===cardData.card.uid ? 
-                <div key={`card-${i}`} onClick={() => setSelected({ selectedCard: null })} className="relative bg-blue-400 bg-opacity-40 w-[13rem] h-[18rem]"></div>
-                : <div key={`card-${i}`} onClick={() => handleCardClick(cardData)}><Card card={cardData.card}/></div>
+                <div key={`card-${i}`} onMouseDown={() => setSelected({ selectedCard: null })} className="relative bg-blue-400 bg-opacity-40 w-[13rem] h-[18rem]"></div>
+                : <div key={`card-${i}`} onMouseDown={() => handleCardClick(cardData)}><Card card={cardData.card}/></div>
             ))}
         </div>
     );

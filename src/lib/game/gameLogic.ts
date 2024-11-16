@@ -1,5 +1,6 @@
 import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from "@data/types";
 import { deepEqual } from "@utils/helpers";
+import { extractCardValue } from "./cardUtils";
 
 
 const getMinMaxCoordinates = (board: BoardType): [[number, number], [number, number]] => {
@@ -174,12 +175,33 @@ export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
     return result;
 }
 
-// player: number;
-// cards: {
-//     card: PopulatedCardData,
-//     x?: number,
-//     y?: number,
-//     hand?: boolean,
-// }[];
-// generals: GeneralsType;
-// basicCount: number;
+
+export const validatePayment = (cardToBuy:PopulatedCardData, payment:PopulatedCardData[]) => {
+    if (["monster", "god"].includes(cardToBuy.type)) return { success: cardToBuy.cost.length === payment.length, match: cardToBuy.cost.slice(0,payment.length) };
+    const paymentCards = payment.map(c => extractCardValue(c));
+    const costArray = cardToBuy.cost;
+    // Make a copy of paymentCards to track remaining cards.
+    const availableCards = [...paymentCards];
+    const match: (string | null)[] = [];
+
+  for (const cost of costArray) {
+    // Find the first card that can cover the current cost.
+    const cardIndex = availableCards.findIndex(card => card.includes(cost));
+
+    if (cardIndex === -1) {
+      // If no card can pay for the current cost, add null to the match array.
+      match.push(null);
+    } else {
+      // Add the matched card value to the match array.
+      match.push(cost);
+
+      // Remove the used card from the list of available cards.
+      availableCards.splice(cardIndex, 1);
+    }
+  }
+
+  // Determine success based on whether there are any null values in the match array.
+  const success = !match.includes(null);
+
+  return { success, match };
+}

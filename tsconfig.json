@@ -25,6 +25,7 @@
         "name": "next"
       }
     ],
+    "forceConsistentCasingInFileNames": true,
     "baseUrl": "./",
     "paths": {
       "@components/*": ["src/components/*"],
