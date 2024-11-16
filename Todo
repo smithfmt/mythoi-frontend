@@ -10,6 +10,4 @@ try changing the card images to img tags instead of next
 
 Implement proper Turn System (resetting the shop, only allowing people to buy when it is their turn etc.)
 
-open/close shop with space
-
 setup god connections in active connections function

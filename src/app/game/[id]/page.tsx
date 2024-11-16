@@ -17,6 +17,7 @@ import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
 import { useLoading } from "@components/providers/LoadingContext";
 import ShopModal from "@components/game/ShopModal";
+import MenuModal from "@components/game/MenuModal";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -28,6 +29,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [selected, setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
     const [scale, setScale] = useState(1);
     const [shopOpen, setShopOpen] = useState(false);
+    const [menuOpen, setMenuOpen] = useState(true);
     const playerData = useMemo(() => {
         return userData?.gameData ? JSON.parse(userData.gameData) as PlayerData : null;
     }, [userData]);
@@ -43,6 +45,22 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         return selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
     }, [cardsInBoard, selected.selectedCard]);
 
+    // Open Shop with spacebar
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.code === "Space") {
+                event.preventDefault(); // Prevent the default spacebar scrolling behavior
+                setShopOpen((prev) => !prev);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, []);
+
+    // Fetch Initial Data on page load
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -65,8 +83,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             startLoading();
-            const response = await updateGameById(id, "selectGeneral", { generalCard });
-            console.log("GENERAL SELECTED",response);
+            await updateGameById(id, "selectGeneral", { generalCard });
         } catch (error: unknown) {
             addError(handleError(error));
         } finally {
@@ -99,9 +116,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         if (!playerData) return;
         try {
             startLoading();
-            const response = await updateGameById(id, "endTurn", { playerData });
-            setSelected({selectedCard:null})
-            console.log(response)
+            await updateGameById(id, "endTurn", { playerData });
+            setSelected({selectedCard:null});
         } catch (error: unknown) {
             addError(handleError(error));
         } finally {
@@ -114,8 +130,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         if (!playerData) return;
         try {
             startLoading();
-            const response = await updateGameById(id, "drawCard", { playerData });
-            console.log(response)
+            await updateGameById(id, "drawCard", { playerData });
         } catch (error: unknown) {
             addError(handleError(error));
         } finally {
@@ -124,13 +139,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     }
 
     const handleToggleShop = () => {
-        setShopOpen(!shopOpen);
+        setShopOpen((prev) => !prev);
     }
-
-    console.log(gameData)
 
     return (
         <div className="max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
+            <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {playerData&&<GameHud scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
             {gameData&&<ShopModal shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
             {gameData&& (

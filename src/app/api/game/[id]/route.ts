@@ -43,9 +43,8 @@ export const createGame = async (lobby: LobbyType) => {
     })
 
     return game;
-  } catch (error) {
-    console.error("Error creating game:", error);
-    throw new Error("Error creating game");
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
   }
 };
 
