@@ -45,9 +45,10 @@ model Game {
   createdAt  DateTime @default(now())
   players    User[]
   host       String
-  turn       Int
+  turn       Int      @default(1)
+  turnOrder  Int[]
   heroDeck   Int[]
-  heroShop   Json?
-  discardPile String[]
+  heroShop   Json
+  discardPile Json?
   finished   Boolean  @default(false)
 }

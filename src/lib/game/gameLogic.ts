@@ -154,7 +154,13 @@ export const addActiveConnections = (cards:CardObjectData[]) => {
         const adjacentCards = getAdjacentCards(board,x,y);
         sides.forEach(side => {
             const adjacentCard = adjacentCards.filter(c => c.dir===side)[0];
-            cardData.card.sides[side].active = !!(adjacentCard&&adjacentCard.card.sides[dirMap[side]].attribute===cardData.card.sides[side].attribute);
+            if (adjacentCard&&adjacentCard.card.type==="monster") {
+                cardData.card.sides[side].active = false;
+            } else if (adjacentCard&&(adjacentCard.card.type==="god"||cardData.card.type==="god")) {
+                cardData.card.sides[side].active = true;
+            } else {
+                cardData.card.sides[side].active = !!(adjacentCard&&adjacentCard.card.sides[dirMap[side]].attribute===cardData.card.sides[side].attribute);
+            }
         });
         return cardData;
     })

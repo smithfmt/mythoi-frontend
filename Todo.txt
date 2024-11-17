@@ -1,0 +1,15 @@
+Ensure Lobby Starting works correctly for everyone
+
+Image flickering on Firefox and/or chrome. dragging too fast on chrome
+
+Add more movement controls (keyboard & maybe scroll)
+
+notifications not deleting automatically
+
+Invalid payment for a G R B if buying with RG GB B
+
+Add cards that have been deleted to the discard pile
+
+Add Update Lobby Data socket
+
+instead of deleting lobby, set it as started and delete when the game ends

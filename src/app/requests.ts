@@ -25,3 +25,17 @@ export const updateGameById = async (id: string | number, action, data) => {
     });
     return response;
 }
+
+export const deleteAllLobbies = async () => {
+    const response = await axios.post("/api/lobby", { action: "deleteAll" }, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` }
+    });
+    return response;
+}
+
+export const deleteAllGames = async () => {
+    const response = await axios.delete("/api/game", {
+        headers: { Authorization: `Bearer ${getAuthToken()}` }
+    });
+    return response;
+}

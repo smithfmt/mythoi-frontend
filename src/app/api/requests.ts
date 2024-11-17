@@ -22,7 +22,16 @@ export const updateUserById = async (id: number, data) => {
 
 export const findGameById = async (id: number) => {
     const gameData = await prisma.game.findUnique({
-        where: { id }
+        where: { id },
+        include: {
+            players: {
+                select: {
+                    id: true,
+                    name: true,
+                    gameData:true,
+                }
+            }
+        }
     });
     return gameData;
 }

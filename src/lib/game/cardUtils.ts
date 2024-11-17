@@ -46,7 +46,7 @@ export const generateCard = (card:CardData) => {
     switch (type) {
         case "monster":
             for (let i=0;i<4;i++) {
-                attributes.push("Div");
+                attributes.push("Mon");
             }
             break;
         case "god":

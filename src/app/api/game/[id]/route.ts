@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { generatePlayerGenerals } from 'src/lib/game/generation';
 import { generateCard } from 'src/lib/game/cardUtils';
-import { shuffle } from '@utils/helpers';
+import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { LobbyType, UserType } from '@app/api/types';
 import { cards } from '@data/cards';
@@ -23,7 +23,8 @@ export const createGame = async (lobby: LobbyType) => {
         name: `Game for ${lobby.name}`,
         players: { connect: lobby.players.map((player) => ({ id: player.id })) },
         host: lobby.host.toString(), 
-        turn: lobby.players[0].id, 
+        turn: 1,
+        turnOrder: shuffle(lobby.players).map(p => p.id), 
         heroDeck,
         heroShop: JSON.stringify(heroShop),
       },
@@ -37,7 +38,7 @@ export const createGame = async (lobby: LobbyType) => {
             choices: playerGenerals[i],
           },
           cards: [],
-          basicCount: 0,
+          turnEnded: false,
         })
       })
     })
@@ -81,16 +82,43 @@ interface UpdateData {
   card: PopulatedCardData;
 }
 
+interface GameUpdates {
+  turnOrder?: number[];
+  heroShop?:string;
+}
+
+const manageTurns = async (id: string) => {
+  try {
+    const game = await findGameById(parseInt(id));
+    if (!game) return console.warn("Game Not Found");
+    const players = game.players.map(p => JSON.parse(p.gameData as string)) as PlayerData[];
+    const allPlayersEndedTurn = players.reduce((acc, cur) => acc&&cur.turnEnded,true);
+    if (!allPlayersEndedTurn) return;
+    players.forEach(async playerData => {
+      await updateUserById(playerData.player, { gameData: JSON.stringify({...playerData, turnEnded: false}) });
+    });
+    const heroShop = JSON.parse(game.heroShop as string);
+    while (heroShop.length<3) {
+      heroShop.push(game.heroDeck.splice(0,1).map(cardId => generateCard(cards.hero[cardId]))[0]);
+    }
+    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck });
+  } catch {
+    console.warn("Error managing turns");
+  }
+}
+
 const updateGame = async (user: UserType, id: string, action: string, data:UpdateData) => {
   try {
     // Fetch the current game, including playerData
     const game = await findGameById(parseInt(id));
     if (!game) return { message: "Game not found", status: 404 };
-    let gameUpdates;
+    const gameUpdates:GameUpdates = {};
     const userData = await findUserById(user.id);
     if (!userData) return { message: "User Data not found", status: 404 };
 
     let playerData: PlayerData = JSON.parse(userData?.gameData as string);
+    const isYourTurn = userData.id===game.turnOrder[0];
+    const hasEndedTurn = playerData.turnEnded;
     switch (action) {
       case "selectGeneral":
         if (playerData.generals.selected) return { message: "Already Selected General", status: 401 };
@@ -110,43 +138,48 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         playerData.cards = [...playerData.cards, ...startingCards];
         break;
       case "endTurn":
-        const { playerData: updatedPlayerData } = data;
+        if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
         // Validate that the data has not been tampered with
-        if (!validatePlayerData(playerData, updatedPlayerData)) return { message: "Data mismatch with server", status: 405 }
+        if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };
         // Check that board is valid
-        const { success, error } = checkValidBoard(updatedPlayerData.cards.filter(c => !c.hand) as BoardType);
+        const { success, error } = checkValidBoard(data.playerData.cards.filter(c => !c.hand) as BoardType);
         if (!success) return { message: error||"An unknown Validation error occurred", status: 405 };
         // Add Active Connections
-        updatedPlayerData.cards = addActiveConnections(updatedPlayerData.cards);
+        data.playerData.cards = addActiveConnections(data.playerData.cards);
         // Draw a Card
-        updatedPlayerData.cards.push({card: drawBasicCard(), hand: true});
-        playerData = updatedPlayerData;
+        data.playerData.cards.push({card: drawBasicCard(), hand: true});
+        // Set turnEnded
+        data.playerData.turnEnded = true;
+        gameUpdates.turnOrder = rotateArray(game.turnOrder);
+        playerData = data.playerData;
         break;
       case "drawCard": // For Testing
-        const { playerData: updatedData } = data;
-        updatedData.cards.push({card: drawBasicCard(), hand: true});
-        playerData = updatedData;
+        data.playerData.cards.push({card: drawBasicCard(), hand: true});
+        playerData = data.playerData;
         break;
       case "buyCard":
-        const { payment, card } = data;
+        if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
+        // Validate that the data has not been tampered with
+        if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };
         const heroShop = JSON.parse(game.heroShop as string) as PopulatedCardData[];
-        const heroCard = heroShop.filter(c => c.uid===card.uid)[0];
+        const heroCard = heroShop.filter(c => c.uid===data.card.uid)[0];
         if (!heroCard) return { message: "Card not in shop", status: 401 };
-        const paymentCards = playerData.cards.filter(cardObj => payment.includes(cardObj.card.uid)).map(cardObj => cardObj.card);
+        const paymentCards = playerData.cards.filter(cardObj => data.payment.includes(cardObj.card.uid)).map(cardObj => cardObj.card);
         const isValid = validatePayment(heroCard, paymentCards).success;
         if (!isValid) return { message: "Invalid payment", status: 401 };
         // Successfuly take payment and add the hero card
-        playerData.cards = playerData.cards.filter(cardObj => !payment.includes(cardObj.card.uid));
-        playerData.cards.push({ card:heroCard, hand:true });
+        data.playerData.cards = data.playerData.cards.filter(cardObj => !data.payment.includes(cardObj.card.uid));
+        data.playerData.cards.push({ card:heroCard, hand:true });
         // Remove card from the shop
-        gameUpdates = { heroShop: JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid)) };
+        gameUpdates.heroShop = JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid));
+        playerData = data.playerData;
         break;
       default:
         return { message: "Invalid action", status: 400 };
     }
-    if (gameUpdates) await updateGameById(parseInt(id), gameUpdates)
+    if (Object.keys(gameUpdates).length) await updateGameById(parseInt(id), gameUpdates)
     const updatedGameData = await updateUserById(user.id, { gameData: JSON.stringify(playerData) });
-
+    manageTurns(id);
     return { message: "Successfully updated game", data: { gameData: updatedGameData }, status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

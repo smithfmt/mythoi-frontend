@@ -73,3 +73,8 @@ export function deepEqual(obj1, obj2, ignorePaths:string[] = []) {
     return compare(obj1, obj2);
 }
 
+export function rotateArray<T>(arr: T[]): T[] {
+    if (arr.length === 0) return arr; // Handle empty array
+    const [first, ...rest] = arr; // Destructure the array
+    return [...rest, first];      // Reconstruct with first at the end
+}

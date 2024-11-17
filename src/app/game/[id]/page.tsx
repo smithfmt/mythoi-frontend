@@ -29,7 +29,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [selected, setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
     const [scale, setScale] = useState(1);
     const [shopOpen, setShopOpen] = useState(false);
-    const [menuOpen, setMenuOpen] = useState(true);
+    const [menuOpen, setMenuOpen] = useState(false);
     const playerData = useMemo(() => {
         return userData?.gameData ? JSON.parse(userData.gameData) as PlayerData : null;
     }, [userData]);
@@ -45,12 +45,20 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         return selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
     }, [cardsInBoard, selected.selectedCard]);
 
-    // Open Shop with spacebar
+    // Add keybinds
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
-            if (event.code === "Space") {
-                event.preventDefault(); // Prevent the default spacebar scrolling behavior
-                setShopOpen((prev) => !prev);
+            switch (event.code) {
+                case "KeyS":
+                    event.preventDefault(); // Prevent the default spacebar scrolling behavior
+                    setShopOpen((prev) => !prev);
+                    break;
+                case "Space":
+                    event.preventDefault();
+                    setMenuOpen((prev) => !prev);
+                    break;
+                default:
+                    break;
             }
         };
 
@@ -142,11 +150,15 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         setShopOpen((prev) => !prev);
     }
 
+    const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.player === gameData.turnOrder[0]);
+
+
+
     return (
-        <div className="max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
+        <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
-            {playerData&&<GameHud scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
-            {gameData&&<ShopModal shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
+            {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
+            {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
             {gameData&& (
                 <div>
                     <GameBoard 

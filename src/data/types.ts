@@ -14,7 +14,7 @@ export interface PlayerData {
         hand?: boolean,
     }[];
     generals: GeneralsType;
-    basicCount: number;
+    turnEnded: boolean;
 }
 
 export type GeneralsType = {
@@ -83,6 +83,7 @@ export interface GameData {
     playerData: string;
     heroDeck: number[];
     heroShop: string;
+    turnOrder: number[];
 }
 
 export type Space = {
