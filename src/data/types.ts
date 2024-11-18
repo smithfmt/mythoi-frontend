@@ -75,6 +75,7 @@ export type PopulatedCardData = {
 }
 
 export interface GameData {
+    id: number;
     name: string;
     players: { id: number, name: string }[];
     host: string;

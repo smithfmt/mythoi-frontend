@@ -9,14 +9,14 @@ import socket from "@utils/socketClient";
 import { useLoading } from "@components/providers/LoadingContext";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
+import { LobbyType } from "@app/api/types";
 
 const LobbyPage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
-    const [lobby, setLobby] = useState<{ name: string; players: { id: number; name: string }[]; host: number } | null>(null);
-    const { isLoading, startLoading, stopLoading } = useLoading();
+    const [lobby, setLobby] = useState<LobbyType | null>(null);
+    const { startLoading, stopLoading } = useLoading();
     const { addError } = useErrorHandler();
     const [isHost, setIsHost] = useState(false);
-    const [gameId, setGameId] = useState(null);
     const userId = useUserId();
 
     useEffect(() => {
@@ -38,9 +38,8 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
         fetchLobby();
         
         socket.on(`lobbyDataUpdate-${id}`, (lobbyData) => {
-            if (lobbyData.gameId) setGameId(lobbyData.gameId);
             setLobby(lobbyData);
-          });
+        });
       
           return () => {
             socket.off(`lobbyDataUpdate-${id}`);
@@ -50,27 +49,26 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
     const startLobby = async () => {
         try {
             startLoading()
-            const response = await axios.post(
+            await axios.post(
                 `/api/lobby/${id}`,
-                { action: 'start' }, // Pass the lobby ID
+                { action: 'start' },
                 { headers: { Authorization: `Bearer ${getAuthToken()}` } }
             );
-
-            // TODO Redirect everyone to the game page
-            setGameId(response.data.game)
         } catch (error) {
             addError(handleError(error));
         } finally {
             stopLoading();
         }
     };
+console.log(lobby)
+
     return (
         <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
             <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-                {gameId ? (
+                {lobby?.game ? (
                         <button className="relative z-50 bg-blue-500 text-neutral-50 hover:bg-blue-700 active:bg-blue-400 active:text-neutral-20 transition-all outline-2 outline-blue-950 rounded-lg">
-                            <Link className="w-full h-full p-12" href={`/game/${gameId}`}>{"Proceed to Game ->"}</Link>
-                            </button>
+                            <Link className="w-full h-full p-12" href={`/game/${lobby.game.id}`}>{"Proceed to Game ->"}</Link>
+                        </button>
                 ) : lobby && (
                     <div className="relative bg-white rounded-lg shadow-lg p-6 z-50">
                         <h2 className="text-2xl font-bold mb-4">{lobby.name}</h2>

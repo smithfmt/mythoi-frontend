@@ -1,6 +1,9 @@
+import { GameData } from "@data/types";
+
 export type UserType = {
     id: number;
     email: string;
+    name?: string;
   }
 
 export type ApiResponse = {
@@ -16,4 +19,5 @@ export interface LobbyType {
     players: UserType[];
     maxPlayers: number;
     host: number;
+    game?: GameData
 }

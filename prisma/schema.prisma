@@ -37,6 +37,8 @@ model Lobby {
   players   User[]
   maxPlayers Int     @default(2)
   host      Int
+  gameId    Int?
+  game      Game?    @relation(fields: [gameId], references: [id]) 
 }
 
 model Game {
@@ -51,4 +53,5 @@ model Game {
   heroShop   Json
   discardPile Json?
   finished   Boolean  @default(false)
+  lobby      Lobby[]    
 }
