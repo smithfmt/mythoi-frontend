@@ -18,22 +18,19 @@ const joinLobby = async (user:UserType, id:string) => {
       where: { id: parseInt(id) },
     });
 
-    if (!lobby) {
-      return { message: "Lobby not found", status: 400 };
-    }
+    if (!lobby) return { message: "Lobby not found", status: 400 };
 
     // Check if the user is already in another lobby
     const userInLobby = await prisma.lobby.findFirst({
       where: { players: { some: { id: user.id } } },
     });
 
-    if (userInLobby) {
-      return { message: "User is already in a lobby", status: 400 };
-    }
+    if (userInLobby) return { message: "User is already in a lobby", status: 400 };
     await prisma.lobby.update({
       where: { id: parseInt(id) },
       data: {
         players: { connect: { id: user.id } },
+        playerCount: lobby.playerCount++,
       },
     });
 
@@ -76,6 +73,12 @@ const deleteLobby = async (user:UserType, id:string) => {
 
 const leaveLobby = async (user:UserType, id:string) => {
   try {
+    const lobby = await prisma.lobby.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!lobby) return { message: "Lobby not found", status: 400 };
+
     // Check if the user is in a lobby
     const userLobby = await prisma.lobby.findUnique({
       where: { id: parseInt(id) },
@@ -93,6 +96,7 @@ const leaveLobby = async (user:UserType, id:string) => {
         players: {
           disconnect: { id: user.id },
         },
+        playerCount: lobby.playerCount--,
       },
     });
 
@@ -131,7 +135,8 @@ const startLobby = async (user:UserType, id:string) => {
 
     // Create the game using the players in the lobby
     const game = await createGame(lobby) as GameData | { message: string, status: number};  
-    if (game.message || game.status) return game;
+    if ("message" in game && "status" in game) return game;
+
     // After creating the game, update the lobby
 
     await prisma.lobby.update({

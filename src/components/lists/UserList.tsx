@@ -1,11 +1,10 @@
 "use client"
 import { useEffect, useState } from "react";
 import socket from "@utils/socketClient"
-import axios from "axios";
-import { getAuthToken } from "src/lib/auth/getAuthToken";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
 import { useLoading } from "@components/providers/LoadingContext";
+import { fetchAllUsers } from "@app/requests";
 
 const UserList = () => {
   const [userNames, setUserNames] = useState([]);
@@ -16,7 +15,7 @@ const UserList = () => {
     const fetchUsers = async () => {
       try {
         startLoading();
-        const response = await axios.get(`/api/users`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+        const response = await fetchAllUsers();
         setUserNames(response.data.users.map(u => u.name));
       } catch (error: unknown) {
         addError(handleError(error));
@@ -32,7 +31,7 @@ const UserList = () => {
     return () => {
       socket.off("userListUpdate");
     };
-  }, [addError]);
+  }, [addError, startLoading, stopLoading]);
 
   return (
     <div className="relative z-50 bg-black text-neutral-50 p-16">

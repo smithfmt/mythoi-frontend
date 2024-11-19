@@ -79,7 +79,7 @@ const ShopModal = ({ isYourTurn, playerData, shopCards, shopOpen, setShopOpen, h
                 {/* Cards in Hand */}
                 <div className="flex flex-col flex-wrap max-h-[100vh] w-[40%] pt-16 px-16 gap-x-0 ">
                     {cardsToDisplay.map((cardData,i) => (<div onClick={() => handlePaymentClick(cardData.card)} key={`shopHand-${i}`} className={`${payment.filter(c => c.uid===cardData.card.uid).length?"":`brightness-50 ${payment.length===selected?.cost.length?"":"hover:brightness-75"}`}  transition-all cursor-pointer`}>
-                        <Card card={cardData.card} shop={true}/>
+                        <Card card={cardData.card}/>
                     </div>))}
                 </div>
                 <div className="flex flex-col items-center p-16">
@@ -91,7 +91,7 @@ const ShopModal = ({ isYourTurn, playerData, shopCards, shopOpen, setShopOpen, h
                         {shopCards&&shopCards.map((card, i) => (
                             <div key={`shopCard-${i}`} className="flex flex-col gap-2">
                                 <div className={` ${selected?.uid===card.uid?"outline outline-4  outline-blue-400 -translate-y-4":""} cursor-pointer hover:-translate-y-1 transition-all`} onClick={() => handleClick(card)} >
-                                    <Card card={card} shop={true}/>
+                                    <Card card={card}/>
                                 </div>
                                 <div className="flex justify-center gap-1">
                                     {card.cost.map((cost,i) => <div className="relative w-fit h-fit saturate-150" key={`cost-${i}`}>

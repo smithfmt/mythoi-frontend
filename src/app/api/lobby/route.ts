@@ -70,11 +70,9 @@ const createLobby = async (user:UserType, name:string) => {
         name,
         started: false,
         host: user.id,
+        playerCount: 1,
       },
     });
-
-    // updateLobbyList();
-
     return { message: "Lobby created", data: { lobby } , status: 200 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

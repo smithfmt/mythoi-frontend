@@ -1,14 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
 import useUserId from "@hooks/useUserId";
 import { useRouter } from "next/navigation";
-import { getAuthToken } from "src/lib/auth/getAuthToken";
 import socket from "@utils/socketClient"
 import handleError from "@utils/handleError";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import { useLoading } from "@components/providers/LoadingContext";
+import { createNewLobby, deleteLobbyById, fetchAllLobbies, joinLobbyById, userLeaveLobby } from "@app/requests";
 
 type Players = {
     id: number,
@@ -34,7 +33,7 @@ const LobbyList = () => {
     const fetchLobbies = async () => {
       try {
         startLoading();
-        const response = await axios.get(`/api/lobby`, { headers: {Authorization: `Bearer ${getAuthToken()}`} });
+        const response = await fetchAllLobbies();
         setLobbies(response.data.lobbies);
       } catch (error: unknown) {
         addError(handleError(error));
@@ -53,20 +52,14 @@ const LobbyList = () => {
     return () => {
       socket.off("lobbyListUpdate");
     };
-  }, [addError]);
+  }, [addError, startLoading, stopLoading]);
 
   const createLobby = async () => {
-    if (!newLobbyName) {
-      addError({message: "Please enter a lobby name."});
-      return;
-    }
+    if (!newLobbyName) return addError({message: "Please enter a lobby name."});
 
     try {
       startLoading();
-      const response = await axios.post(`/api/lobby`, {
-        action: 'create',
-        name: newLobbyName,
-      },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
+      const response = await createNewLobby(newLobbyName);
       setNewLobbyName("");
       router.push(`/lobby/${response.data.lobby.id}`);
     } catch (error: unknown) {
@@ -79,10 +72,7 @@ const LobbyList = () => {
   const joinLobby = async (lobbyId: number) => {
     try {
       startLoading();
-      const response = await axios.post(`/api/lobby/${lobbyId}`, {
-        action: 'join',
-      },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
-      console.log("Joined lobby:", response.data);
+      await joinLobbyById(lobbyId);
       router.push(`/lobby/${lobbyId}`);
     } catch (error: unknown) {
       addError(handleError(error));
@@ -94,11 +84,7 @@ const LobbyList = () => {
   const leaveLobby = async () => {
     try {
       startLoading();
-      await axios.post(`/api/lobby`, {
-        action: 'leave',
-      },{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
-      console.log("Left lobby");
-      // Handle lobby update after leaving (fetch updated lobbies, for example)
+      await userLeaveLobby();
     } catch (error: unknown) {
       addError(handleError(error));
     } finally {
@@ -109,9 +95,7 @@ const LobbyList = () => {
   const deleteLobby = async (lobbyId: number) => {
     try {
       startLoading();
-      await axios.delete(`/api/lobby/${lobbyId}`,{ headers: {Authorization: `Bearer ${getAuthToken()}`} });
-      console.log("Deleted lobby");
-      // Handle lobby update after deleting (fetch updated lobbies, for example)
+      await deleteLobbyById(lobbyId);
     } catch (error: unknown) {
       addError(handleError(error));
     } finally {

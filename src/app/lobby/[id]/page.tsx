@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
-import { getAuthToken } from "src/lib/auth/getAuthToken"; // Assuming you have a way to get the current user ID
 import useUserId from "@hooks/useUserId";
 import Link from "next/link";
 import socket from "@utils/socketClient";
@@ -10,6 +8,7 @@ import { useLoading } from "@components/providers/LoadingContext";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
 import { LobbyType } from "@app/api/types";
+import { fetchLobbyById, updateLobbyById } from "@app/requests";
 
 const LobbyPage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -23,7 +22,7 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
         const fetchLobby = async () => {
             try {
                 startLoading();
-                const response = await axios.get(`/api/lobby/${id}`, { headers: { Authorization: `Bearer ${getAuthToken()}` } });
+                const response = await fetchLobbyById(id);
                 setLobby(response.data.lobby);
                 if (response.data.lobby.host === userId) {
                     setIsHost(true);
@@ -44,23 +43,18 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
           return () => {
             socket.off(`lobbyDataUpdate-${id}`);
           };
-    }, [id, userId]);
+    }, [id, userId, startLoading, stopLoading, addError]);
 
     const startLobby = async () => {
         try {
             startLoading()
-            await axios.post(
-                `/api/lobby/${id}`,
-                { action: 'start' },
-                { headers: { Authorization: `Bearer ${getAuthToken()}` } }
-            );
+            await updateLobbyById(id, "start")
         } catch (error) {
             addError(handleError(error));
         } finally {
             stopLoading();
         }
     };
-console.log(lobby)
 
     return (
         <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">

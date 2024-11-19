@@ -39,6 +39,7 @@ model Lobby {
   host      Int
   gameId    Int?
   game      Game?    @relation(fields: [gameId], references: [id]) 
+  playerCount Int
 }
 
 model Game {

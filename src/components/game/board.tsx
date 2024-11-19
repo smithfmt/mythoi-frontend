@@ -23,7 +23,7 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const boardRef = useRef<HTMLDivElement | null>(null);
 
-  const easingDuration = 0.2; // Duration of easing effect
+  const easingDuration = 0.2; 
 
   useEffect(() => {
     if (dragging) {
@@ -52,6 +52,34 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
       };
     }
   }, [dragging, startPos]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const moveAmount = 50; 
+      switch (e.key) {
+        case "ArrowUp":
+          setOffset((prev) => ({ ...prev, y: prev.y + moveAmount }));
+          break;
+        case "ArrowDown":
+          setOffset((prev) => ({ ...prev, y: prev.y - moveAmount }));
+          break;
+        case "ArrowLeft":
+          setOffset((prev) => ({ ...prev, x: prev.x + moveAmount }));
+          break;
+        case "ArrowRight":
+          setOffset((prev) => ({ ...prev, x: prev.x - moveAmount }));
+          break;
+        default:
+          break;
+      }
+    };
+  
+    window.addEventListener("keydown", handleKeyDown);
+  
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setDragging(true);

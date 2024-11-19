@@ -62,13 +62,19 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             }
         };
 
+        const handleScrollWheel = (event: WheelEvent) => {
+            if (event.deltaY > 0) return setScale((prevScale) => Math.max(0.1, prevScale - 0.1));
+            return setScale((prevScale) => prevScale + 0.1);
+        }
+
         window.addEventListener("keydown", handleKeyDown);
+        window.addEventListener("wheel", handleScrollWheel);
         return () => {
             window.removeEventListener("keydown", handleKeyDown);
+            window.removeEventListener("wheel", handleScrollWheel);
         };
     }, []);
 
-    // Fetch Initial Data on page load
     useEffect(() => {
         const fetchGame = async () => {
             try {
@@ -84,9 +90,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 stopLoading();
             }
         };
-
         fetchGame();
-    }, [id, setGameData, setUserData, userId, addError, startLoading,stopLoading]);
+    }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading]);
 
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
