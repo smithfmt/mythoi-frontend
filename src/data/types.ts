@@ -1,3 +1,4 @@
+import { JsonValue } from "@prisma/client/runtime/library";
 import { cards } from "./cards"
 
 export type CardType = {
@@ -77,15 +78,13 @@ export type PopulatedCardData = {
 export interface GameData {
     id: number;
     name: string;
-    players: { id: number, name: string }[];
+    players: { id: number, name: string, gameData: JsonValue }[];
     host: string;
-    turn: string;
-    drawnHeroes: string[];
-    playerData: string;
+    turn: number;
     heroDeck: number[];
-    heroShop: string;
+    heroShop: JsonValue;
     turnOrder: number[];
-    discardPile: string;
+    discardPile: JsonValue;
 }
 
 export type Space = {

@@ -163,7 +163,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
-            {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
+            {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
             {gameData&& (
                 <div>
                     <GameBoard 
@@ -175,7 +175,6 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                     scale={scale}
                     />
                     <Hand selectedCard={selected.selectedCard} setSelected={setSelected} hand={cardsInHand} handleCardClick={handleCardClick} />
-                    {/* Card following Mouse */}
                     <CardCursorTracker selectedCard={selected.selectedCard}/>
                 </div>
             )}

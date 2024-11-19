@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { generatePlayerGenerals } from 'src/lib/game/generation';
+import { generateBattle, generateBattleOrder, generatePlayerGenerals } from 'src/lib/game/generation';
 import { generateCard } from 'src/lib/game/cardUtils';
 import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
@@ -18,6 +18,11 @@ export const createGame = async (lobby: LobbyType) => {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
     const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId]));
+    
+    const battleDistribution = 15;
+    const battleCount = 1;
+    const battleOrder = generateBattleOrder(battleCount,battleDistribution);
+
     const game = await prisma.game.create({
       data: {
         name: `Game for ${lobby.name}`,
@@ -28,6 +33,7 @@ export const createGame = async (lobby: LobbyType) => {
         heroDeck,
         heroShop: JSON.stringify(heroShop),
         discardPile: JSON.stringify([]),
+        battleOrder,
       },
     });
     lobby.players.forEach(async (player, i) => {
@@ -103,7 +109,10 @@ const manageTurns = async (id: string) => {
     while (heroShop.length<3) {
       heroShop.push(game.heroDeck.splice(0,1).map(cardId => generateCard(cards.hero[cardId]))[0]);
     }
-    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck });
+    const battling = game.battleOrder.includes(game.turn+1);
+    const battles = game.battles ? JSON.parse(game.battles as string) : [];
+    if (battling) battles.push(generateBattle(game));
+    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck, battling, battles: JSON.stringify(battles) });
   } catch {
     console.warn("Error managing turns");
   }

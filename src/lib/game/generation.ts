@@ -1,4 +1,6 @@
 import { cards } from "@data/cards";
+import { GameData } from "@data/types";
+import { shuffle } from "@utils/helpers";
 
 export const generatePlayerGenerals = (totalPlayers: number) => {
     const generals = cards.general;
@@ -9,4 +11,26 @@ export const generatePlayerGenerals = (totalPlayers: number) => {
         playerGenerals.push(shuffledGenerals.splice(0,generalsPerPlayer));
     }
     return playerGenerals;
+};
+
+export const generateBattleOrder = (count: number, distribution: number): number[] => {
+    const battleOrder: number[] = [];
+    for (let i = 0; i < count; i++) {
+      const randomOffset = Math.floor(Math.random() * 3);
+      const sign = Math.random() < 0.5 ? -1 : 1;
+      battleOrder.push(i * distribution + sign * randomOffset);
+    }
+    return battleOrder;
+};
+
+export const generateBattle = (game:GameData, players: number[]) => {
+    const battlePlayers = game.players.filter(p => players.includes(p.id));
+    // Sort out bots
+    return {
+        players: battlePlayers,
+        graveyard: [],
+        ended: false,
+        turnOrder: shuffle(players),
+        turn: 1,
+    };
 };
