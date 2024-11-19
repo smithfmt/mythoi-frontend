@@ -40,32 +40,26 @@ export const fillBlankAttribute = (index:number, costs:any[]) => {
 };
 
 export const generateCard = (card:CardData) => {
-    const { id, img, name, atk, hp, red, green, blue, ability, style, cost, desc, type } = card;
+    const { id, img, name, atk, hp, red=0, green=0, blue=0, mon=0, div=0, ability, style, cost, desc, type } = card;
     
     const attributes:Attribute[] = [];
-    switch (type) {
-        case "monster":
-            for (let i=0;i<4;i++) {
-                attributes.push("Mon");
-            }
-            break;
-        case "god":
-            for (let i=0;i<5;i++) {
-                attributes.push("Div");
-            }
-            break;
-        default:
-            for (let i=0;i<red;i++) {
-                attributes.push("Str");
-            }
-            for (let i=0;i<green;i++) {
-                attributes.push("Agi");
-            }
-            for (let i=0;i<blue;i++) {
-                attributes.push("Int");
-            }
-            break;
-    };
+
+    for (let i=0;i<red;i++) {
+        attributes.push("Str");
+    }
+    for (let i=0;i<green;i++) {
+        attributes.push("Agi");
+    }
+    for (let i=0;i<blue;i++) {
+        attributes.push("Int");
+    }
+    for (let i=0;i<mon;i++) {
+        attributes.push("Mon");
+    }
+    for (let i=0;i<div;i++) {
+        attributes.push("Div");
+    }
+    
     const shuffledAttributes = shuffle(attributes);
     const costs:Attribute[] = shuffledAttributes.slice(0,cost);
     const connections = shuffledAttributes.length>4?shuffledAttributes.slice(0,4):shuffledAttributes.length<4? shuffle(fillConnections(shuffledAttributes)): shuffledAttributes

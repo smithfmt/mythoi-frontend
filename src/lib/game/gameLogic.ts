@@ -182,32 +182,82 @@ export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
 }
 
 
-export const validatePayment = (cardToBuy:PopulatedCardData, payment:PopulatedCardData[]) => {
-    if (["monster", "god"].includes(cardToBuy.type)) return { success: cardToBuy.cost.length === payment.length, match: cardToBuy.cost.slice(0,payment.length) };
-    const paymentCards = payment.map(c => extractCardValue(c));
-    const costArray = cardToBuy.cost;
-    // Make a copy of paymentCards to track remaining cards.
-    const availableCards = [...paymentCards];
-    const match: (string | null)[] = [];
-
-  for (const cost of costArray) {
-    // Find the first card that can cover the current cost.
-    const cardIndex = availableCards.findIndex(card => card.includes(cost));
-
-    if (cardIndex === -1) {
-      // If no card can pay for the current cost, add null to the match array.
-      match.push(null);
-    } else {
-      // Add the matched card value to the match array.
-      match.push(cost);
-
-      // Remove the used card from the list of available cards.
-      availableCards.splice(cardIndex, 1);
+export const validatePayment = (
+    cardToBuy: PopulatedCardData,
+    payment: PopulatedCardData[]
+) => {
+    if (["monster", "god"].includes(cardToBuy.type)) {
+      return {
+        success: cardToBuy.cost.length === payment.length,
+        match: cardToBuy.cost.slice(0, payment.length),
+      };
     }
-  }
-
-  // Determine success based on whether there are any null values in the match array.
-  const success = !match.includes(null);
-
-  return { success, match };
-}
+  
+    const paymentCards = payment.map((c) => extractCardValue(c));
+    const costArray = cardToBuy.cost;
+  
+    // Helper function to validate a specific order of payment cards
+    const validateOrder = (cards: string[][]): { success: boolean; match: (string | null)[] } => {
+      const availableCards = [...cards];
+      const match: (string | null)[] = [];
+  
+      for (const cost of costArray) {
+        const cardIndex = availableCards.findIndex((card) => card.includes(cost));
+  
+        if (cardIndex === -1) {
+          // If no card can pay for the current cost, add null to the match array.
+          match.push(null);
+        } else {
+          // Add the matched card value to the match array.
+          match.push(cost);
+  
+          // Remove the used card from the list of available cards.
+          availableCards.splice(cardIndex, 1);
+        }
+      }
+  
+      const success = !match.includes(null) && availableCards.length >= 0;
+      return { success, match };
+    };
+  
+    // Check the original order of payment cards first
+    const result = validateOrder(paymentCards);
+  
+    if (result.success) {
+      return result; // If the original order works, return it
+    }
+  
+    // Helper function to generate all permutations of an array
+    const getPermutations = (array: string[][]): string[][][] => {
+      if (array.length === 0) return [[]];
+      return array.flatMap((value, index) =>
+        getPermutations([...array.slice(0, index), ...array.slice(index + 1)]).map((perm) => [value, ...perm])
+      );
+    };
+  
+    // Test all permutations of the payment cards
+    const permutations = getPermutations(paymentCards);
+    let bestMatch: (string | null)[] = [];
+    let maxMatches = 0;
+  
+    for (const perm of permutations) {
+      const attempt = validateOrder(perm);
+      const matchedCount = attempt.match.filter((item) => item !== null).length;
+  
+      if (matchedCount > maxMatches) {
+        maxMatches = matchedCount;
+        bestMatch = attempt.match;
+      }
+  
+      if (attempt.success) {
+        return attempt; // Return the first valid permutation
+      }
+    }
+  
+    // If no valid permutation is found, return the best possible match
+    return {
+      success: false,
+      match: bestMatch,
+    };
+};
+  

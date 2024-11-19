@@ -1,7 +1,14 @@
 Image flickering on Firefox and/or chrome. dragging too fast on chrome
 
-notifications not deleting automatically
-
-Invalid payment for a G R B if buying with RG GB B
-
-Add cards that have been deleted to the discard pile
+Battles:
+    On Create Game, add battles at certain turn numbers (slight randomness)
+    In the turn manager, if battles.includes(turn) game.battling = true
+        Divide the players into pairs. for each pair, create a battle Object and attach it to the game (game.battles)
+        Battle Object:
+            players : { player: id,name , cards }
+            graveyard : card[]
+            ended: false
+            turnOrder : string[]
+            turn : 1
+    
+    In the game page, if game.battling return <Battle /> (no gamehud, just battlehud)

@@ -34,6 +34,11 @@ const deleteAllGames = async () => {
       data: {
         gameData: ""
       }
+    });
+    await prisma.lobby.deleteMany({
+      where: {
+        started: true,
+      },
     })
     return { message: "All games deleted successfully", status: 200 };
   } catch (error: unknown) {

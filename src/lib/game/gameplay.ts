@@ -11,7 +11,7 @@ export const drawBasicCard = () => {
 
     // Step 3: Loop through the cards and subtract their weights until randomNum is reached
     const findRandomCard = () => {
-        const totalWeight = Object.values(basic).reduce((sum, card) => sum + (card.weight||0), 0);
+        const totalWeight = basic.reduce((sum, card) => sum + (card.weight||0), 0);
         const randomNum = Math.random() * totalWeight;
 
     // Step 3: Loop through the cards and subtract their weights until randomNum is reached
@@ -23,7 +23,7 @@ export const drawBasicCard = () => {
             }
         }
         // Fallback in case of rounding errors
-        return Object.values(basic)[Object.values(basic).length - 1];
+        return basic[basic.length - 1];
     };
     const result = {...findRandomCard()};
     // Add random attributes

@@ -1,23 +1,5 @@
 "use client"
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-
 const ErrorHandler = ({ errors, deleteError }) => {
-    const router = useRouter();
-    useEffect(() => {
-        errors.forEach((error, index) => {
-            if (error.redirect) {
-                router.push(error.redirect);
-            } 
-            const timer = setTimeout(() => {
-                deleteError(index);
-            }, 5000);
-            return () => clearTimeout(timer);
-            
-        });
-    }, [errors, deleteError,]);
-    
-
     return (
         <div className="fixed top-16 left-16 flex flex-col w-64 gap-2 z-50">
             {errors.map((error, i) => (

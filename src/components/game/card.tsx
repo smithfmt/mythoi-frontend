@@ -19,7 +19,7 @@ const Card = ({ card } : { card: PopulatedCardData, shop?: boolean }) => {
         Str: "rgba(255,0,0,0.3)",
         Int: "rgba(1,145,226,0.45)",
         Agi:"rgba(4,186,0,0.45)",
-        Mon:"rgba(0,0,0,0.6)",
+        Mon:"rgba(15,0,20,0.8)",
         Div:"rgba(255,229,0,0.2)",
     };
 

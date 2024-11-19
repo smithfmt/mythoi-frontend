@@ -16,7 +16,7 @@ import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerD
 export const createGame = async (lobby: LobbyType) => {
   try {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
-    const heroDeck:number[] = shuffle(Object.keys(cards.hero).map(str => parseInt(str)));
+    const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
     const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId]));
     const game = await prisma.game.create({
       data: {
@@ -27,6 +27,7 @@ export const createGame = async (lobby: LobbyType) => {
         turnOrder: shuffle(lobby.players).map(p => p.id), 
         heroDeck,
         heroShop: JSON.stringify(heroShop),
+        discardPile: JSON.stringify([]),
       },
     });
     lobby.players.forEach(async (player, i) => {
@@ -84,7 +85,8 @@ interface UpdateData {
 
 interface GameUpdates {
   turnOrder?: number[];
-  heroShop?:string;
+  heroShop?: string;
+  discardPile?: string;
 }
 
 const manageTurns = async (id: string) => {
@@ -168,6 +170,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         const isValid = validatePayment(heroCard, paymentCards).success;
         if (!isValid) return { message: "Invalid payment", status: 401 };
         // Successfuly take payment and add the hero card
+        gameUpdates.discardPile = JSON.stringify([...JSON.parse(game.discardPile as string), ...shuffle(paymentCards)]);
         data.playerData.cards = data.playerData.cards.filter(cardObj => !data.payment.includes(cardObj.card.uid));
         data.playerData.cards.push({ card:heroCard, hand:true });
         // Remove card from the shop
@@ -186,6 +189,17 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
   }
 };
 
+const deleteGame = async (user: UserType, id: string) => {
+  try {
+    await prisma.game.delete({
+      where: { id: Number(id) },
+    });
+    return { message: "Game deleted", status: 200 };
+  } catch (error: unknown) {
+    return nextErrorHandler(error);
+  }
+}
+
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   const { error } = await verifyToken(req);
   if (error) return handleResponse(error);
@@ -203,4 +217,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   return handleResponse(response);
 }
 
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const { user, error } = await verifyToken(req);
+  if (error) return handleResponse(error);
+  const { id } = params;
+  const response = await deleteGame(user, id);
+  return handleResponse(response);
+}
 

@@ -3,7 +3,7 @@ export const capitalize = (string: string) => {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function shuffle(array:any[]) {
+export function shuffle<T>(array:T[]) {
     for (let i = array.length - 1; i >= 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];

@@ -157,7 +157,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.player === gameData.turnOrder[0]);
 
-
+    // const discardPile = gameData ? JSON.parse(gameData.discardPile) : [];
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">

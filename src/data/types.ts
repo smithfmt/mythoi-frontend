@@ -29,9 +29,11 @@ export type CardData = {
     atk: number;
     hp: number;
     connect: number;
-    red: number;
-    green: number;
-    blue: number;
+    red?: number;
+    green?: number;
+    blue?: number;
+    mon?: number;
+    div?: number;
     type: string;
     ability: string;
     style: string;
@@ -41,9 +43,7 @@ export type CardData = {
 };
   
 export type CardsObject = {
-    [key in 'basic' | 'general' | 'hero']: {
-        [key: number]: CardData;
-    };
+    [key in 'basic' | 'general' | 'hero']: CardData[];
 };
 
 export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div";
@@ -85,6 +85,7 @@ export interface GameData {
     heroDeck: number[];
     heroShop: string;
     turnOrder: number[];
+    discardPile: string;
 }
 
 export type Space = {

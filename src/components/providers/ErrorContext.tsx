@@ -1,6 +1,7 @@
 "use client";
 
 import ErrorHandler from "@components/utils/ErrorHandler";
+import { useRouter } from "next/navigation";
 import React, { createContext, useCallback, useContext, useRef, useState } from "react";
 
 type Error = { message: string; status?: number, redirect?:string };
@@ -15,19 +16,31 @@ const ErrorContext = createContext<ErrorContextType | undefined>(undefined);
 
 export const ErrorProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const errorsRef = useRef<Error[]>([]);
-  const [, forceRender] = useState(false); // Dummy state to force re-renders
-
-  const addError = useCallback((error: Error) => {
-    if (!errorsRef.current.some((e) => e.message === error.message)) {
-      errorsRef.current.push(error);
-      forceRender((prev) => !prev); // Trigger a re-render
-    }
-  }, []);
+  const [, forceRender] = useState(false);
+  const router = useRouter();
 
   const deleteError = useCallback((index: number) => {
     errorsRef.current = errorsRef.current.filter((_, i) => i !== index);
-    forceRender((prev) => !prev); // Trigger a re-render
+    forceRender((prev) => !prev);
   }, []);
+
+  const addError = useCallback((error: Error) => {
+    if (!errorsRef.current.some((e) => e.message === error.message)) {
+      const index = errorsRef.current.length;
+      errorsRef.current.push(error);
+      forceRender((prev) => !prev);
+
+      if (error.redirect) {
+        setTimeout(() => {
+          router.push(error.redirect as string); 
+        }, 0);
+      }
+
+      setTimeout(() => {
+        deleteError(index);
+      }, 5000);
+    }
+  }, [deleteError, router]);
 
   return (
     <ErrorContext.Provider value={{ errors: errorsRef.current, addError, deleteError }}>
