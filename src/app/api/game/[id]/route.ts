@@ -8,7 +8,7 @@ import { cards } from '@data/cards';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
-import { BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
+import { BattleData, BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
@@ -19,7 +19,7 @@ export const createGame = async (lobby: LobbyType) => {
     const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
     const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId]));
     
-    const battleDistribution = 15;
+    const battleDistribution = 5;
     const battleCount = 1;
     const battleOrder = generateBattleOrder(battleCount,battleDistribution);
 
@@ -110,9 +110,10 @@ const manageTurns = async (id: string) => {
       heroShop.push(game.heroDeck.splice(0,1).map(cardId => generateCard(cards.hero[cardId]))[0]);
     }
     const battling = game.battleOrder.includes(game.turn+1);
-    const battles = game.battles ? JSON.parse(game.battles as string) : [];
-    if (battling) battles.push(generateBattle(game));
-    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck, battling, battles: JSON.stringify(battles) });
+    const battles = game.battles ? game.battles.map(b => JSON.parse(b as string) as BattleData) : [];
+    console.log(battling, game.turn, game.battleOrder);
+    if (battling) battles.push(generateBattle(game, players.map(p => p.player)));
+    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck, battling, battles: battles.map(b => JSON.stringify(b)) });
   } catch {
     console.warn("Error managing turns");
   }
@@ -149,6 +150,9 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         playerData.cards = [...playerData.cards, ...startingCards];
         break;
       case "endTurn":
+        // Check if a battle is happening
+        if (game.battling) return { message: "Battle in progress", status: 401 };
+        // Check if it is their turn
         if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
         // Validate that the data has not been tampered with
         if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };
@@ -165,10 +169,15 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         playerData = data.playerData;
         break;
       case "drawCard": // For Testing
+        // Check if a battle is happening
+        if (game.battling) return { message: "Battle in progress", status: 401 };
+        // Check if it is their turn
         data.playerData.cards.push({card: drawBasicCard(), hand: true});
         playerData = data.playerData;
         break;
       case "buyCard":
+        // Check if a battle is happening
+        if (game.battling) return { message: "Battle in progress", status: 401 };
         if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
         // Validate that the data has not been tampered with
         if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };

@@ -7,13 +7,9 @@ Add Bots to the lobby
 Battles:
     In the turn manager, if battles.includes(turn) game.battling = true
         Divide the players into pairs. for each pair, create a battle Object and attach it to the game (game.battles)
-        Battle Object:
-            players : { player: id,name , cards }
-            graveyard : card[]
-            ended: false
-            turnOrder : string[]
-            turn : 1
-    
+
+    Add a Condition so that when there is an unfinished battle, other api requests (end turn etc.) don't work
+
     In the game page, if game.battling return <Battle /> (no gamehud, just battlehud)
 
     

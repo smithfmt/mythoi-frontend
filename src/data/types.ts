@@ -85,6 +85,21 @@ export interface GameData {
     heroShop: JsonValue;
     turnOrder: number[];
     discardPile: JsonValue;
+    battleOrder: number[];
+    battles: JsonValue[];
+    battling: boolean;
+}
+
+export type BattleData = {
+    players: {
+        gameData: GameData;
+        id: number;
+        name: string;
+    }[];
+    graveyard: { card:CardData, playerId: number}[];
+    ended: boolean;
+    turnOrder: number[];
+    turn: number;
 }
 
 export type Space = {

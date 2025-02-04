@@ -56,6 +56,6 @@ model Game {
   finished   Boolean  @default(false)
   lobby      Lobby[]    
   battleOrder Int[]
-  battles    Json?
+  battles    Json[]
   battling   Boolean  @default(false)
 }

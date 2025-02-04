@@ -18,6 +18,7 @@ import handleError from "@utils/handleError";
 import { useLoading } from "@components/providers/LoadingContext";
 import ShopModal from "@components/game/ShopModal";
 import MenuModal from "@components/game/MenuModal";
+import Battle from "@components/game/Battle";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -161,6 +162,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
+            {gameData?.battling && <Battle gameData={gameData} />}
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
             {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
