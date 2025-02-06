@@ -111,7 +111,6 @@ const manageTurns = async (id: string) => {
     }
     const battling = game.battleOrder.includes(game.turn+1);
     const battles = game.battles ? game.battles.map(b => JSON.parse(b as string) as BattleData) : [];
-    console.log(battling, game.turn, game.battleOrder);
     if (battling) battles.push(generateBattle(game, players.map(p => p.player)));
     updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck, battling, battles: battles.map(b => JSON.stringify(b)) });
   } catch {

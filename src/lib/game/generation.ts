@@ -15,10 +15,10 @@ export const generatePlayerGenerals = (totalPlayers: number) : number[][] => {
 
 export const generateBattleOrder = (count: number, distribution: number): number[] => {
     const battleOrder: number[] = [];
-    for (let i = 0; i < count; i++) {
+    for (let i = 1; i < count+1; i++) {
       const randomOffset = Math.floor(Math.random() * 3);
       const sign = Math.random() < 0.5 ? -1 : 1;
-      battleOrder.push(i * distribution + sign * randomOffset);
+      battleOrder.push((i * distribution) + (sign * randomOffset));
     }
     return battleOrder;
 };

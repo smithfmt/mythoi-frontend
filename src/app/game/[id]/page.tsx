@@ -162,38 +162,47 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
-            {gameData?.battling && <Battle gameData={gameData} />}
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
-            {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
-            {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
-            {gameData&& (
-                <div>
-                    <GameBoard 
-                    invalidCards={valid.invalidCards} 
-                    board={cardsInBoard as BoardType} 
-                    selected={{ selectedCard: selected.selectedCard, spaces }} 
-                    handlePlaceSelected={handlePlaceSelected} 
-                    handleCardClick={handleCardClick} 
-                    scale={scale}
-                    />
-                    <Hand selectedCard={selected.selectedCard} setSelected={setSelected} hand={cardsInHand} handleCardClick={handleCardClick} />
-                    <CardCursorTracker selectedCard={selected.selectedCard}/>
-                </div>
-            )}
-            {playerData&&!playerData?.generals?.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
-                <div className=" p-32 flex flex-col gap-32">
-                    <h1 className="text-3xl font-black text-neutral-50">Select General</h1>
-                    <div className="flex gap-16">
-                        {playerData.generals.choices.map((generalCard,i) => <div 
-                            key={"gen"+i}
-                            className="hover:cursor-pointer transition-all"
-                            onClick={() => handleSelection(generalCard)}
-                            >
-                            <Card card={generalCard}/>
-                            </div>)}
+            {gameData?.battling ? 
+            // Battle
+            <Battle gameData={gameData} /> 
+            :
+            // Normal
+                <>
+                {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
+                {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
+                {gameData&& (
+                    <div>
+                        <GameBoard 
+                        invalidCards={valid.invalidCards} 
+                        board={cardsInBoard as BoardType} 
+                        selected={{ selectedCard: selected.selectedCard, spaces }} 
+                        handlePlaceSelected={handlePlaceSelected} 
+                        handleCardClick={handleCardClick} 
+                        scale={scale}
+                        />
+                        <Hand selectedCard={selected.selectedCard} setSelected={setSelected} hand={cardsInHand} handleCardClick={handleCardClick} />
+                        <CardCursorTracker selectedCard={selected.selectedCard}/>
                     </div>
-                </div>
-            </div>}
+                )}
+                {playerData&&!playerData?.generals?.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
+                    <div className=" p-32 flex flex-col gap-32">
+                        <h1 className="text-3xl font-black text-neutral-50">Select General</h1>
+                        <div className="flex gap-16">
+                            {playerData.generals.choices.map((generalCard,i) => <div 
+                                key={"gen"+i}
+                                className="hover:cursor-pointer transition-all"
+                                onClick={() => handleSelection(generalCard)}
+                                >
+                                <Card card={generalCard}/>
+                                </div>)}
+                        </div>
+                    </div>
+                </div>}
+                </>
+            }
+
+            
         </div>
     );
 };
