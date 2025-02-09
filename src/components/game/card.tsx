@@ -68,7 +68,7 @@ const Card = ({
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.AtkIcon.src} height={cardComponents.AtkIcon.height} width={cardComponents.AtkIcon.width} alt="atkIcon" />
                     {/* <img className="w-10 h-10" src={cardComponents.AtkIcon.src} alt="atkIcon" /> */}
-                    <p className={`text-center ${updateStats?.newAtk ? `${updateStats.newAtk > card.atk ? "text-green-400 text-glow-green" : "text-red-400 text-glow-red" } font-black` : ""}`}>{updateStats?.newAtk ?? atk}</p>
+                    <p className={`text-center ${updateStats?.newAtk ? `${updateStats.newAtk > card.atk ? "text-green-400 text-glow-green" : updateStats.newAtk < card.atk ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{updateStats?.newAtk ?? atk}</p>
                 </div>
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.HpIcon.src} height={cardComponents.HpIcon.height} width={cardComponents.HpIcon.width} alt="hpIcon" />

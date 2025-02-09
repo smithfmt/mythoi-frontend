@@ -8,6 +8,7 @@ type Props = {
     selectedCard?: CardObjectData;
     setTargetCard?: (card:CardObjectData | undefined) => void;
     targetCard?: CardObjectData;
+    attack?: (card:CardObjectData) => void;
 }
 
 const BattleBoard = ({ 
@@ -16,7 +17,8 @@ const BattleBoard = ({
     setSelectedCard, 
     selectedCard, 
     setTargetCard, 
-    // targetCard 
+    // targetCard,
+    attack,
 } : Props ) => {
     let [minX,maxX] = [6,6];
     board.forEach(card => {
@@ -25,6 +27,22 @@ const BattleBoard = ({
     });
 
     const xOffset = right ? 1 - minX : 9 - maxX;
+    
+    const handleClick = (card: CardObjectData) => {
+        if (setSelectedCard) {
+            setSelectedCard(card);
+        }
+        if (setTargetCard && attack && card.card.hp>0) {
+            attack(card);
+        }
+    }
+
+    const handleMouseOver = (card: CardObjectData) => {
+        if (selectedCard && setTargetCard) {
+            return setTargetCard(card);
+        }
+    }
+
     return (
         <div className="flex justify-center items-center h-full w-full">
             <div className="relative">
@@ -35,9 +53,9 @@ const BattleBoard = ({
                     <div
                         key={`card-${i}`}
                         style={{ gridColumn: item.x + xOffset + 1, gridRow: item.y + 1 }}
-                        onClick={() => (setSelectedCard && setSelectedCard(item))}
                         className={`${setSelectedCard ? "hover:cursor-pointer" : ""} ${setTargetCard && item.card.hp > 0 ? "hover:cursor-pointer" : ""} pointer-events-auto`}
-                        onMouseOver={() => {if (selectedCard && setTargetCard) return (console.log(item),setTargetCard(item))}}
+                        onClick={() => handleClick(item)}
+                        onMouseOver={() => handleMouseOver(item)}
                     >
                     <Card card={item.card} />
                     </div>

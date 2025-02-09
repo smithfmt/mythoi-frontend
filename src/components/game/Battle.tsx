@@ -24,7 +24,7 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
     const [dragging, setDragging] = useState(false);
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
     const [offset, setOffset] = useState({ x: 0, y: 0 });
-    const [ctrlPressed, setCtrlPressed] = useState(false);
+    const [shiftPressed, setShiftPressed] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
 
     const [selectedCard, setSelectedCard] = useState<CardObjectData | undefined>(undefined);
@@ -40,18 +40,18 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
     },[setScale]);
 
     useEffect(() => {
-        const handleCtrlPress = (e: KeyboardEvent, value:boolean) => {
-            if (e.key==="Control") {
-                setCtrlPressed(value);
+        const handleShiftPress = (e: KeyboardEvent, value:boolean) => {
+            if (e.key==="Shift") {
+                setShiftPressed(value);
             }
         }
-        window.addEventListener("keydown", (e) => handleCtrlPress(e,true));
-        window.addEventListener("keyup", (e) => handleCtrlPress(e,false));
+        window.addEventListener("keydown", (e) => handleShiftPress(e,true));
+        window.addEventListener("keyup", (e) => handleShiftPress(e,false));
         return () => {
-            window.removeEventListener("keydown", (e) => handleCtrlPress(e,true));
-            window.removeEventListener("keyup", (e) => handleCtrlPress(e,false));
+            window.removeEventListener("keydown", (e) => handleShiftPress(e,true));
+            window.removeEventListener("keyup", (e) => handleShiftPress(e,false));
         }
-    }, [setCtrlPressed]);
+    }, [setShiftPressed]);
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -66,7 +66,7 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
 
         
 
-        if (ctrlPressed) {
+        if (shiftPressed) {
             if (dragging) {
                 window.addEventListener("mousemove", handleMouseMove);
             } else {
@@ -79,7 +79,7 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [dragging, startPos, ctrlPressed]);
+    }, [dragging, startPos, shiftPressed]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -122,6 +122,10 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
         setDragging(false);
     };
 
+    const attack = (targetCard:CardObjectData) => {
+        console.log(targetCard.card.name)
+    }
+
     const {
         battles,
         battleOrder,
@@ -153,7 +157,7 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
             <div className="max-w-screen max-h-screen flex justify-center items-center">
                 <div
                     ref={boardRef}
-                    className={`relative h-full flex justify-center select-none ${ctrlPressed ? dragging ? "cursor-grabbing" : "cursor-grab" : ""}`}
+                    className={`relative h-full flex justify-center select-none ${shiftPressed ? dragging ? "cursor-grabbing" : "cursor-grab" : ""}`}
                     style={{
                     transform: `translate(${offset.x}px, ${offset.y}px) scale(${scale})`,
                     transition: dragging ? 'none' : `transform ${easingDuration}s ease`, 
@@ -163,7 +167,7 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
                 >
                     <BattleBoard setSelectedCard={setSelectedCard} board={players.filter(p => p.id === currentBattlePlayerIds[0])[0].cardsInBoard as BoardType} />
                     <span className="w-4 h-full bg-black">a</span>
-                    <BattleBoard setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players.filter(p => p.id === currentBattlePlayerIds[1])[0].cardsInBoard as BoardType}/>
+                    <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players.filter(p => p.id === currentBattlePlayerIds[1])[0].cardsInBoard as BoardType}/>
                 </div>
                 
             </div>

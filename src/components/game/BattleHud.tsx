@@ -29,11 +29,17 @@ const BattleHud = ({
 
     const whoTurnName = players.filter(p => p.id===whoTurn)[0].name;
 
-    const { newAtk:selectedNewAtk, newHp:selectedNewHp } = calcConnectedStats(selectedCard?.card);
-    const { newAtk:targetNewAtk, newHp:targetNewHp } = calcConnectedStats(targetCard?.card);
+    const { 
+        newAtk:selectedNewAtk, 
+        // newHp:selectedNewHp 
+    } = calcConnectedStats(selectedCard?.card);
+    const { 
+        // newAtk:targetNewAtk, 
+        newHp:targetNewHp 
+    } = calcConnectedStats(targetCard?.card);
 
-    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? selectedCard.card.hp - targetCard.card.atk : undefined };
-    const targetCardStats = { newHp: targetNewHp&&selectedNewAtk ? targetNewHp - selectedNewAtk : undefined };
+    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? Math.max(selectedCard.card.hp - targetCard.card.atk, 0) : undefined };
+    const targetCardStats = { newHp: targetNewHp&&selectedNewAtk ? Math.max(targetNewHp - selectedNewAtk, 0) : undefined };
 
     const canCast = selectedCard && whoTurn === userId && selectedCard.card.style === "Bolt";
     const canAttack = selectedCard && whoTurn === userId && selectedCard.card.atk > 0;
@@ -49,19 +55,19 @@ const BattleHud = ({
             </div>
             {/* Bottom Bar */}
             <div className="absolute bottom-0 w-full flex items-end">
-                <div>
+                <div className="">
                     {selectedCard&&<Card card={selectedCard.card} updateStats={selectedCardStats}/>}
                 </div>
                 <div className="flex gap-4 p-4 pointer-events-auto">
                     <button className={`dev-button ${canAttack && action==="attack" ? "shadow-glow-white" : ""}`} disabled={!canAttack}
                         onClick={() => canAttack && setAction("attack")}
                     >
-                        Attack
+                        Attack{action==="attack" ? "ing" : ""}
                     </button>
                     <button className={`dev-button ${canCast && action==="cast" ? "shadow-glow-white" : ""}`} disabled={!canCast}
                         onClick={() => canCast && setAction("cast")}
                     >
-                        Cast
+                        Cast{action==="cast" ? "ing" : ""}
                     </button>
                 </div>
                 <div className="ml-auto">

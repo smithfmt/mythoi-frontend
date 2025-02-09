@@ -87,6 +87,11 @@ interface UpdateData {
   playerData: PlayerData;
   payment: string[];
   card: PopulatedCardData;
+  battle: {
+    selectedCardUid: string;
+    targetCardUid: string;
+    abilityId: string;
+  }
 }
 
 interface GameUpdates {
@@ -130,6 +135,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
     let playerData: PlayerData = JSON.parse(userData?.gameData as string);
     const isYourTurn = userData.id===game.turnOrder[0];
     const hasEndedTurn = playerData.turnEnded;
+    
     switch (action) {
       case "selectGeneral":
         if (playerData.generals.selected) return { message: "Already Selected General", status: 401 };
@@ -193,6 +199,35 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Remove card from the shop
         gameUpdates.heroShop = JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid));
         playerData = data.playerData;
+        break;
+      case "battle-attack":
+        // Check if a battle is happening
+        if (!game.battling) return { message: "No Battle in progress", status: 401 };
+        const { selectedCardUid, targetCardUid } = data.battle;
+        // Verify the required data is provided
+        if (!selectedCardUid || !targetCardUid) return { message: "Invalid Data", status: 401 };
+        // Get Battle Data
+        const currentBattleIndex = game.battleOrder.reduce((prev,cur) => cur === game.turn ? cur : prev,0);
+        const currentBattle = JSON.parse(game.battles[currentBattleIndex] as string) as BattleData;
+        if (!currentBattle) return { message: "Battle Not found", status: 401 };
+        const oponentId = currentBattle.players.filter(p => p.id!==user.id)[0]?.id;
+        if (!oponentId) return { message: "Oponent not found", status: 401 };
+        const oponentData = JSON.parse(game.players.filter(p => p.id===oponentId)[0].gameData as string) as PlayerData;
+        // Check that it is this user's turn in the battle
+        if (game.battleOrder[0]!==user.id) return { message: "It is not your turn", status: 401 };
+        // Validate that selected card can attack
+        const selectedCard = playerData.cards.filter(c => c.card.uid === selectedCardUid)[0];
+        if (!selectedCard) return { message: "Selected Card not found", status: 401 };
+        if (selectedCard.card.atk < 1 || selectedCard.hand) return { message: "Selected Card cannot attack", status: 401 };
+        // Validate that the target card can be attacked
+        const targetCard = oponentData.cards.filter(c => c.card.uid === targetCardUid)[0];
+        if (!targetCard || targetCard.card.hp < 1) return { message: "Target Card cannot be attacked", status: 401 };
+        // CALCULATE CONNECTION BONUSES AND THE NEW ATK AND HP FOR EACH CARD
+        // UPDATE game.battleData for both players
+        break;
+      case "battle-cast":
+        // Check if a battle is happening
+        if (!game.battling) return { message: "No Battle in progress", status: 401 };
         break;
       default:
         return { message: "Invalid action", status: 400 };
