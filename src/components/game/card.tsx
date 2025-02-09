@@ -14,7 +14,11 @@ type Props = {
     }
 }
 
-const Card = ({ card, shop, updateStats } : Props) => {
+const Card = ({ 
+    card, 
+    // shop, 
+    updateStats 
+} : Props) => {
     const { img, name, atk, hp, ability, style, cost, sides, desc } = card;
     const imageKey = `${img}.jpeg`;
     const imageData = CardImages[imageKey]?.default;

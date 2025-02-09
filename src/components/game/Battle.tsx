@@ -1,4 +1,4 @@
-import { BattleData, BoardType, CardObjectData, GameData, PlayerData } from "@data/types";
+import { ActionType, BattleData, BoardType, CardObjectData, GameData, PlayerData } from "@data/types";
 import { addActiveConnections } from "@lib/game/gameLogic";
 import { useEffect, useRef, useState } from "react";
 import BattleHud from "./BattleHud";
@@ -8,6 +8,7 @@ type Props = {
     gameData: GameData;
     scale: number;
     setScale: (x:number) => void;
+    userId: number | null;
 }
 
 
@@ -19,7 +20,7 @@ const findCardsInBoard = (playerData: PlayerData) => {
     return { cardsInBoard:inBoard, cardsInHand: inHand };
 }
 
-const Battle = ({ gameData, scale, setScale } : Props) => {
+const Battle = ({ gameData, scale, setScale, userId } : Props) => {
     const [dragging, setDragging] = useState(false);
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
     const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -28,6 +29,8 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
 
     const [selectedCard, setSelectedCard] = useState<CardObjectData | undefined>(undefined);
     const [targetCard, setTargetCard] = useState<CardObjectData | undefined>(undefined);
+
+    const [action, setAction] = useState<ActionType>("attack");
 
 
     const easingDuration = 0.2; 
@@ -106,6 +109,10 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
         };
     }, []);
 
+    useEffect(() => {
+        setAction("attack");
+    }, [selectedCard])
+
     const handleMouseDown = (e: React.MouseEvent) => {
         setDragging(true);
         setStartPos({ x: e.clientX, y: e.clientY });
@@ -123,7 +130,7 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
     let battleIndex = 0;
     battleOrder.forEach((b,i) => { if (b===turn) battleIndex=i });
     const currentBattle = JSON.parse(battles[battleIndex] as string) as BattleData;
-    const currentBattlePlayerIds = currentBattle.players.map(p => p.id);
+    const currentBattlePlayerIds = currentBattle.players.map(p => p.id).sort(p => p === userId ? -1 : 1);
     const players = gameData.players.map(p => {
         const playerData = JSON.parse(p.gameData as string) as PlayerData
         const { cardsInBoard, cardsInHand } = findCardsInBoard(playerData) 
@@ -139,6 +146,9 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
                 whoTurn={whoTurn} 
                 selectedCard={selectedCard}
                 targetCard={targetCard}
+                userId={userId}
+                action={action}
+                setAction={setAction}
             />
             <div className="max-w-screen max-h-screen flex justify-center items-center">
                 <div

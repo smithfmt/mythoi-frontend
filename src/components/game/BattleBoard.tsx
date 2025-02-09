@@ -7,9 +7,17 @@ type Props = {
     setSelectedCard?: (card:CardObjectData) => void; 
     selectedCard?: CardObjectData;
     setTargetCard?: (card:CardObjectData | undefined) => void;
+    targetCard?: CardObjectData;
 }
 
-const BattleBoard = ({ board, right=false, setSelectedCard, selectedCard, setTargetCard } : Props ) => {
+const BattleBoard = ({ 
+    board, 
+    right=false, 
+    setSelectedCard, 
+    selectedCard, 
+    setTargetCard, 
+    // targetCard 
+} : Props ) => {
     let [minX,maxX] = [6,6];
     board.forEach(card => {
         if (card.x>maxX)  maxX=card.x;
@@ -28,7 +36,7 @@ const BattleBoard = ({ board, right=false, setSelectedCard, selectedCard, setTar
                         key={`card-${i}`}
                         style={{ gridColumn: item.x + xOffset + 1, gridRow: item.y + 1 }}
                         onClick={() => (setSelectedCard && setSelectedCard(item))}
-                        className={`${setSelectedCard ? "hover:cursor-pointer" : ""} pointer-events-auto`}
+                        className={`${setSelectedCard ? "hover:cursor-pointer" : ""} ${setTargetCard && item.card.hp > 0 ? "hover:cursor-pointer" : ""} pointer-events-auto`}
                         onMouseOver={() => {if (selectedCard && setTargetCard) return (console.log(item),setTargetCard(item))}}
                     >
                     <Card card={item.card} />

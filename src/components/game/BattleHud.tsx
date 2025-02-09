@@ -1,4 +1,4 @@
-import { BattleData, CardObjectData } from "@data/types";
+import { ActionType, BattleData, CardObjectData } from "@data/types";
 import Card from "./card";
 import { calcConnectedStats } from "@lib/game/cardUtils";
 
@@ -7,9 +7,20 @@ type Props = {
     whoTurn: number;
     selectedCard?: CardObjectData;
     targetCard?: CardObjectData;
+    userId: number | null;
+    action: ActionType;
+    setAction: (action:ActionType) => void;
 }
 
-const BattleHud = ({ battleData, whoTurn, selectedCard, targetCard } : Props) => {
+const BattleHud = ({ 
+    battleData, 
+    whoTurn, 
+    selectedCard, 
+    targetCard, 
+    userId, 
+    action, 
+    setAction, 
+} : Props) => {
     const { players,
             // graveyard,
             // ended,
@@ -17,13 +28,15 @@ const BattleHud = ({ battleData, whoTurn, selectedCard, targetCard } : Props) =>
             turn } = battleData;
 
     const whoTurnName = players.filter(p => p.id===whoTurn)[0].name;
-    const isAttacking = true;
 
     const { newAtk:selectedNewAtk, newHp:selectedNewHp } = calcConnectedStats(selectedCard?.card);
     const { newAtk:targetNewAtk, newHp:targetNewHp } = calcConnectedStats(targetCard?.card);
 
     const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? selectedCard.card.hp - targetCard.card.atk : undefined };
     const targetCardStats = { newHp: targetNewHp&&selectedNewAtk ? targetNewHp - selectedNewAtk : undefined };
+
+    const canCast = selectedCard && whoTurn === userId && selectedCard.card.style === "Bolt";
+    const canAttack = selectedCard && whoTurn === userId && selectedCard.card.atk > 0;
 
     return (
         <div className="fixed h-screen w-screen inset-0 z-50 pointer-events-none">
@@ -40,10 +53,14 @@ const BattleHud = ({ battleData, whoTurn, selectedCard, targetCard } : Props) =>
                     {selectedCard&&<Card card={selectedCard.card} updateStats={selectedCardStats}/>}
                 </div>
                 <div className="flex gap-4 p-4 pointer-events-auto">
-                    <button className="dev-button" disabled={!selectedCard || selectedCard.card.atk === 0}>
+                    <button className={`dev-button ${canAttack && action==="attack" ? "shadow-glow-white" : ""}`} disabled={!canAttack}
+                        onClick={() => canAttack && setAction("attack")}
+                    >
                         Attack
                     </button>
-                    <button className="dev-button" disabled={!selectedCard || selectedCard.card.ability!=="Bolt"}>
+                    <button className={`dev-button ${canCast && action==="cast" ? "shadow-glow-white" : ""}`} disabled={!canCast}
+                        onClick={() => canCast && setAction("cast")}
+                    >
                         Cast
                     </button>
                 </div>

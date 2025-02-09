@@ -17,6 +17,9 @@ const config: Config = {
         foreground: "var(--foreground)",
         cardText: "#372B00",
       },
+      boxShadow: {
+        "glow-white": "0px 0px 16px #fff"
+      },
       keyframes: {
         errorEnter: {
           "0%": {transform:"translateX(-100%)"},

@@ -4,7 +4,7 @@ export const cards: CardsObject = {
     basic: [
         { weight: 4, img : ["Warrior 1","Warrior 2","Warrior 3","Warrior 4","Warrior 5"], name : "Warrior", atk : 2, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Soldier", style : "Passive", cost : 0, desc : "A brave soldier for your army",},
         { weight: 3, img : ["Archer 1","Archer 2","Archer 3","Archer 4"], name : "Archer", atk : 2, hp : 1, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Ranged", style : "Passive", cost : 0, desc : "All attacks are ranged",},
-        { weight: 3, img : ["Horseman 1","Horseman 2","Horseman 3","Horseman 4"], name : "Horseman", atk : 3, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Charge", style : "Bolt", cost : 0, desc : "Can always attack first",},
+        { weight: 3, img : ["Horseman 1","Horseman 2","Horseman 3","Horseman 4"], name : "Horseman", atk : 3, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Charge", style : "Passive", cost : 0, desc : "Can always attack first",},
         { weight: 2, img : ["Helmet 1", "Helmet 2"], name : "Helmet", atk : 0, hp : 0, connect : 1, red : 0, green : 0, blue : 0, type : "basic", ability : "Equipment", style : "Passive", cost : 0, desc : "A trusty helmet",},
         { weight: 2, img : ["Shield 1", "Shield 2"], name : "Shield", atk : 0, hp : 0, connect : 1, red : 0, green : 0, blue : 0, type : "basic", ability : "Equipment", style : "Passive", cost : 0, desc : "A tough shield",},
         { weight: 2, img : ["Sword 1", "Sword 2"], name : "Sword", atk : 0, hp : 0, connect : 1, red : 0, green : 0, blue : 0, type : "basic", ability : "Equipment", style : "Passive", cost : 0, desc : "A sharp sword",},

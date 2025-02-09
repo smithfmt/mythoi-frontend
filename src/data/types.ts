@@ -124,3 +124,5 @@ export type UserDataType = {
     id: number;
     gameData: string;
 }
+
+export type ActionType = "attack" | "cast";

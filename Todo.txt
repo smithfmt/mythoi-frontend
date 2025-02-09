@@ -23,3 +23,8 @@ In the Battle, on a user's turn, they want to be able to click on one of their c
 
 -- Long Term Refactoring --
 Move anything currently stored as Json to have its own db tables (battle player.gameData etc.) - use relationals to link them
+
+-- Minor bugs --
+Shop should cycle on its own (not only when people buy)
+Horseman should not be bolt
+When battle starts, the view doesn't change without refresh
