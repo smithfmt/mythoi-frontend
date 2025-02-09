@@ -4,10 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
 import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData, UserDataType } from "@data/types";
-import GameBoard from "@components/game/Board";
+import GameBoard from "@components/game/board";
 import Hand from "@components/game/Hand";
 import { addActiveConnections, getPlaceableSpaces } from "@lib/game/gameLogic";
-import Card from "@components/game/Card";
+import Card from "@components/game/card";
 import GameHud from "@components/game/GameHud";
 import { placeCard } from "@lib/game/gameplay";
 import { fetchGameById, fetchUserById, updateGameById } from "@app/requests";
@@ -165,7 +165,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {gameData?.battling ? 
             // Battle
-            <Battle gameData={gameData} /> 
+            <Battle gameData={gameData} scale={scale} setScale={setScale} /> 
             :
             // Normal
                 <>

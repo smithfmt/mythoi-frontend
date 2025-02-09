@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { BoardType, CardObjectData, PopulatedCardData } from "@data/types";
-import Card from "./Card";
+import Card from "./card";
 
 type Props = {
   board: BoardType; 
