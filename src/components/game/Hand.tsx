@@ -1,5 +1,5 @@
 import { CardObjectData, PopulatedCardData } from "@data/types";
-import Card from "./Card";
+import Card from "./card";
 import { Dispatch, SetStateAction } from "react";
 
 type Props = {

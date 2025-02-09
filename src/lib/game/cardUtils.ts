@@ -102,3 +102,31 @@ export const extractCardValue = (card: PopulatedCardData) => {
     });
     return result;
 };
+
+export const calcConnectedStats = (card?: PopulatedCardData) => {
+    if (!card) return { newAtk: undefined, newHp: undefined };
+    let [newAtk, newHp] = [card.atk, card.hp];
+    Object.values(card.sides).forEach(side => {
+        if (side.active) {
+            switch (side.attribute) {
+                case "Agi":
+                    newHp++;
+                    break;
+                case "Str":
+                    newAtk++;
+                    break;
+                case "Int":
+                    newAtk++;
+                    newHp++;
+                    break;
+                case "Div":
+                    newAtk++;
+                    newHp++;
+                    break;
+                case "Mon":
+                    break;
+            }
+        }
+    });
+    return { newAtk, newHp };
+}

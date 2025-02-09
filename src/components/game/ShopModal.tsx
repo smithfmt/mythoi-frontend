@@ -1,5 +1,5 @@
 import { useState } from "react";
-import Card from "./Card";
+import Card from "./card";
 import Image from "next/image";
 import cardComponents from "@assets/card/cardComponents";
 import { CardObjectData, PlayerData, PopulatedCardData } from "@data/types";

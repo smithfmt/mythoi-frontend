@@ -5,7 +5,16 @@ import Image from "next/image";
 import { CardImages } from "@assets/images";
 import Default from "@assets/card/images/Spare 2.jpeg"
 
-const Card = ({ card } : { card: PopulatedCardData, shop?: boolean }) => {
+type Props = {
+    card: PopulatedCardData; 
+    shop?: boolean;
+    updateStats?: {
+        newAtk?: number;
+        newHp?: number;
+    }
+}
+
+const Card = ({ card, shop, updateStats } : Props) => {
     const { img, name, atk, hp, ability, style, cost, sides, desc } = card;
     const imageKey = `${img}.jpeg`;
     const imageData = CardImages[imageKey]?.default;
@@ -55,12 +64,12 @@ const Card = ({ card } : { card: PopulatedCardData, shop?: boolean }) => {
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.AtkIcon.src} height={cardComponents.AtkIcon.height} width={cardComponents.AtkIcon.width} alt="atkIcon" />
                     {/* <img className="w-10 h-10" src={cardComponents.AtkIcon.src} alt="atkIcon" /> */}
-                    <p className="text-center">{atk}</p>
+                    <p className={`text-center ${updateStats?.newAtk ? `${updateStats.newAtk > card.atk ? "text-green-400 text-glow-green" : "text-red-400 text-glow-red" } font-black` : ""}`}>{updateStats?.newAtk ?? atk}</p>
                 </div>
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.HpIcon.src} height={cardComponents.HpIcon.height} width={cardComponents.HpIcon.width} alt="hpIcon" />
                     {/* <img className="w-10 h-10" src={cardComponents.HpIcon.src} alt="hpIcon" /> */}
-                    <p className="text-center">{hp}</p>
+                    <p className={`text-center ${updateStats?.newHp ? `${updateStats.newHp > card.hp ? "text-green-400 text-glow-green" : updateStats.newHp < card.hp ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{updateStats?.newHp ?? hp}</p>
                 </div>
             </div>}
 

@@ -56,6 +56,18 @@ body {
     @apply relative box-border bg-[#917E54] border-b-2 border-b-[#6F4C30] border-t-2 border-t-[#75342A] border-opacity-40 after:card-shadow after:absolute after:w-full after:h-full
   }
 
+  .dev-button {
+    @apply bg-neutral-900 text-neutral-50 text-lg border-neutral-50 border-2 rounded-lg p-4 hover:bg-neutral-800 active:bg-neutral-600 disabled:cursor-default disabled:bg-neutral-600 disabled:text-neutral-300
+  }
+
+  .text-glow-green {
+    text-shadow: #4ade80 0 0 16px;
+  }
+
+  .text-glow-red {
+    text-shadow: #f87171 0 0 16px;
+  }
+
   .debug {
     outline: 2px solid lime;
   }

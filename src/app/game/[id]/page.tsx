@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
 import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData, UserDataType } from "@data/types";
-import GameBoard from "@components/game/board";
+import GameBoard from "@components/game/Board";
 import Hand from "@components/game/Hand";
 import { addActiveConnections, getPlaceableSpaces } from "@lib/game/gameLogic";
 import Card from "@components/game/card";

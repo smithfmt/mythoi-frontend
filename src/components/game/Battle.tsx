@@ -1,7 +1,8 @@
 import { BattleData, BoardType, CardObjectData, GameData, PlayerData } from "@data/types";
-import Card from "./card";
 import { addActiveConnections } from "@lib/game/gameLogic";
 import { useEffect, useRef, useState } from "react";
+import BattleHud from "./BattleHud";
+import BattleBoard from "./BattleBoard";
 
 type Props = {
     gameData: GameData;
@@ -9,32 +10,6 @@ type Props = {
     setScale: (x:number) => void;
 }
 
-const BattleBoard = ({ board, right=false }: {board: BoardType, right?: boolean}) => {
-    let [minX,maxX] = [6,6];
-    board.forEach(card => {
-        if (card.x>maxX)  maxX=card.x;
-        if (card.x<minX) minX=card.x;
-    });
-
-    const xOffset = right ? 1 - minX : 9 - maxX;
-    return (
-        <div className="flex justify-center items-center h-full w-full">
-            <div className="relative">
-                <div className="grid grid-cols-[repeat(11,13rem)] grid-rows-[repeat(11,18rem)] gap-1 border border-gray-300">
-                {board.map((item, i) => (
-                    <div
-                    key={`card-${i}`}
-                    style={{ gridColumn: item.x + xOffset + 1, gridRow: item.y + 1 }}
-                    >
-                    <Card card={item.card} />
-                    </div>
-                ))}
-            
-                </div>
-            </div>
-        </div>
-    );
-}
 
 const findCardsInBoard = (playerData: PlayerData) => {
     const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as BoardType) : [];
@@ -50,6 +25,10 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
     const [offset, setOffset] = useState({ x: 0, y: 0 });
     const [ctrlPressed, setCtrlPressed] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
+
+    const [selectedCard, setSelectedCard] = useState<CardObjectData | undefined>(undefined);
+    const [targetCard, setTargetCard] = useState<CardObjectData | undefined>(undefined);
+
 
     const easingDuration = 0.2; 
 
@@ -151,8 +130,16 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
         return {...p, gameData: playerData, cardsInBoard, cardsInHand };
     });
     
+    const whoTurn = currentBattle.players.filter(p => p.id === currentBattle.turnOrder[0])[0].id;
+
     return (
         <div className="w-full h-full flex justify-center gap-16">
+            <BattleHud 
+                battleData={currentBattle} 
+                whoTurn={whoTurn} 
+                selectedCard={selectedCard}
+                targetCard={targetCard}
+            />
             <div className="max-w-screen max-h-screen flex justify-center items-center">
                 <div
                     ref={boardRef}
@@ -164,9 +151,9 @@ const Battle = ({ gameData, scale, setScale } : Props) => {
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                 >
-                    <BattleBoard board={players.filter(p => p.id === currentBattlePlayerIds[0])[0].cardsInBoard as BoardType} />
+                    <BattleBoard setSelectedCard={setSelectedCard} board={players.filter(p => p.id === currentBattlePlayerIds[0])[0].cardsInBoard as BoardType} />
                     <span className="w-4 h-full bg-black">a</span>
-                    <BattleBoard right={true} board={players.filter(p => p.id === currentBattlePlayerIds[1])[0].cardsInBoard as BoardType}/>
+                    <BattleBoard setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players.filter(p => p.id === currentBattlePlayerIds[1])[0].cardsInBoard as BoardType}/>
                 </div>
                 
             </div>

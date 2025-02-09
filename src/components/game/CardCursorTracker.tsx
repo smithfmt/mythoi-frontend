@@ -1,5 +1,5 @@
 import { PopulatedCardData } from "@data/types";
-import Card from "./Card";
+import Card from "./card";
 import useMousePosition from "@hooks/useMousePosition";
 
 const CardCursorTracker = ({selectedCard}:{selectedCard:PopulatedCardData|null}) => {
