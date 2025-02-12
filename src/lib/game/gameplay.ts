@@ -67,8 +67,8 @@ export const returnToHand = (cardData: CardObjectData) => {
     return { card : clearConnections(cardData).card, hand: true } as CardObjectData;
 }
 
-export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveyard: PopulatedCardData[]) => {
-    const newGraveyard = [...graveyard,playerData.cards.filter(cardData => cardData.card.uid === cardUid)[0].card];
+export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveyard: { card:PopulatedCardData, playerId:number }[]) => {
+    const newGraveyard = [...graveyard, { card: playerData.cards.filter(cardData => cardData.card.uid === cardUid)[0].card, playerId: playerData.player }];
     const filteredCards = playerData.cards.map(cardData => cardData.card.uid === cardUid ? returnToHand(cardData) : cardData);
     const newCards = addActiveConnections(filteredCards);
     return {
@@ -77,10 +77,10 @@ export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveya
     }
 }
 
-export const sendDeadToGraveyard = (playerData: PlayerData, graveyard: PopulatedCardData[]) => {
+export const sendDeadToGraveyard = (playerData: PlayerData, graveyard: { card:PopulatedCardData, playerId:number }[]) => {
     const newCards = playerData.cards.map(cardData => {
         if (!cardData.hand && cardData.card.hp === 0) {
-            graveyard.push(clearConnections(cardData).card);
+            graveyard.push({ card: clearConnections(cardData).card, playerId: playerData.player});
             return returnToHand(cardData);
         }
         return cardData;

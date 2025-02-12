@@ -3,6 +3,10 @@ import { addActiveConnections } from "@lib/game/gameLogic";
 import { useEffect, useRef, useState } from "react";
 import BattleHud from "./BattleHud";
 import BattleBoard from "./BattleBoard";
+import { useLoading } from "@components/providers/LoadingContext";
+import { useErrorHandler } from "@components/providers/ErrorContext";
+import { updateGameById } from "@app/requests";
+import handleError from "@utils/handleError";
 
 type Props = {
     gameData: GameData;
@@ -21,6 +25,8 @@ const findCardsInBoard = (playerData: PlayerData) => {
 }
 
 const Battle = ({ gameData, scale, setScale, userId } : Props) => {
+    const { startLoading, stopLoading } = useLoading();
+    const { addError } = useErrorHandler();
     const [dragging, setDragging] = useState(false);
     const [startPos, setStartPos] = useState({ x: 0, y: 0 });
     const [offset, setOffset] = useState({ x: 0, y: 0 });
@@ -122,8 +128,20 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
         setDragging(false);
     };
 
-    const attack = (targetCard:CardObjectData) => {
-        console.log(targetCard.card.name)
+    const attack = async (targetCard:CardObjectData) => {
+        if (!selectedCard) return;
+        try {
+            startLoading();
+            await updateGameById(gameData.id, "battle-attack", { battle: {
+                selectedCardUid: selectedCard.card.uid,
+                targetCardUid: targetCard.card.uid,
+            } });
+            setSelectedCard(undefined);
+        } catch (error: unknown) {
+            addError(handleError(error));
+        } finally {
+            stopLoading();
+        }
     }
 
     const {

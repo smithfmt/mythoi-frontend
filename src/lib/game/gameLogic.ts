@@ -169,7 +169,7 @@ export const addActiveConnections = (cards:CardObjectData[]) => {
 
 export const clearConnections = (cardData:CardObjectData) => {
     const sides = Object.keys(dirMap);
-    sides.forEach(side => cardData.card[side].active = false);
+    sides.forEach(side => cardData.card[side] ? cardData.card[side].active = false : "");
     return cardData;
 }
 

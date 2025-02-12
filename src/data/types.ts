@@ -96,7 +96,7 @@ export type BattleData = {
         id: number;
         name: string;
     }[];
-    graveyard: { card:CardData, playerId: number}[];
+    graveyard: { card:PopulatedCardData, playerId: number}[];
     ended: boolean;
     turnOrder: number[];
     turn: number;

@@ -9,9 +9,10 @@ import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { BattleData, BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
-import { drawBasicCard } from 'src/lib/game/gameplay';
+import { drawBasicCard, sendDeadToGraveyard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
+import { JsonValue } from '@prisma/client/runtime/library';
 
 export const createGame = async (lobby: LobbyType) => {
   try {
@@ -98,6 +99,7 @@ interface GameUpdates {
   turnOrder?: number[];
   heroShop?: string;
   discardPile?: string;
+  battles?: JsonValue[];
 }
 
 const manageTurns = async (id: string) => {
@@ -207,25 +209,54 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Verify the required data is provided
         if (!selectedCardUid || !targetCardUid) return { message: "Invalid Data", status: 401 };
         // Get Battle Data
-        const currentBattleIndex = game.battleOrder.reduce((prev,cur) => cur === game.turn ? cur : prev,0);
+        let currentBattleIndex = 0;
+        game.battleOrder.forEach((item,i) => {if (item === game.turn) currentBattleIndex = i})
         const currentBattle = JSON.parse(game.battles[currentBattleIndex] as string) as BattleData;
         if (!currentBattle) return { message: "Battle Not found", status: 401 };
-        const oponentId = currentBattle.players.filter(p => p.id!==user.id)[0]?.id;
+        let currentPlayerIndex = 0;
+        const currentPlayerData = JSON.parse(game.players.filter((p,i) => { if (p.id===playerData.player) {currentPlayerIndex=i; return true} return false })[0].gameData as string) as PlayerData;
+        let oponentPlayerIndex = 0;
+        const oponentId = currentBattle.players.filter((p,i) => { if (p.id!==user.id) {oponentPlayerIndex=i; return true} return false })[0]?.id;
         if (!oponentId) return { message: "Oponent not found", status: 401 };
+        if (currentPlayerIndex===oponentPlayerIndex) return { message: "Error finding players", status: 401 };
         const oponentData = JSON.parse(game.players.filter(p => p.id===oponentId)[0].gameData as string) as PlayerData;
         // Check that it is this user's turn in the battle
-        if (game.battleOrder[0]!==user.id) return { message: "It is not your turn", status: 401 };
+        if (currentBattle.turnOrder[0]!==user.id) return { message: "It is not your turn", status: 401 };
         // Validate that selected card can attack
-        const selectedCard = playerData.cards.filter(c => c.card.uid === selectedCardUid)[0];
+        const selectedCard = currentPlayerData.cards.filter(c => c.card.uid === selectedCardUid)[0];
         if (!selectedCard) return { message: "Selected Card not found", status: 401 };
         if (selectedCard.card.atk < 1 || selectedCard.hand) return { message: "Selected Card cannot attack", status: 401 };
         // Validate that the target card can be attacked
         const targetCard = oponentData.cards.filter(c => c.card.uid === targetCardUid)[0];
         if (!targetCard || targetCard.card.hp < 1) return { message: "Target Card cannot be attacked", status: 401 };
-        // CALCULATE CONNECTION BONUSES AND THE NEW ATK AND HP FOR EACH CARD
-        const { newAtk: selectedNewAtk, newHp: selectedNewHp } = calcConnectedStats(selectedCard.card);
-        const { newAtk: targetNewAtk, newHp: targetNewHp } = calcConnectedStats(targetCard.card);
-        // UPDATE game.battleData for both players
+        // Calculate Connection Bonuses 
+        const { newAtk: selectedNewAtk } = calcConnectedStats(selectedCard.card);
+        const { newHp: targetNewHp } = calcConnectedStats(targetCard.card);
+        // Update Cards for both Players
+        currentPlayerData.cards = currentPlayerData.cards.map(cardData => {
+          if (cardData.card.uid === selectedCard.card.uid) {
+            cardData.card.hp = cardData.card.hp - targetCard.card.atk;
+          }
+          return cardData;
+        });
+
+        oponentData.cards = oponentData.cards.map(cardData => {
+          if (cardData.card.uid === targetCard.card.uid) {
+            cardData.card.hp = (targetNewHp || targetCard.card.hp) - (selectedNewAtk || selectedCard.card.atk);
+          }
+          return cardData;
+        });
+        // Update battle data with both players
+        const { playerData: finalCurrentPlayerData, graveyard } = sendDeadToGraveyard(currentPlayerData, currentBattle.graveyard);
+        const { playerData: finalOponentData, graveyard: finalGraveyard } = sendDeadToGraveyard(currentPlayerData, graveyard);
+
+        currentBattle.players[currentPlayerIndex].gameData.players = currentBattle.players[currentPlayerIndex].gameData.players.map(p => p.id === currentPlayerData.player ? {...p, gameData: finalCurrentPlayerData} : p);
+        currentBattle.players[oponentPlayerIndex].gameData.players = currentBattle.players[oponentPlayerIndex].gameData.players.map(p => p.id === oponentData.player ? {...p, gameData: finalOponentData} : p);
+        currentBattle.graveyard = finalGraveyard;
+
+        game.battles[currentBattleIndex] = JSON.stringify(currentBattle);
+
+        gameUpdates.battles = game.battles;
         break;
       case "battle-cast":
         // Check if a battle is happening
