@@ -167,6 +167,12 @@ export const addActiveConnections = (cards:CardObjectData[]) => {
     return updatedCards;
 }
 
+export const clearConnections = (cardData:CardObjectData) => {
+    const sides = Object.keys(dirMap);
+    sides.forEach(side => cardData.card[side].active = false);
+    return cardData;
+}
+
 export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
     // if (Old.player!==New.player) return false;
     let result = true;
@@ -180,7 +186,6 @@ export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
     });
     return result;
 }
-
 
 export const validatePayment = (
     cardToBuy: PopulatedCardData,

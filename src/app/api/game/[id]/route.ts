@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { generateBattle, generateBattleOrder, generatePlayerGenerals } from 'src/lib/game/generation';
-import { generateCard } from 'src/lib/game/cardUtils';
+import { calcConnectedStats, generateCard } from 'src/lib/game/cardUtils';
 import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { LobbyType, UserType } from '@app/api/types';
@@ -223,6 +223,8 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         const targetCard = oponentData.cards.filter(c => c.card.uid === targetCardUid)[0];
         if (!targetCard || targetCard.card.hp < 1) return { message: "Target Card cannot be attacked", status: 401 };
         // CALCULATE CONNECTION BONUSES AND THE NEW ATK AND HP FOR EACH CARD
+        const { newAtk: selectedNewAtk, newHp: selectedNewHp } = calcConnectedStats(selectedCard.card);
+        const { newAtk: targetNewAtk, newHp: targetNewHp } = calcConnectedStats(targetCard.card);
         // UPDATE game.battleData for both players
         break;
       case "battle-cast":

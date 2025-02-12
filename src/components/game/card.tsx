@@ -38,7 +38,7 @@ const Card = ({
 
     return (
         <div className="grid-stack-children relative z-50 w-[13rem] h-[18rem] bg-neutral-50 font-cinzel">
-            
+            {updateStats?.newHp === 0 && <div className="z-[100] pointer-events-none bg-red-500/50 w-full h-full"></div>}
             <div className="relative z-20 w-full h-full p-6 overflow-hidden">
 
             {/* Character Image */}

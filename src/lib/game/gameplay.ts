@@ -1,7 +1,8 @@
 import { cards } from "@data/cards";
-import { PlayerData, Space } from "@data/types";
+import { CardObjectData, PlayerData, PopulatedCardData, Space } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
 import { generateCard } from "./cardUtils";
+import { addActiveConnections, clearConnections } from "./gameLogic";
 
 export const drawBasicCard = () => {
     // Step 1: Calculate the total weight
@@ -62,4 +63,30 @@ export const placeCard = (playerData: PlayerData, uid: string, space: Space,): [
     return [playerData, null];
 }
 
+export const returnToHand = (cardData: CardObjectData) => {
+    return { card : clearConnections(cardData).card, hand: true } as CardObjectData;
+}
 
+export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveyard: PopulatedCardData[]) => {
+    const newGraveyard = [...graveyard,playerData.cards.filter(cardData => cardData.card.uid === cardUid)[0].card];
+    const filteredCards = playerData.cards.map(cardData => cardData.card.uid === cardUid ? returnToHand(cardData) : cardData);
+    const newCards = addActiveConnections(filteredCards);
+    return {
+        updatedPlayerData: { ...playerData, cards: newCards },
+        graveyard: newGraveyard,
+    }
+}
+
+export const sendDeadToGraveyard = (playerData: PlayerData, graveyard: PopulatedCardData[]) => {
+    const newCards = playerData.cards.map(cardData => {
+        if (!cardData.hand && cardData.card.hp === 0) {
+            graveyard.push(clearConnections(cardData).card);
+            return returnToHand(cardData);
+        }
+        return cardData;
+    });
+    return {
+        playerData: { ...playerData, cards: newCards },
+        graveyard,
+    }
+}
