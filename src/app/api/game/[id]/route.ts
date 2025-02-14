@@ -249,11 +249,9 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Update battle data with both players
         const { playerData: finalCurrentPlayerData, graveyard } = sendDeadToGraveyard(currentPlayerData, currentBattle.graveyard);
         const { playerData: finalOponentData, graveyard: finalGraveyard } = sendDeadToGraveyard(currentPlayerData, graveyard);
-
-        currentBattle.players[currentPlayerIndex].gameData.players = currentBattle.players[currentPlayerIndex].gameData.players.map(p => p.id === currentPlayerData.player ? {...p, gameData: finalCurrentPlayerData} : p);
-        currentBattle.players[oponentPlayerIndex].gameData.players = currentBattle.players[oponentPlayerIndex].gameData.players.map(p => p.id === oponentData.player ? {...p, gameData: finalOponentData} : p);
+        currentBattle.players[currentPlayerIndex].gameData = finalCurrentPlayerData;
+        currentBattle.players[oponentPlayerIndex].gameData = finalOponentData;
         currentBattle.graveyard = finalGraveyard;
-
         game.battles[currentBattleIndex] = JSON.stringify(currentBattle);
 
         gameUpdates.battles = game.battles;

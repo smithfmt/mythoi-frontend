@@ -24,8 +24,7 @@ model User {
 
   lobbyId   Int? 
   lobby     Lobby?   @relation(fields: [lobbyId], references: [id])
-  gameId    Int?
-  game      Game?    @relation(fields: [gameId], references: [id]) 
+  player    Player?
   gameData  Json?
 }
 
@@ -46,7 +45,7 @@ model Game {
   id         Int      @id @default(autoincrement())
   name       String
   createdAt  DateTime @default(now())
-  players    User[]
+  players    Player[]
   host       String
   turn       Int      @default(1)
   turnOrder  Int[]
@@ -59,3 +58,74 @@ model Game {
   battles    Json[]
   battling   Boolean  @default(false)
 }
+
+model Player {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  user       User     @relation(fields: [userId], references: [id])
+  gameId     Int      @unique
+  game       Game     @relation(fields: [gameId], references: [id])
+  cards      Card[]
+  battles    Battle[]
+  battleCards BattleCard[]
+}
+
+model Card {
+  id         Int      @id @default(autoincrement())
+  playerId   Int      @unique
+  player     Player   @relation(fields: [playerId], references: [id])
+  uid        String
+  img        String
+  name       String
+  atk        Int
+  hp         Int
+  top        Json
+  right      Json
+  bottom     Json
+  left       Json
+  type       String
+  ability    String
+  style      String
+  cost       String[]
+  desc       String
+  x          Int?
+  y          Int?
+  hand       Boolean?
+  battleCard BattleCard[]
+}
+
+model Battle {
+  id         Int      @id @default(autoincrement())
+  players    Player[]
+  graveyard  BattleCard[]
+  ended      Boolean
+  turnOrder  Int[]
+  turn       Int
+}
+
+model BattleCard {
+  id         Int      @id @default(autoincrement())
+
+  battleId   Int
+  battle     Battle   @relation(fields: [battleId], references: [id])
+
+  playerId   Int
+  player     Player   @relation(fields: [playerId], references: [id])
+
+  gameCardId Int?
+  gameCard   Card?    @relation(fields: [gameCardId], references: [id])
+
+  currentAtk Int
+  currentHp  Int
+  x          Int
+  y          Int
+  hand       Boolean? @default(false)
+  top        Json
+  right      Json
+  bottom     Json
+  left       Json
+  cast       Boolean? @default(false)
+}
+
+
+
