@@ -69,7 +69,7 @@ const createLobby = async (user:UserType, name:string) => {
         players: { connect: { id: user.id } },
         name,
         started: false,
-        host: user.id,
+        hostId: user.id,
         playerCount: 1,
       },
     });

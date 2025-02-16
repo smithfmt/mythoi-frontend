@@ -7,12 +7,12 @@ import socket from "@utils/socketClient";
 import { useLoading } from "@components/providers/LoadingContext";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
-import { LobbyType } from "@app/api/types";
 import { fetchLobbyById, updateLobbyById } from "@app/requests";
+import { LobbyData } from "@data/types";
 
 const LobbyPage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
-    const [lobby, setLobby] = useState<LobbyType | null>(null);
+    const [lobby, setLobby] = useState<LobbyData | null>(null);
     const { startLoading, stopLoading } = useLoading();
     const { addError } = useErrorHandler();
     const [isHost, setIsHost] = useState(false);
@@ -24,7 +24,7 @@ const LobbyPage = ({ params }: { params: { id: string } }) => {
                 startLoading();
                 const response = await fetchLobbyById(id);
                 setLobby(response.data.lobby);
-                if (response.data.lobby.host === userId) {
+                if (response.data.lobby.hostId === userId) {
                     setIsHost(true);
                 }
             } catch (error) {

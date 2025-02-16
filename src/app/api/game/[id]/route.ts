@@ -3,56 +3,61 @@ import { generateBattle, generateBattleOrder, generatePlayerGenerals } from 'src
 import { calcConnectedStats, generateCard } from 'src/lib/game/cardUtils';
 import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
-import { LobbyType, UserType } from '@app/api/types';
 import { cards } from '@data/cards';
 import { nextErrorHandler } from '@utils/nextErrorHandler';
 import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
-import { BattleData, BoardType, CardObjectData, PlayerData, PopulatedCardData } from '@data/types';
+import { BattleData, LobbyData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard, sendDeadToGraveyard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
 import { JsonValue } from '@prisma/client/runtime/library';
 
-export const createGame = async (lobby: LobbyType) => {
+export const createGame = async (lobby: LobbyData) => {
   try {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
-    const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId]));
+    const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId])).map(c => ({ ...c, inHeroShop: true }));
     
     const battleDistribution = 5;
     const battleCount = 1;
     const battleOrder = generateBattleOrder(battleCount,battleDistribution);
 
+// Create Game in DB
     const game = await prisma.game.create({
       data: {
         name: `Game for ${lobby.name}`,
-        players: { connect: lobby.players.map((player) => ({ id: player.id })) },
-        host: lobby.host.toString(), 
+        hostId: lobby.hostId, 
         turn: 1,
         turnOrder: shuffle(lobby.players).map(p => p.id), 
         heroDeck,
-        heroShop: JSON.stringify(heroShop),
-        discardPile: JSON.stringify([]),
         battleOrder,
+        lobbyId: lobby.id
       },
     });
-    lobby.players.forEach(async (player, i) => {
-      await updateUserById(player.id, {
-        gameData: JSON.stringify({
-          player: player.id,
-          generals: {
-            selected: false,
-            choices: playerGenerals[i],
-          },
-          cards: [],
-          turnEnded: false,
-        })
-      })
-    })
+// Create first Shop Cards and Generals
+    await prisma.card.createMany({
+      data: [
+        ...heroShop,
+        ...lobby.players
+          .map((player,i) => 
+            playerGenerals[i].map(genCard => ({ ...genCard, playerId: player.id, isGeneralSelection: true })))
+          .flat(),
+      ],
+    });
+// Create Players
+    await prisma.player.createMany({
+      data: lobby.players.map(p => (
+        {
+          userId: p.id,
+          gameId: game.id,
+        }
+      ))
+    });
 
     return game;
   } catch (error: unknown) {
+    console.log(error)
     return nextErrorHandler(error);
   }
 };

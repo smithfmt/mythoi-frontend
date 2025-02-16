@@ -51,6 +51,9 @@ model Player {
   cards      Card[]
   battles    Battle[]
   battleCards BattleCard[]
+
+  generalSelected Boolean @default(false)
+  turnEnded Boolean @default(false)
 }
 
 model Game {
@@ -73,13 +76,14 @@ model Game {
 
 model Card {
   id         Int      @id @default(autoincrement())
-  playerId   Int      @unique
-  player     Player   @relation(fields: [playerId], references: [id])
+  playerId   Int?      @unique
+  player     Player?   @relation(fields: [playerId], references: [id])
   gameId     Int      @unique
   battleCard BattleCard[]
   
   inDiscardPile Boolean @default(false)
   inHeroShop  Boolean @default(false)
+  isGeneralSelection  Boolean @default(false)
 
   uid        String
   img        String

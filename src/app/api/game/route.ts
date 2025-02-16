@@ -25,16 +25,7 @@ const getAllGames = async () => {
 const deleteAllGames = async () => {
   try {
     await prisma.game.deleteMany({});
-    await prisma.user.updateMany({
-      where: {
-        gameData: {
-          not: ""
-        }
-      },
-      data: {
-        gameData: ""
-      }
-    });
+    await prisma.card.deleteMany({});
     await prisma.lobby.deleteMany({
       where: {
         started: true,

@@ -1,6 +1,6 @@
-import { CardsObject } from "./types";
+import { RawCardsObject } from "./types";
 
-export const cards: CardsObject = {
+export const cards: RawCardsObject = {
     basic: [
         { weight: 4, img : ["Warrior 1","Warrior 2","Warrior 3","Warrior 4","Warrior 5"], name : "Warrior", atk : 2, hp : 2, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Soldier", style : "Passive", cost : 0, desc : "A brave soldier for your army",},
         { weight: 3, img : ["Archer 1","Archer 2","Archer 3","Archer 4"], name : "Archer", atk : 2, hp : 1, connect : 2, red : 0, green : 0, blue : 0, type : "basic", ability : "Ranged", style : "Passive", cost : 0, desc : "All attacks are ranged",},

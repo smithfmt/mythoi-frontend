@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Attribute, CardData, PopulatedCardData } from "@data/types";
+import { Attribute, PopulatedCardData, RawCardData, sides } from "@data/types";
 import { shuffle } from "@utils/helpers";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -39,7 +39,7 @@ export const fillBlankAttribute = (index:number, costs:any[]) => {
     return res;
 };
 
-export const generateCard = (card:CardData) => {
+export const generateCard = (card:RawCardData) => {
     const { id, img, name, atk, hp, red=0, green=0, blue=0, mon=0, div=0, ability, style, cost, desc, type } = card;
     
     const attributes:Attribute[] = [];
@@ -63,42 +63,44 @@ export const generateCard = (card:CardData) => {
     const shuffledAttributes = shuffle(attributes);
     const costs:Attribute[] = shuffledAttributes.slice(0,cost);
     const connections = shuffledAttributes.length>4?shuffledAttributes.slice(0,4):shuffledAttributes.length<4? shuffle(fillConnections(shuffledAttributes)): shuffledAttributes
-    const sides = {
-        top: {
-            connect: connections[0]!=="blank",
-            attribute: connections[0]!=="blank"?connections[0]:fillBlankAttribute(0,shuffledAttributes),
-            active:false,
-        },
-        right: {
-            connect: connections[1]!=="blank",
-            attribute: connections[1]!=="blank"?connections[1]:fillBlankAttribute(1,shuffledAttributes),
-            active:false,
-        },
-        bottom: {
-            connect: connections[2]!=="blank",
-            attribute: connections[2]!=="blank"?connections[2]:fillBlankAttribute(2,shuffledAttributes),
-            active:false,
-        },
-        left: {
-            connect: connections[3]!=="blank",
-            attribute: connections[3]!=="blank"?connections[3]:fillBlankAttribute(3,shuffledAttributes),
-            active:false,
-        }
+    const top = {
+        connect: connections[0]!=="blank",
+        attribute: connections[0]!=="blank"?connections[0]:fillBlankAttribute(0,shuffledAttributes),
+        active:false,
     };
+    const right = {
+        connect: connections[1]!=="blank",
+        attribute: connections[1]!=="blank"?connections[1]:fillBlankAttribute(1,shuffledAttributes),
+        active:false,
+    };
+    const bottom = {
+        connect: connections[2]!=="blank",
+        attribute: connections[2]!=="blank"?connections[2]:fillBlankAttribute(2,shuffledAttributes),
+        active:false,
+    };
+    const left = {
+        connect: connections[3]!=="blank",
+        attribute: connections[3]!=="blank"?connections[3]:fillBlankAttribute(3,shuffledAttributes),
+        active:false,
+    }
 
     const image = type==="basic" ? img[Math.floor(Math.random()*img.length)]: img as string;
 
-    const populatedCard: PopulatedCardData = {
-        id, uid: uuidv4(),img:image, name, atk, hp, ability, style, desc, type,
-        sides, cost: costs,
+    const populatedCard:PopulatedCardData = {
+        id, uid: uuidv4(), img: image, name, atk, hp, ability, style, desc, type,
+        top, right, bottom, left, cost: costs,
+        inHand: false,
+        inDiscardPile: false,
+        inHeroShop: false,
+        gameId: 0
     };
     return populatedCard;
 };
 
 export const extractCardValue = (card: PopulatedCardData) => {
     const result:Attribute[] = [];
-    Object.keys(card.sides).forEach(side => {
-        if (!result.includes(card.sides[side].attribute)) result.push(card.sides[side].attribute);
+    sides.forEach(side => {
+        if (!result.includes(card[side].attribute)) result.push(card[side].attribute);
     });
     return result;
 };
@@ -106,9 +108,9 @@ export const extractCardValue = (card: PopulatedCardData) => {
 export const calcConnectedStats = (card?: PopulatedCardData) => {
     if (!card) return { newAtk: undefined, newHp: undefined };
     let [newAtk, newHp] = [card.atk, card.hp];
-    Object.values(card.sides).forEach(side => {
-        if (side.active) {
-            switch (side.attribute) {
+    sides.forEach(side => {
+        if (card[side].active) {
+            switch (card[side].attribute) {
                 case "Agi":
                     newHp++;
                     break;

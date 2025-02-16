@@ -123,12 +123,14 @@ const startLobby = async (user:UserType, id:string) => {
             id: true,
             name: true,
             email: true,
+            createdAt: true,
           }
       } }
     });
 
     if (!lobby) return { message: "Lobby not found", status: 404 };
     if (!lobby.players.filter(p => p.id===user.id).length) return { message: "User not in selected lobby", status: 401 };
+    if (lobby.hostId !== user.id) return { message: "User is not the host", status: 401 };
     if (lobby.started) return { message: "Lobby already started", status: 401 };
 
     // Create the game using the players in the lobby

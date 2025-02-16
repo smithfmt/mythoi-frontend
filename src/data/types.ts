@@ -39,6 +39,8 @@ export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div";
 
 export type ActionType = "attack" | "cast";
 
+export const sides = ["top", "right", "bottom", "left"];
+
 type Connection = {
     connect: boolean;
     attribute: Attribute;
@@ -64,11 +66,12 @@ export interface CardData {
     x?: number;
     y?: number;
     inHand: boolean;
-    playerId: number;
-    player: PlayerData;
+    playerId?: number;
+    player?: PlayerData;
     inDiscardPile: boolean;
-    inHeroDhop: boolean;
-    battleCard: BattleCardData[];
+    inHeroShop: boolean;
+    isGeneralSelection: boolean;
+    battleCard?: BattleCardData[];
     gameId: number;
 }
 
@@ -98,7 +101,7 @@ export interface PopulatedBattleCardData extends BattleCardData {
 export interface UserData {
     id: number;
     name: string;
-    createdAt: string;
+    createdAt?: Date;
     lobbyId?: number;
     lobby?: LobbyData;
     player?: PlayerData;
@@ -113,12 +116,14 @@ export interface PlayerData {
     cards: CardData[];
     battles: BattleData[];
     battleCards: BattleCardData[];
+    generalSelected: boolean;
+    turnEnded: boolean;
 }
 
 export interface LobbyData {
     id: number;
     name: string;
-    createdAt: string;
+    createdAt?: Date;
     players: UserData[];
     game?: GameData;
     maxPlayers: number;
@@ -129,7 +134,7 @@ export interface LobbyData {
 export interface GameData {
     id: number;
     name: string;
-    createdAt: string;
+    createdAt?: Date;
     hostId: number;
     turn: number;
     turnOrder: number[];
