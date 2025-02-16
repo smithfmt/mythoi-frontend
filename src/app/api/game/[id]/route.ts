@@ -35,18 +35,9 @@ export const createGame = async (lobby: LobbyData) => {
         lobbyId: lobby.id
       },
     });
-// Create first Shop Cards and Generals
-    await prisma.card.createMany({
-      data: [
-        ...heroShop,
-        ...lobby.players
-          .map((player,i) => 
-            playerGenerals[i].map(genCard => ({ ...genCard, playerId: player.id, isGeneralSelection: true })))
-          .flat(),
-      ],
-    });
+
 // Create Players
-    await prisma.player.createMany({
+    const players = await prisma.player.createManyAndReturn({
       data: lobby.players.map(p => (
         {
           userId: p.id,
@@ -54,10 +45,20 @@ export const createGame = async (lobby: LobbyData) => {
         }
       ))
     });
+// Create first Shop Cards and Generals
+    await prisma.card.createMany({
+      data: [
+        ...heroShop,
+        ...players
+          .map((player,i) => 
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            playerGenerals[i].map(({id, ...genCard}) => ({ ...genCard, playerId: player.id, isGeneralSelection: true })))
+          .flat(),
+      ],
+    });
 
     return game;
   } catch (error: unknown) {
-    console.log(error)
     return nextErrorHandler(error);
   }
 };

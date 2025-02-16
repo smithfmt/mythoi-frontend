@@ -8,12 +8,7 @@ const getAllGames = async () => {
   try {
     const games = await prisma.game.findMany({
       include: {
-        players: {
-          select: {
-            id: true,
-            name: true,
-          }
-        },
+        players: true,
       },
     });
     return { message: "Successfully fetched games", data: { games }, status: 200};

@@ -90,8 +90,6 @@ export const generateCard = (card:RawCardData) => {
         id, uid: uuidv4(), img: image, name, atk, hp, ability, style, desc, type,
         top, right, bottom, left, cost: costs,
         inHand: false,
-        inDiscardPile: false,
-        inHeroShop: false,
         gameId: 0
     };
     return populatedCard;

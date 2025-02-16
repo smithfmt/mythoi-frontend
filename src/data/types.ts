@@ -68,9 +68,9 @@ export interface CardData {
     inHand: boolean;
     playerId?: number;
     player?: PlayerData;
-    inDiscardPile: boolean;
-    inHeroShop: boolean;
-    isGeneralSelection: boolean;
+    inDiscardPile?: boolean;
+    inHeroShop?: boolean;
+    isGeneralSelection?: boolean;
     battleCard?: BattleCardData[];
     gameId: number;
 }

@@ -33,7 +33,7 @@ model Lobby {
   createdAt DateTime @default(now())
   started   Boolean  @default(false)
   players   User[]
-  game      Game?
+  game      Game?   
 
   maxPlayers Int     @default(2)
   hostId       Int
@@ -45,8 +45,8 @@ model Player {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
   user       User     @relation(fields: [userId], references: [id])
-  gameId     Int      @unique
-  game       Game     @relation(fields: [gameId], references: [id])
+  gameId     Int      
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   cards      Card[]
   battles    Battle[]
@@ -60,14 +60,14 @@ model Game {
   id         Int      @id @default(autoincrement())
   name       String
   createdAt  DateTime @default(now())
-  players    Player[]
+  players    Player[] 
   hostId     Int
   turn       Int      @default(1)
   turnOrder  Int[]
   heroDeck   Int[]
   finished   Boolean  @default(false)
   lobbyId     Int     @unique
-  lobby       Lobby   @relation(fields: [lobbyId], references: [id])
+  lobby       Lobby   @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
   
   battling   Boolean  @default(false)
   battleOrder Int[]
@@ -76,9 +76,9 @@ model Game {
 
 model Card {
   id         Int      @id @default(autoincrement())
-  playerId   Int?      @unique
+  playerId   Int?      
   player     Player?   @relation(fields: [playerId], references: [id])
-  gameId     Int      @unique
+  gameId     Int      
   battleCard BattleCard[]
   
   inDiscardPile Boolean @default(false)
@@ -108,7 +108,7 @@ model Battle {
   id         Int      @id @default(autoincrement())
   players    Player[]
   gameId     Int
-  game       Game     @relation(fields: [gameId], references: [id])
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
   ended      Boolean  
   turnOrder  Int[]
   turn       Int
