@@ -11,7 +11,6 @@ import { GameData } from '@data/types';
 
 
 const joinLobby = async (user:UserType, id:string) => {
-
   try {
     // Check if the lobby exists
     const lobby = await prisma.lobby.findUnique({
@@ -114,7 +113,6 @@ const leaveLobby = async (user:UserType, id:string) => {
 };
 
 const startLobby = async (user:UserType, id:string) => {
-
   try {
     // Find and update the lobby to started
     const lobby = await prisma.lobby.findUnique({

@@ -6,24 +6,12 @@ export type CardType = {
     type: keyof typeof cards,
 }
 
-export interface PlayerData {
-    player: number;
-    cards: {
-        card: PopulatedCardData,
-        x?: number,
-        y?: number,
-        hand?: boolean,
-    }[];
-    generals: GeneralsType;
-    turnEnded: boolean;
-}
-
 export type GeneralsType = {
     selected: boolean,
     choices: PopulatedCardData[] | number[],
 }
 
-export type CardData = {
+export type RawCardData = {
     id: number;
     img: string | string[];
     name: string;
@@ -43,11 +31,13 @@ export type CardData = {
     weight?: number;
 };
   
-export type CardsObject = {
-    [key in 'basic' | 'general' | 'hero']: CardData[];
+export type RawCardsObject = {
+    [key in 'basic' | 'general' | 'hero']: RawCardData[];
 };
 
 export type Attribute = "Str" | "Int" | "Agi" | "Mon" | "Div";
+
+export type ActionType = "attack" | "cast";
 
 type Connection = {
     connect: boolean;
@@ -55,74 +45,109 @@ type Connection = {
     active?: boolean;
 }
 
-export type PopulatedCardData = {
+export interface CardData {
     id: number;
     uid: string;
     img: string;
     name: string;
     atk: number;
     hp: number;
-    sides: {
-        top: Connection;
-        right: Connection;
-        bottom: Connection;
-        left: Connection;
-    };
+    top: JsonValue;
+    right: JsonValue;
+    bottom: JsonValue;
+    left: JsonValue;
     type: string;
     ability: string;
     style: string;
     cost: Attribute[];
     desc: string;
+    x?: number;
+    y?: number;
+    inHand: boolean;
+    playerId: number;
+    player: PlayerData;
+    inDiscardPile: boolean;
+    inHeroDhop: boolean;
+    battleCard: BattleCardData[];
+    gameId: number;
+}
+
+export interface PopulatedCardData extends CardData {
+    top: Connection;
+    right: Connection;
+    bottom: Connection;
+    left: Connection;
+}
+
+export interface BattleCardData extends CardData {
+    hasCast: boolean;
+    currentAtk: number;
+    currentHp: number;
+    gameCardId: number;
+    gameCard: CardData;
+    inGraveyard: boolean;
+}
+
+export interface PopulatedBattleCardData extends BattleCardData {
+    top: Connection;
+    right: Connection;
+    bottom: Connection;
+    left: Connection;
+}
+
+export interface UserData {
+    id: number;
+    name: string;
+    createdAt: string;
+    lobbyId?: number;
+    lobby?: LobbyData;
+    player?: PlayerData;
+}
+
+export interface PlayerData {
+    id: number;
+    userId: number;
+    user: UserData;
+    gameId: number;
+    game: GameData
+    cards: CardData[];
+    battles: BattleData[];
+    battleCards: BattleCardData[];
+}
+
+export interface LobbyData {
+    id: number;
+    name: string;
+    createdAt: string;
+    players: UserData[];
+    game?: GameData;
+    maxPlayers: number;
+    hostId: number;
+    playerCount: number
 }
 
 export interface GameData {
     id: number;
     name: string;
-    players: { id: number, name: string, gameData: JsonValue }[];
-    host: string;
+    createdAt: string;
+    hostId: number;
     turn: number;
-    heroDeck: number[];
-    heroShop: JsonValue;
     turnOrder: number[];
-    discardPile: JsonValue;
+    heroDeck: number[];
+    finished: boolean;
+    lobbyId: number;
+    lobby: LobbyData;
     battleOrder: number[];
-    battles: JsonValue[];
+    battles: BattleData[]
     battling: boolean;
 }
 
 export type BattleData = {
-    players: {
-        gameData: GameData;
-        id: number;
-        name: string;
-    }[];
-    graveyard: { card:PopulatedCardData, playerId: number}[];
+    id: number;
+    players: PlayerData[];
+    gameId: number;
+    game: GameData;
     ended: boolean;
     turnOrder: number[];
     turn: number;
 }
-
-export type Space = {
-    x?: number;
-    y?: number;
-    hand?: boolean;
-}
-
-export interface CardObjectData extends Space {
-    card: PopulatedCardData;
-}
-
-export type BoardType = {
-    card:PopulatedCardData,
-    x:number,
-    y:number,
-    hand?:boolean,
-}[]
-
-export type UserDataType = {
-    name: string;
-    id: number;
-    gameData: string;
-}
-
-export type ActionType = "attack" | "cast";

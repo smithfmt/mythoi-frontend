@@ -25,7 +25,6 @@ model User {
   lobbyId   Int? 
   lobby     Lobby?   @relation(fields: [lobbyId], references: [id])
   player    Player?
-  gameData  Json?
 }
 
 model Lobby {
@@ -34,30 +33,13 @@ model Lobby {
   createdAt DateTime @default(now())
   started   Boolean  @default(false)
   players   User[]
+  game      Game?
+
   maxPlayers Int     @default(2)
-  host      Int
-  gameId    Int?
-  game      Game?    @relation(fields: [gameId], references: [id]) 
+  hostId       Int
   playerCount Int
 }
 
-model Game {
-  id         Int      @id @default(autoincrement())
-  name       String
-  createdAt  DateTime @default(now())
-  players    Player[]
-  host       String
-  turn       Int      @default(1)
-  turnOrder  Int[]
-  heroDeck   Int[]
-  heroShop   Json
-  discardPile Json?
-  finished   Boolean  @default(false)
-  lobby      Lobby[]    
-  battleOrder Int[]
-  battles    Json[]
-  battling   Boolean  @default(false)
-}
 
 model Player {
   id         Int      @id @default(autoincrement())
@@ -65,15 +47,40 @@ model Player {
   user       User     @relation(fields: [userId], references: [id])
   gameId     Int      @unique
   game       Game     @relation(fields: [gameId], references: [id])
+
   cards      Card[]
   battles    Battle[]
   battleCards BattleCard[]
+}
+
+model Game {
+  id         Int      @id @default(autoincrement())
+  name       String
+  createdAt  DateTime @default(now())
+  players    Player[]
+  hostId     Int
+  turn       Int      @default(1)
+  turnOrder  Int[]
+  heroDeck   Int[]
+  finished   Boolean  @default(false)
+  lobbyId     Int     @unique
+  lobby       Lobby   @relation(fields: [lobbyId], references: [id])
+  
+  battling   Boolean  @default(false)
+  battleOrder Int[]
+  battles    Battle[]
 }
 
 model Card {
   id         Int      @id @default(autoincrement())
   playerId   Int      @unique
   player     Player   @relation(fields: [playerId], references: [id])
+  gameId     Int      @unique
+  battleCard BattleCard[]
+  
+  inDiscardPile Boolean @default(false)
+  inHeroShop  Boolean @default(false)
+
   uid        String
   img        String
   name       String
@@ -90,15 +97,15 @@ model Card {
   desc       String
   x          Int?
   y          Int?
-  hand       Boolean?
-  battleCard BattleCard[]
+  inHand     Boolean @default(false)
 }
 
 model Battle {
   id         Int      @id @default(autoincrement())
   players    Player[]
-  graveyard  BattleCard[]
-  ended      Boolean
+  gameId     Int
+  game       Game     @relation(fields: [gameId], references: [id])
+  ended      Boolean  
   turnOrder  Int[]
   turn       Int
 }
@@ -106,25 +113,29 @@ model Battle {
 model BattleCard {
   id         Int      @id @default(autoincrement())
 
-  battleId   Int
-  battle     Battle   @relation(fields: [battleId], references: [id])
-
   playerId   Int
   player     Player   @relation(fields: [playerId], references: [id])
 
   gameCardId Int?
   gameCard   Card?    @relation(fields: [gameCardId], references: [id])
 
+  inGraveyard Boolean @default(false)
+
   currentAtk Int
   currentHp  Int
+  atk        Int
+  hp         Int
+
   x          Int
   y          Int
-  hand       Boolean? @default(false)
+  inHand     Boolean @default(false)
+
   top        Json
   right      Json
   bottom     Json
   left       Json
-  cast       Boolean? @default(false)
+
+  hasCast    Boolean @default(false)
 }
 
 
