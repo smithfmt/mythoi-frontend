@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { BoardType, CardObjectData, GameData, PlayerData, PopulatedCardData, UserDataType } from "@data/types";
+import { GameData, PlayerData, PopulatedCardData, sides, UserData } from "@data/types";
 import GameBoard from "@components/game/board";
 import Hand from "@components/game/Hand";
 import { addActiveConnections, getPlaceableSpaces } from "@lib/game/gameLogic";
 import Card from "@components/game/card";
 import GameHud from "@components/game/GameHud";
 import { placeCard } from "@lib/game/gameplay";
-import { fetchGameById, fetchUserById, updateGameById } from "@app/requests";
+import { fetchCardsByCondition, fetchGameById, fetchPlayerById, fetchUserById, updateGameById } from "@app/requests";
 import useBoardValidation from "@hooks/useBoardValidation";
 import CardCursorTracker from "@components/game/CardCursorTracker";
 import { useErrorHandler } from "@components/providers/ErrorContext";
@@ -26,19 +26,19 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const { addError } = useErrorHandler();
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
-    const [userData, setUserData] = useSocket<UserDataType>(`userDataUpdate-${userId}`);
+    const [userData, setUserData] = useSocket<UserData>(`userDataUpdate-${userId}`);
+    const [playerData, setPlayerData] = useSocket<PlayerData>(`playerDataUpdate-${userData?.player?.id}`);
+    const [generalCards, setGeneralCards] = useState<PopulatedCardData[]>([]);
     const [selected, setSelected] = useState<{selectedCard:PopulatedCardData|null}>({selectedCard:null});
     const [scale, setScale] = useState(1);
     const [shopOpen, setShopOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    const playerData = useMemo(() => {
-        return userData?.gameData ? JSON.parse(userData.gameData) as PlayerData : null;
-    }, [userData]);
-    const valid = useBoardValidation(playerData);
+    
+    const valid = useBoardValidation(playerData?.cards);
     const { cardsInBoard, cardsInHand } = useMemo(() => {
-        const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as BoardType) : [];
-        const inBoard: CardObjectData[] = [];
-        const inHand: CardObjectData[] = [];
+        const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as PopulatedCardData[]) : [];
+        const inBoard: PopulatedCardData[] = [];
+        const inHand: PopulatedCardData[] = [];
         cardsWithConnections.forEach(cardData => cardData.hand ? inHand.push(cardData) : inBoard.push(cardData));
         return { cardsInBoard:inBoard, cardsInHand: inHand };
     }, [playerData]);
@@ -82,9 +82,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 startLoading();
                 const gameResponse = await fetchGameById(id);
                 const userResponse = userId && await fetchUserById(userId);
-                
+                const playerResponse = userResponse && userResponse.data.userData.player?.id && await fetchPlayerById(userResponse.data.userData.player.id);
+                const generalsResponse = playerResponse && !playerResponse.data.player.generalSelected && await fetchCardsByCondition({ isGeneralSelection:true, playerId:playerResponse.data.player.id });
                 if (userResponse) setUserData(userResponse.data.userData);
                 if (gameResponse) setGameData(gameResponse.data.game);
+                if (playerResponse) setPlayerData(playerResponse.data.player);
+                if (generalsResponse) setGeneralCards(generalsResponse.data.cards);
             } catch (error: unknown) {
                 addError(handleError(error));
             } finally {
@@ -92,7 +95,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             }
         };
         fetchGame();
-    }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading]);
+    }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData]);
 
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
@@ -112,17 +115,17 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         if (!uid) return addError({message: "No Card Found!"});
         const [updatedPlayerData, error] = placeCard(playerData, uid, {x,y,hand})
         if (error || !updatedPlayerData) return addError({message: error||"Unknown Error placing card"});
-        setUserData({...userData,gameData:JSON.stringify(updatedPlayerData)});
+        setPlayerData(updatedPlayerData);
         setSelected({selectedCard:null});
     };
 
-    const handleCardClick = (cardData: CardObjectData) => {
+    const handleCardClick = (card: PopulatedCardData) => {
         if (!playerData || !userData) return addError({message: "No Player Data"});
         const updatedPlayerData = { ...playerData };
-        updatedPlayerData.cards = updatedPlayerData.cards.map(data => data.card.uid===cardData.card.uid ? { card: data.card, hand: true } : data);
-        setUserData({...userData, gameData: JSON.stringify(updatedPlayerData)});
-        const selectedCard = cardData.card;
-        Object.keys(cardData.card.sides).forEach(side => selectedCard.sides[side].active = false);
+        updatedPlayerData.cards = updatedPlayerData.cards.map(c => c.uid===card.uid ? { ...c, hand: true } : c);
+        setPlayerData(updatedPlayerData);
+        const selectedCard = card;
+        sides.forEach(side => selectedCard[side].active = false);
         setSelected({ selectedCard });
     };
 
@@ -155,9 +158,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         setShopOpen((prev) => !prev);
     }
 
-    const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.player === gameData.turnOrder[0]);
-
-    // const discardPile = gameData ? JSON.parse(gameData.discardPile) : [];
+    const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.id === gameData.turnOrder[0]);
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
@@ -173,13 +174,13 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             :
             // Normal
                 <>
-                {playerData?.generals?.selected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
+                {playerData?.generalSelected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
                 {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
                 {gameData&& (
                     <div>
                         <GameBoard 
                         invalidCards={valid.invalidCards} 
-                        board={cardsInBoard as BoardType} 
+                        board={cardsInBoard} 
                         selected={{ selectedCard: selected.selectedCard, spaces }} 
                         handlePlaceSelected={handlePlaceSelected} 
                         handleCardClick={handleCardClick} 
@@ -189,11 +190,11 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                         <CardCursorTracker selectedCard={selected.selectedCard}/>
                     </div>
                 )}
-                {playerData&&!playerData?.generals?.selected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
+                {playerData&&!playerData?.generalSelected&&<div className="fixed z-50 h-full w-full top-0 left-0 bg-neutral-800 bg-opacity-70 flex justify-center items-center">
                     <div className=" p-32 flex flex-col gap-32">
                         <h1 className="text-3xl font-black text-neutral-50">Select General</h1>
                         <div className="flex gap-16">
-                            {playerData.generals.choices.map((generalCard,i) => <div 
+                            {generalCards.map((generalCard,i) => <div 
                                 key={"gen"+i}
                                 className="hover:cursor-pointer transition-all"
                                 onClick={() => handleSelection(generalCard)}

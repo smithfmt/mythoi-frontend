@@ -12,12 +12,17 @@ import { drawBasicCard, sendDeadToGraveyard } from 'src/lib/game/gameplay';
 import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
 import { JsonValue } from '@prisma/client/runtime/library';
+import { UserType } from '@app/api/types';
 
 export const createGame = async (lobby: LobbyData) => {
   try {
     const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
-    const heroShop = heroDeck.splice(0,3).map(cardId => generateCard(cards.hero[cardId])).map(c => ({ ...c, inHeroShop: true }));
+    const heroShop = heroDeck.splice(0,3)
+      .map(cardId => generateCard(cards.hero[cardId]))
+      .map(c => ({ ...c, inHeroShop: true }))
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ id, ...card }) => card);
     
     const battleDistribution = 5;
     const battleCount = 1;
@@ -140,7 +145,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
     const userData = await findUserById(user.id);
     if (!userData) return { message: "User Data not found", status: 404 };
 
-    let playerData: PlayerData = JSON.parse(userData?.gameData as string);
+    const playerData = await findPlayerById(userData.player?.id);
     const isYourTurn = userData.id===game.turnOrder[0];
     const hasEndedTurn = playerData.turnEnded;
     
@@ -313,4 +318,3 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   const response = await deleteGame(user, id);
   return handleResponse(response);
 }
-

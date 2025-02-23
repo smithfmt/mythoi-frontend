@@ -1,18 +1,18 @@
-import { BoardType, PlayerData } from "@data/types";
+import { PopulatedCardData } from "@data/types";
 import { checkValidBoard } from "@lib/game/gameLogic";
 import { useEffect, useState } from "react";
 
-const useBoardValidation = (playerData: PlayerData | null) => {
+const useBoardValidation = (cards: PopulatedCardData[] | undefined) => {
     const [valid, setValid] = useState<{success:boolean, error?:string, invalidCards?:{ card:string, error?:string }[]}>({success: false, error: "No Player Data",});
    
     useEffect(() => {
-        if (playerData) {
-            const board = playerData?.cards.filter(cardData => !cardData.hand&&cardData.x&&cardData.y) as BoardType;
-            const validation = checkValidBoard(board)
+        if (cards) {
+            const board = cards.filter(card => !card.inHand&&card.x&&card.y);
+            const validation = checkValidBoard(board);
             setValid(validation);
         };
         
-    },[playerData]);
+    },[cards]);
 
     return valid;
 }

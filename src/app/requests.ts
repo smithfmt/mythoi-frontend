@@ -1,11 +1,11 @@
-import { GameData, UserDataType } from "@data/types";
+import { BattleData, CardQueryCondition, GameData, PlayerData, PopulatedCardData, UserData } from "@data/types";
 import { getAuthToken } from "@lib/auth/getAuthToken";
 import axios from "axios";
 
 // Users //
 
 export const fetchUserById = async (id: string | number) => {
-    const response: {data:{userData:UserDataType}}|null = id?await axios.get(`/api/users/${id}`, {
+    const response: {data:{userData:UserData}}|null = id?await axios.get(`/api/users/${id}`, {
         headers: { Authorization: `Bearer ${getAuthToken()}` },
     }):null;
     return response;
@@ -117,6 +117,36 @@ export const fetchAllGames = async () => {
 export const deleteAllGames = async () => {
     const response = await axios.delete("/api/game", {
         headers: { Authorization: `Bearer ${getAuthToken()}` }
+    });
+    return response;
+}
+
+// Players //
+
+export const fetchPlayerById = async (id: string | number) => {
+    const response: {data:{player:PlayerData}} = await axios.get(`/api/player/${id}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+    });
+    return response;
+}
+
+// Battles //
+
+export const fetchBattleById = async (id: string | number) => {
+    const response: {data:{battle:BattleData}} = await axios.get(`/api/battle/${id}`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+    });
+    return response;
+}
+
+// Cards //
+
+export const fetchCardsByCondition = async (condition: CardQueryCondition) => {
+    const response: {data:{cards:PopulatedCardData[]}} = await axios.get(`/api/card`, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },
+        params: {
+            ...condition,
+        }
     });
     return response;
 }

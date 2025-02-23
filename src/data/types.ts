@@ -113,7 +113,7 @@ export interface PlayerData {
     user: UserData;
     gameId: number;
     game: GameData
-    cards: CardData[];
+    cards: PopulatedCardData[];
     battles: BattleData[];
     battleCards: BattleCardData[];
     generalSelected: boolean;
@@ -156,3 +156,8 @@ export type BattleData = {
     turnOrder: number[];
     turn: number;
 }
+
+export type CardQueryCondition = {
+    isGeneralSelection?: boolean;
+    playerId?: number;
+};

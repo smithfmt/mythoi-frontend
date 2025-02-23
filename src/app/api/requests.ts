@@ -6,7 +6,7 @@ export const findUserById = async (id: number) => {
         select: {
           id: true,
           name: true,
-          gameData: true,
+          player: true,
         }
     });
     return userData;
@@ -27,8 +27,6 @@ export const findGameById = async (id: number) => {
             players: {
                 select: {
                     id: true,
-                    name: true,
-                    gameData:true,
                 }
             }
         }
@@ -42,4 +40,12 @@ export const updateGameById = async (id: number, data) => {
         data,
     });
     return gameData;
+}
+
+export const findPlayerById = async (id?: number) => {
+    if (!id) return null;
+    const playerData = await prisma.player.findUnique({
+        where: { id },
+    });
+    return playerData;
 }
