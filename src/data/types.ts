@@ -48,7 +48,6 @@ type Connection = {
 }
 
 export interface CardData {
-    id: number;
     uid: string;
     img: string;
     name: string;
@@ -68,7 +67,7 @@ export interface CardData {
     inHand: boolean;
     playerId?: number;
     player?: PlayerData;
-    inDiscardPile?: boolean;
+    inDiscardPile: boolean;
     inHeroShop?: boolean;
     isGeneralSelection?: boolean;
     battleCard?: BattleCardData[];
@@ -143,8 +142,9 @@ export interface GameData {
     lobbyId: number;
     lobby: LobbyData;
     battleOrder: number[];
-    battles: BattleData[]
+    battles: BattleData[];
     battling: boolean;
+    heroShop?: PopulatedCardData[];
 }
 
 export type BattleData = {

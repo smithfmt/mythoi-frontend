@@ -27,9 +27,15 @@ export const findGameById = async (id: number) => {
             players: {
                 select: {
                     id: true,
+                    turnEnded: true,
                 }
-            }
-        }
+            },
+            battles: {
+                select: {
+                    id: true,
+                },
+            },
+        },
     });
     return gameData;
 }
@@ -48,4 +54,30 @@ export const findPlayerById = async (id?: number) => {
         where: { id },
     });
     return playerData;
+}
+
+export const findCardById = async (id?: number) => {
+    if (!id) return null;
+    const cardData = await prisma.card.findUnique({
+        where: { id },
+    });
+    return cardData;
+}
+
+export const updateCardById = async (id: number, data) => {
+    const cardData = await prisma.card.update({
+        where: { id },
+        data,
+    });
+    return cardData;
+}
+
+export const findHeroShopCards = async (includeDiscarded=false) => {
+    const heroShopCards = await prisma.card.findMany({
+        where: {
+            inHeroShop: true,
+            inDiscardPile: includeDiscarded,
+        },
+    });
+    return heroShopCards;
 }

@@ -33,13 +33,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [scale, setScale] = useState(1);
     const [shopOpen, setShopOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
-    
     const valid = useBoardValidation(playerData?.cards);
     const { cardsInBoard, cardsInHand } = useMemo(() => {
         const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as PopulatedCardData[]) : [];
         const inBoard: PopulatedCardData[] = [];
         const inHand: PopulatedCardData[] = [];
-        cardsWithConnections.forEach(cardData => cardData.hand ? inHand.push(cardData) : inBoard.push(cardData));
+        cardsWithConnections.forEach(card => card.inHand ? inHand.push(card) : inBoard.push(card));
         return { cardsInBoard:inBoard, cardsInHand: inHand };
     }, [playerData]);
     const spaces = useMemo(() => {
@@ -96,7 +95,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         };
         fetchGame();
     }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData]);
-
+    console.log(playerData?.cards)
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             startLoading();
@@ -175,7 +174,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             // Normal
                 <>
                 {playerData?.generalSelected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
-                {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop&&JSON.parse(gameData.heroShop as string)} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
+                {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
                 {gameData&& (
                     <div>
                         <GameBoard 

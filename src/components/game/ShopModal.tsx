@@ -2,7 +2,7 @@ import { useState } from "react";
 import Card from "./card";
 import Image from "next/image";
 import cardComponents from "@assets/card/cardComponents";
-import { CardObjectData, PlayerData, PopulatedCardData } from "@data/types";
+import { PlayerData, PopulatedCardData } from "@data/types";
 import { extractCardValue } from "@lib/game/cardUtils";
 import { validatePayment } from "@lib/game/gameLogic";
 import { useErrorHandler } from "@components/providers/ErrorContext";
@@ -21,14 +21,14 @@ const colors = {
 type Props = {
     isYourTurn:boolean, 
     playerData:PlayerData, 
-    shopCards:PopulatedCardData[], 
+    shopCards?:PopulatedCardData[], 
     shopOpen:boolean, 
     setShopOpen: (shopOpen:boolean) => void, 
-    hand: CardObjectData[], 
+    hand: PopulatedCardData[], 
     gameId: number,
 }
 
-const ShopModal = ({ isYourTurn, playerData, shopCards, shopOpen, setShopOpen, hand, gameId }:Props) => {
+const ShopModal = ({ isYourTurn, playerData, shopCards=[], shopOpen, setShopOpen, hand, gameId }:Props) => {
     const [selected, setSelected] = useState<PopulatedCardData | null>(null);
     const [payment, setPayment] = useState<PopulatedCardData[]>([]);
     
@@ -70,7 +70,7 @@ const ShopModal = ({ isYourTurn, playerData, shopCards, shopOpen, setShopOpen, h
         setShopOpen(false);
     }
 
-    const cardsToDisplay = selected&&hand ? ["monster", "god"].includes(selected.type) ? hand.filter(c => c.card.type!=="general") : hand.filter(c => extractCardValue(c.card).filter((atr) => selected.cost.includes(atr)).length) : hand?.filter(c => c.card.type!=="general") || [];
+    const cardsToDisplay = selected&&hand ? ["monster", "god"].includes(selected.type) ? hand.filter(card => card.type!=="general") : hand.filter(card => extractCardValue(card).filter((atr) => selected.cost.includes(atr)).length) : hand?.filter(card => card.type!=="general") || [];
     const { success, match } = selected ? validatePayment(selected,payment) : { success:false, match:[] };
     return (
         <div className={`fixed w-full h-full bg-neutral-900 bg-opacity-80 flex justify-center items-center transition-all z-[100] cursor-pointer ${shopOpen?"opacity-100 pointer-events-auto":"hidden"}`}>
@@ -78,8 +78,8 @@ const ShopModal = ({ isYourTurn, playerData, shopCards, shopOpen, setShopOpen, h
             <div className="relative z-50 pointer-events-auto cursor-auto flex justify-between w-full">
                 {/* Cards in Hand */}
                 <div className="flex flex-col flex-wrap max-h-[100vh] w-[40%] pt-16 px-16 gap-x-0 ">
-                    {cardsToDisplay.map((cardData,i) => (<div onClick={() => handlePaymentClick(cardData.card)} key={`shopHand-${i}`} className={`${payment.filter(c => c.uid===cardData.card.uid).length?"":`brightness-50 ${payment.length===selected?.cost.length?"":"hover:brightness-75"}`}  transition-all cursor-pointer`}>
-                        <Card card={cardData.card}/>
+                    {cardsToDisplay.map((card,i) => (<div onClick={() => handlePaymentClick(card)} key={`shopHand-${i}`} className={`${payment.filter(c => c.uid===card.uid).length?"":`brightness-50 ${payment.length===selected?.cost.length?"":"hover:brightness-75"}`}  transition-all cursor-pointer`}>
+                        <Card card={card}/>
                     </div>))}
                 </div>
                 <div className="flex flex-col items-center p-16">

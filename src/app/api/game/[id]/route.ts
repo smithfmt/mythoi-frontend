@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
-import { generateBattle, generateBattleOrder, generatePlayerGenerals } from 'src/lib/game/generation';
-import { calcConnectedStats, generateCard } from 'src/lib/game/cardUtils';
+import { generateBattleOrder, generatePlayerGenerals } from 'src/lib/game/generation';
+import { calcConnectedStats,generateCard } from 'src/lib/game/cardUtils';
 import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { cards } from '@data/cards';
@@ -9,7 +9,7 @@ import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { BattleData, LobbyData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard, sendDeadToGraveyard } from 'src/lib/game/gameplay';
-import { findGameById, findUserById, updateUserById, updateGameById } from '@app/api/requests';
+import { findGameById, findUserById,findPlayerById, findCardById, findHeroShopCards } from '@app/api/requests';
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { UserType } from '@app/api/types';
@@ -82,7 +82,9 @@ const getGame = async (id: string) => {
       return { message: "Game not found", status: 404 };
     }
 
-    return { message: "Successfully fetched game", data: { game }, status: 200 };
+    const shopCards = await findHeroShopCards();
+
+    return { message: "Successfully fetched game", data: { game: { heroShop: shopCards, ...game } }, status: 200 };
   } catch (error: unknown) {
     return nextErrorHandler(error);
   }
@@ -117,20 +119,55 @@ const manageTurns = async (id: string) => {
   try {
     const game = await findGameById(parseInt(id));
     if (!game) return console.warn("Game Not Found");
-    const players = game.players.map(p => JSON.parse(p.gameData as string)) as PlayerData[];
+    const { players } = game;
     const allPlayersEndedTurn = players.reduce((acc, cur) => acc&&cur.turnEnded,true);
     if (!allPlayersEndedTurn) return;
-    players.forEach(async playerData => {
-      await updateUserById(playerData.player, { gameData: JSON.stringify({...playerData, turnEnded: false}) });
+
+    // Update all players to turnEnded = false;
+    await prisma.player.updateMany({
+      where: { 
+        id: {
+          in: players.map(p => p.id),
+        },
+      },
+      data: {
+        turnEnded: false,
+      },
     });
-    const heroShop = JSON.parse(game.heroShop as string);
-    while (heroShop.length<3) {
-      heroShop.push(game.heroDeck.splice(0,1).map(cardId => generateCard(cards.hero[cardId]))[0]);
+
+    const heroShop = await findHeroShopCards();
+    const newHeroShopCards:PopulatedCardData[] = [];
+    for (let i = heroShop.length; i<3; i++) {
+      newHeroShopCards.push(generateCard(cards.hero[game.heroDeck[newHeroShopCards.length]]));
     }
+
+    // Add new shop cards
+    await prisma.card.createMany({
+      data: newHeroShopCards,
+    })
+
     const battling = game.battleOrder.includes(game.turn+1);
-    const battles = game.battles ? game.battles.map(b => JSON.parse(b as string) as BattleData) : [];
-    if (battling) battles.push(generateBattle(game, players.map(p => p.player)));
-    updateGameById(game.id,{ turn: game.turn+1, heroShop: JSON.stringify(heroShop), heroDeck: game.heroDeck, battling, battles: battles.map(b => JSON.stringify(b)) });
+    // const battles = await prisma.battle.findMany({
+    //   where: {
+    //     id: {
+    //       in: game.battles.map(b => b.id),
+    //     },
+    //   },
+    // });
+
+    if (battling) {
+      // START BATTLE
+    }
+
+    await prisma.game.update({
+      where: { id: game.id },
+      data: {
+        turn: game.turn+1,
+        heroDeck: game.heroDeck.slice(1),
+        battling,
+      }
+    });
+    
   } catch {
     console.warn("Error managing turns");
   }
@@ -146,26 +183,55 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
     if (!userData) return { message: "User Data not found", status: 404 };
 
     const playerData = await findPlayerById(userData.player?.id);
+    if (!playerData) return { message: "Player Data not found", status: 404 };
+
     const isYourTurn = userData.id===game.turnOrder[0];
     const hasEndedTurn = playerData.turnEnded;
     
     switch (action) {
       case "selectGeneral":
-        if (playerData.generals.selected) return { message: "Already Selected General", status: 401 };
-        const { generalCard } = data;
+        if (playerData.generalSelected) return { message: "Already Selected General", status: 401 };
+
+        const updatedGeneralCard = await findCardById(data.generalCard.id);
+        if (!updatedGeneralCard) return { message: "Updated General Card not found", status: 404 };
         
-        playerData.generals.selected = true;
-        playerData.cards.push({
-          card: generalCard, 
-          x: 5,
-          y: 5,
+        // Update General Card
+        await prisma.card.update({
+          where: { id: updatedGeneralCard.id },
+          data: {
+            x: 5,
+            y: 5,
+            playerId: playerData.id
+          },
         });
 
-        const startingCards:CardObjectData[] = [];
-        for (let i=0;i<(generalCard.id===4?5:3);i++) {
-          startingCards.push({card: drawBasicCard(), hand: true});
+        // Create Starting Cards
+        await prisma.card.createMany({
+          data: [
+            { ...drawBasicCard(), playerId: playerData.id },
+            { ...drawBasicCard(), playerId: playerData.id },
+            { ...drawBasicCard(), playerId: playerData.id }
+          ]
+        });
+
+        // Run any "onGeneralSelection" abilities
+        if (updatedGeneralCard.ability=="Royal Wealth") {
+          await prisma.card.createMany({
+            data: [
+              { ...drawBasicCard(), playerId: playerData.id },
+              { ...drawBasicCard(), playerId: playerData.id }
+            ]
+          });
         }
-        playerData.cards = [...playerData.cards, ...startingCards];
+
+        // Update Player Data
+        await prisma.player.update({
+          where: { id: playerData.id },
+          data: {
+            generalSelected: true,
+          },
+        });
+
         break;
       case "endTurn":
         // Check if a battle is happening
@@ -184,14 +250,14 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Set turnEnded
         data.playerData.turnEnded = true;
         gameUpdates.turnOrder = rotateArray(game.turnOrder);
-        playerData = data.playerData;
+        // playerData = data.playerData;
         break;
       case "drawCard": // For Testing
         // Check if a battle is happening
         if (game.battling) return { message: "Battle in progress", status: 401 };
         // Check if it is their turn
         data.playerData.cards.push({card: drawBasicCard(), hand: true});
-        playerData = data.playerData;
+        // playerData = data.playerData;
         break;
       case "buyCard":
         // Check if a battle is happening
@@ -211,7 +277,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         data.playerData.cards.push({ card:heroCard, hand:true });
         // Remove card from the shop
         gameUpdates.heroShop = JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid));
-        playerData = data.playerData;
+        // playerData = data.playerData;
         break;
       case "battle-attack":
         // Check if a battle is happening
@@ -274,10 +340,8 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
       default:
         return { message: "Invalid action", status: 400 };
     }
-    if (Object.keys(gameUpdates).length) await updateGameById(parseInt(id), gameUpdates)
-    const updatedGameData = await updateUserById(user.id, { gameData: JSON.stringify(playerData) });
     manageTurns(id);
-    return { message: "Successfully updated game", data: { gameData: updatedGameData }, status: 201 };
+    return { message: "Successfully updated game", status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);
   }

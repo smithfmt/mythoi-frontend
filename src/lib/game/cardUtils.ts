@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Attribute, PopulatedCardData, RawCardData, sides } from "@data/types";
+import { Prisma } from "@prisma/client";
 import { shuffle } from "@utils/helpers";
 import { v4 as uuidv4 } from 'uuid';
 
@@ -40,7 +41,7 @@ export const fillBlankAttribute = (index:number, costs:any[]) => {
 };
 
 export const generateCard = (card:RawCardData) => {
-    const { id, img, name, atk, hp, red=0, green=0, blue=0, mon=0, div=0, ability, style, cost, desc, type } = card;
+    const { img, name, atk, hp, red=0, green=0, blue=0, mon=0, div=0, ability, style, cost, desc, type } = card;
     
     const attributes:Attribute[] = [];
 
@@ -87,9 +88,9 @@ export const generateCard = (card:RawCardData) => {
     const image = type==="basic" ? img[Math.floor(Math.random()*img.length)]: img as string;
 
     const populatedCard:PopulatedCardData = {
-        id, uid: uuidv4(), img: image, name, atk, hp, ability, style, desc, type,
+        uid: uuidv4(), img: image, name, atk, hp, ability, style, desc, type,
         top, right, bottom, left, cost: costs,
-        inHand: false,
+        inHand: false, inDiscardPile: false,
         gameId: 0
     };
     return populatedCard;
@@ -129,4 +130,14 @@ export const calcConnectedStats = (card?: PopulatedCardData) => {
         }
     });
     return { newAtk, newHp };
+}
+
+export const cleanCardForDB = (card: PopulatedCardData) => {
+    return {
+        ...card,
+        top: card.top ?? Prisma.JsonNull,
+        right: card.right ?? Prisma.JsonNull,
+        bottom: card.bottom ?? Prisma.JsonNull,
+        left: card.left ?? Prisma.JsonNull,
+    };
 }

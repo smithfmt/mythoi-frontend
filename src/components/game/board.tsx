@@ -1,15 +1,15 @@
 import { useState, useEffect, useRef } from 'react';
-import { BoardType, CardObjectData, PopulatedCardData } from "@data/types";
+import { PopulatedCardData } from "@data/types";
 import Card from "./card";
 
 type Props = {
-  board: BoardType; 
+  board: PopulatedCardData[]; 
   selected: {
     selectedCard: PopulatedCardData | null;
     spaces: { x: number; y: number }[];
   };
   handlePlaceSelected: (x: number, y: number, hand: boolean) => void;
-  handleCardClick: (card: CardObjectData) => void;
+  handleCardClick: (card: PopulatedCardData) => void;
   invalidCards: {
     card: string;
     error?: string;
@@ -105,15 +105,14 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
             <div
               key={`card-${i}`}
               onMouseDown={(e) => (e.stopPropagation(),handleCardClick(item))}
-              // onClick={(e) => (e.stopPropagation(),handleCardClick(item))}
-              style={{ gridColumn: item.x + 1, gridRow: item.y + 1 }}
+              style={{ gridColumn: item.x||0 + 1, gridRow: item.y||0 + 1 }}
               className={`${
-                invalidCards?.filter((c) => c.card === item.card.uid).length
+                invalidCards?.filter((c) => c.card === item.uid).length
                   ? "relative after:top-0 after:absolute after:z-50 after:w-full after:h-full after:bg-red-600 after:bg-opacity-50"
                   : ""
               }`}
             >
-              <Card card={item.card} />
+              <Card card={item} />
             </div>
           ))}
           {selected.spaces.length &&

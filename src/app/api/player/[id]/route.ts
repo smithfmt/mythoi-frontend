@@ -9,6 +9,9 @@ const getPlayer = async (id: string) => {
       // Fetch the game by its ID, including related players and playerData
       const player = await prisma.player.findUnique({
         where: { id: parseInt(id) },
+        include: {
+          cards: true,
+        }
       });
   
       if (!player) {

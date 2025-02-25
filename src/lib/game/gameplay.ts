@@ -1,5 +1,5 @@
 import { cards } from "@data/cards";
-import { CardObjectData, PlayerData, PopulatedCardData, Space } from "@data/types";
+import { PlayerData, PopulatedCardData } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
 import { generateCard } from "./cardUtils";
 import { addActiveConnections, clearConnections } from "./gameLogic";
@@ -31,18 +31,18 @@ export const drawBasicCard = () => {
     for (let i=0; i<result.connect;i++) {
         switch (Math.floor(Math.random()*3)) {
             case 0:
-                result.red++;
+                result.red = (result.red||0) + 1;
                 break;
             case 1:
-                result.green++;
+                result.green = (result.green||0) + 1;
                 break;
             default:
-                result.blue++;
+                result.blue = (result.blue||0) + 1;
                 break;
         };
     };
 
-    return generateCard(result);
+    return { ...generateCard(result), inHand: true };
 }
 
 export const placeCard = (playerData: PlayerData, uid: string, space: Space,): [PlayerData | null, string | null] => {
