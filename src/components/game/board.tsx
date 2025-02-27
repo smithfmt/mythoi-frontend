@@ -121,7 +121,7 @@ const GameBoard = ({ board, selected, handlePlaceSelected, handleCardClick, inva
                 onClick={() => handlePlaceSelected(x, y, false)}
                 onMouseUp={() => handlePlaceSelected(x, y, false)}
                 key={`blank-${x}-${y}`}
-                style={{ gridColumn: x + 1, gridRow: y + 1 }}
+                style={{ gridColumn: x, gridRow: y }}
                 className="bg-blue-400 bg-opacity-50 w-full h-full"
               />
             ))}

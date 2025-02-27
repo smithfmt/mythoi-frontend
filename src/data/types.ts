@@ -75,6 +75,7 @@ export interface CardData {
 }
 
 export interface PopulatedCardData extends CardData {
+    id: number;
     top: Connection;
     right: Connection;
     bottom: Connection;
@@ -161,3 +162,9 @@ export type CardQueryCondition = {
     isGeneralSelection?: boolean;
     playerId?: number;
 };
+
+export type Space = {
+    x: number;
+    y: number;
+    inHand: boolean;
+}

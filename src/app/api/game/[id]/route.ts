@@ -199,11 +199,25 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         await prisma.card.update({
           where: { id: updatedGeneralCard.id },
           data: {
-            x: 5,
-            y: 5,
+            x: 6,
+            y: 6,
             playerId: playerData.id
           },
         });
+
+        // Discard unselected generals
+        await prisma.card.updateMany({
+          where: {
+            id: {
+              not: updatedGeneralCard.id
+            },
+            playerId: playerData.id,
+            isGeneralSelection: true,
+          },
+          data: {
+            inDiscardPile: true,
+          },
+        })
 
         // Create Starting Cards
         await prisma.card.createMany({

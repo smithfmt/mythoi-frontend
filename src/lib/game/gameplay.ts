@@ -1,5 +1,5 @@
 import { cards } from "@data/cards";
-import { PlayerData, PopulatedCardData } from "@data/types";
+import { PlayerData, PopulatedCardData, Space } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
 import { generateCard } from "./cardUtils";
 import { addActiveConnections, clearConnections } from "./gameLogic";
@@ -45,31 +45,31 @@ export const drawBasicCard = () => {
     return { ...generateCard(result), inHand: true };
 }
 
-export const placeCard = (playerData: PlayerData, uid: string, space: Space,): [PlayerData | null, string | null] => {
-    const { x, y, hand } = space;
+export const placeCard = (playerData: PlayerData, uid: string, space: Space): [PlayerData | null, string | null] => {
+    const { x, y, inHand } = space;
 
     // Check if the Space is filled
     const isFilled = !!playerData.cards.filter(card => card.x===x&&card.y===y).length;
     if (isFilled) return [null, "Space is already filled"];
 
     // Check if Card Exists
-    const cardIndex = findIndexByParam(playerData.cards, ["card", "uid"], uid);
+    const cardIndex = findIndexByParam(playerData.cards, ["uid"], uid);
     if (cardIndex===undefined) return [null, "Card not found"];
     const currentCard = playerData.cards[cardIndex];
 
     // Set Card's new position
-    Object.assign(currentCard, { x, y, hand });
+    Object.assign(currentCard, { x, y, inHand });
     
     return [playerData, null];
 }
 
-export const returnToHand = (cardData: CardObjectData) => {
-    return { card : clearConnections(cardData).card, hand: true } as CardObjectData;
+export const returnToHand = (card: PopulatedCardData) => {
+    return { ...clearConnections(card), inHand: true, x: undefined, y: undefined };
 }
 
 export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveyard: { card:PopulatedCardData, playerId:number }[]) => {
-    const newGraveyard = [...graveyard, { card: playerData.cards.filter(cardData => cardData.card.uid === cardUid)[0].card, playerId: playerData.player }];
-    const filteredCards = playerData.cards.map(cardData => cardData.card.uid === cardUid ? returnToHand(cardData) : cardData);
+    const newGraveyard = [...graveyard, { card: playerData.cards.filter(cardData => cardData.uid === cardUid)[0], playerId: playerData.id }];
+    const filteredCards = playerData.cards.map(cardData => cardData.uid === cardUid ? returnToHand(cardData) : cardData);
     const newCards = addActiveConnections(filteredCards);
     return {
         updatedPlayerData: { ...playerData, cards: newCards },
@@ -78,12 +78,12 @@ export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveya
 }
 
 export const sendDeadToGraveyard = (playerData: PlayerData, graveyard: { card:PopulatedCardData, playerId:number }[]) => {
-    const newCards = playerData.cards.map(cardData => {
-        if (!cardData.hand && cardData.card.hp === 0) {
-            graveyard.push({ card: clearConnections(cardData).card, playerId: playerData.player});
-            return returnToHand(cardData);
+    const newCards = playerData.cards.map(card => {
+        if (!card.inHand && card.hp === 0) {
+            graveyard.push({ card: clearConnections(card), playerId: playerData.id});
+            return returnToHand(card);
         }
-        return cardData;
+        return card;
     });
     return {
         playerData: { ...playerData, cards: newCards },

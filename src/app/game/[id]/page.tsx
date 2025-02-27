@@ -34,16 +34,15 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const [shopOpen, setShopOpen] = useState(false);
     const [menuOpen, setMenuOpen] = useState(false);
     const valid = useBoardValidation(playerData?.cards);
-    const { cardsInBoard, cardsInHand } = useMemo(() => {
-        const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as PopulatedCardData[]) : [];
-        const inBoard: PopulatedCardData[] = [];
-        const inHand: PopulatedCardData[] = [];
-        cardsWithConnections.forEach(card => card.inHand ? inHand.push(card) : inBoard.push(card));
-        return { cardsInBoard:inBoard, cardsInHand: inHand };
-    }, [playerData]);
-    const spaces = useMemo(() => {
-        return selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
-    }, [cardsInBoard, selected.selectedCard]);
+    
+    const { cardsInBoard, cardsInHand, spaces } = useMemo(() => {
+        const activeCards = playerData?.cards?.filter(c => !c.inDiscardPile) || [];
+        const cardsInBoard = addActiveConnections(activeCards.filter(c => !c.inHand));
+        const cardsInHand = activeCards.filter(c => c.inHand);
+        const spaces = selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
+        console.log(activeCards)
+        return { activeCards, cardsInBoard, cardsInHand, spaces };
+    }, [playerData?.cards, selected.selectedCard]); // Dependencies
 
     // Add keybinds
     useEffect(() => {
@@ -95,7 +94,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         };
         fetchGame();
     }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData]);
-    console.log(playerData?.cards)
+
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             startLoading();
@@ -107,12 +106,12 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         }
     };
 
-    const handlePlaceSelected = async (x:number, y:number, hand:boolean) => {
+    const handlePlaceSelected = async (x:number, y:number, inHand:boolean) => {
         if (!playerData || !userData) return addError({message: "No Player Data"});
         if (!spaces.filter(space => (space.x===x&&space.y===y)).length || !selected.selectedCard) return addError({message: "Space is not available"});
         const { uid } = selected.selectedCard;
         if (!uid) return addError({message: "No Card Found!"});
-        const [updatedPlayerData, error] = placeCard(playerData, uid, {x,y,hand})
+        const [updatedPlayerData, error] = placeCard(playerData, uid, {x,y,inHand})
         if (error || !updatedPlayerData) return addError({message: error||"Unknown Error placing card"});
         setPlayerData(updatedPlayerData);
         setSelected({selectedCard:null});
@@ -121,7 +120,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const handleCardClick = (card: PopulatedCardData) => {
         if (!playerData || !userData) return addError({message: "No Player Data"});
         const updatedPlayerData = { ...playerData };
-        updatedPlayerData.cards = updatedPlayerData.cards.map(c => c.uid===card.uid ? { ...c, hand: true } : c);
+        updatedPlayerData.cards = updatedPlayerData.cards.map(c => c.uid===card.uid ? { ...c, inHand: true, x: undefined, y: undefined } : c);
         setPlayerData(updatedPlayerData);
         const selectedCard = card;
         sides.forEach(side => selectedCard[side].active = false);
