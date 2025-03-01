@@ -48,13 +48,9 @@ export function deepEqual(obj1, obj2, ignorePaths:string[] = []) {
 
         // Get keys for both objects
         const keys1 = Object.keys(obj1);
-        const keys2 = Object.keys(obj2);
-
-        // Check if they have the same number of keys
-        if (keys1.length !== keys2.length) return false;
 
         // Check each key in obj1 to make sure it’s in obj2 with the same value
-        for (let key of keys1) {
+        for (const key of keys1) {
             const currentPath = [...path, key];
 
             // Skip if this key path is in the ignore list

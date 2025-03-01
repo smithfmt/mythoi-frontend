@@ -40,7 +40,6 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         const cardsInBoard = addActiveConnections(activeCards.filter(c => !c.inHand));
         const cardsInHand = activeCards.filter(c => c.inHand);
         const spaces = selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
-        console.log(activeCards)
         return { activeCards, cardsInBoard, cardsInHand, spaces };
     }, [playerData?.cards, selected.selectedCard]); // Dependencies
 
@@ -131,7 +130,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         if (!playerData) return;
         try {
             startLoading();
-            await updateGameById(id, "endTurn", { playerData });
+            await updateGameById(id, "endTurn", { cards: playerData.cards });
             setSelected({selectedCard:null});
         } catch (error: unknown) {
             addError(handleError(error));
@@ -157,6 +156,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     }
 
     const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.id === gameData.turnOrder[0]);
+
+    if (gameData && playerData) console.log(gameData.heroShop)
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">

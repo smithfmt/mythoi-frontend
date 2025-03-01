@@ -1,3 +1,4 @@
+import { PopulatedCardData } from '@data/types';
 import prisma from '@prisma/prismaClient';
 
 export const findUserById = async (id: number) => {
@@ -52,6 +53,9 @@ export const findPlayerById = async (id?: number) => {
     if (!id) return null;
     const playerData = await prisma.player.findUnique({
         where: { id },
+        include: {
+            cards: true,
+        },
     });
     return playerData;
 }
@@ -80,4 +84,15 @@ export const findHeroShopCards = async (includeDiscarded=false) => {
         },
     });
     return heroShopCards;
+}
+
+export const updateCards = async (cards: PopulatedCardData[]) => {
+    await Promise.all(cards.map(async ({ id, top, right, bottom, left, x, y, inHand }) => {
+        await prisma.card.update({
+          where: { id },
+          data: {
+            top, right, bottom, left, x, y, inHand,
+          }
+        })
+    }))
 }

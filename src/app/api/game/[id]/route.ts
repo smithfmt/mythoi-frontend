@@ -9,8 +9,8 @@ import { verifyToken } from 'src/lib/auth/verifyToken';
 import { handleResponse } from '@utils/handleResponse';
 import { BattleData, LobbyData, PlayerData, PopulatedCardData } from '@data/types';
 import { drawBasicCard, sendDeadToGraveyard } from 'src/lib/game/gameplay';
-import { findGameById, findUserById,findPlayerById, findCardById, findHeroShopCards } from '@app/api/requests';
-import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerData } from '@lib/game/gameLogic';
+import { findGameById, findUserById,findPlayerById, findCardById, findHeroShopCards, updateCards } from '@app/api/requests';
+import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerCards } from '@lib/game/gameLogic';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { UserType } from '@app/api/types';
 
@@ -24,7 +24,7 @@ export const createGame = async (lobby: LobbyData) => {
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .map(({ id, ...card }) => card);
     
-    const battleDistribution = 5;
+    const battleDistribution = 15;
     const battleCount = 1;
     const battleOrder = generateBattleOrder(battleCount,battleDistribution);
 
@@ -34,7 +34,6 @@ export const createGame = async (lobby: LobbyData) => {
         name: `Game for ${lobby.name}`,
         hostId: lobby.hostId, 
         turn: 1,
-        turnOrder: shuffle(lobby.players).map(p => p.id), 
         heroDeck,
         battleOrder,
         lobbyId: lobby.id
@@ -50,6 +49,15 @@ export const createGame = async (lobby: LobbyData) => {
         }
       ))
     });
+
+// Set TurnOrder with player Ids
+    await prisma.game.update({
+      where: { id: game.id },
+      data: {
+        turnOrder: shuffle(players).map(p => p.id), 
+      }
+    })
+
 // Create first Shop Cards and Generals
     await prisma.card.createMany({
       data: [
@@ -83,7 +91,6 @@ const getGame = async (id: string) => {
     }
 
     const shopCards = await findHeroShopCards();
-
     return { message: "Successfully fetched game", data: { game: { heroShop: shopCards, ...game } }, status: 200 };
   } catch (error: unknown) {
     return nextErrorHandler(error);
@@ -101,6 +108,11 @@ interface UpdateData {
   playerData: PlayerData;
   payment: string[];
   card: PopulatedCardData;
+
+  cards: PopulatedCardData[];
+  buyCardId: number;
+  paymentCardIds: number[];
+  
   battle: {
     selectedCardUid: string;
     targetCardUid: string;
@@ -176,8 +188,8 @@ const manageTurns = async (id: string) => {
 const updateGame = async (user: UserType, id: string, action: string, data:UpdateData) => {
   try {
     // Fetch the current game, including playerData
-    const game = await findGameById(parseInt(id));
-    if (!game) return { message: "Game not found", status: 404 };
+    const gameData = await findGameById(parseInt(id));
+    if (!gameData) return { message: "Game not found", status: 404 };
     const gameUpdates:GameUpdates = {};
     const userData = await findUserById(user.id);
     if (!userData) return { message: "User Data not found", status: 404 };
@@ -185,7 +197,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
     const playerData = await findPlayerById(userData.player?.id);
     if (!playerData) return { message: "Player Data not found", status: 404 };
 
-    const isYourTurn = userData.id===game.turnOrder[0];
+    const isYourTurn = playerData.id===gameData.turnOrder[0];
     const hasEndedTurn = playerData.turnEnded;
     
     switch (action) {
@@ -249,68 +261,103 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         break;
       case "endTurn":
         // Check if a battle is happening
-        if (game.battling) return { message: "Battle in progress", status: 401 };
+        if (gameData.battling) return { message: "Battle in progress", status: 401 };
         // Check if it is their turn
         if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
         // Validate that the data has not been tampered with
-        if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };
+        if (!validatePlayerCards(playerData.cards as PopulatedCardData[], data.cards)) return { message: "Data mismatch with server", status: 405 };
         // Check that board is valid
-        const { success, error } = checkValidBoard(data.playerData.cards.filter(c => !c.hand) as BoardType);
+        const { success, error } = checkValidBoard(data.cards.filter(c => !c.inHand && !c.inDiscardPile));
         if (!success) return { message: error||"An unknown Validation error occurred", status: 405 };
         // Add Active Connections
-        data.playerData.cards = addActiveConnections(data.playerData.cards);
+        data.cards = addActiveConnections(data.cards);
+        await updateCards(data.cards);
         // Draw a Card
-        data.playerData.cards.push({card: drawBasicCard(), hand: true});
+        await prisma.card.createMany({
+          data: [
+            { ...drawBasicCard(), playerId: playerData.id },
+          ],
+        });
         // Set turnEnded
-        data.playerData.turnEnded = true;
-        gameUpdates.turnOrder = rotateArray(game.turnOrder);
-        // playerData = data.playerData;
+        await prisma.player.update({
+          where: { id: playerData.id },
+          data: { turnEnded: true, },
+        });
+        // Update TurnOrder
+        await prisma.game.update({
+          where: { id: gameData.id },
+          data: { turnOrder: rotateArray(gameData.turnOrder) },
+        });
         break;
       case "drawCard": // For Testing
         // Check if a battle is happening
-        if (game.battling) return { message: "Battle in progress", status: 401 };
+        if (gameData.battling) return { message: "Battle in progress", status: 401 };
         // Check if it is their turn
-        data.playerData.cards.push({card: drawBasicCard(), hand: true});
-        // playerData = data.playerData;
+        await prisma.card.createMany({
+          data: [
+            { ...drawBasicCard(), playerId: playerData.id },
+          ],
+        });
         break;
       case "buyCard":
         // Check if a battle is happening
-        if (game.battling) return { message: "Battle in progress", status: 401 };
+        if (gameData.battling) return { message: "Battle in progress", status: 401 };
         if (!isYourTurn||hasEndedTurn) return { message: "It is not your turn", status: 401 };
-        // Validate that the data has not been tampered with
-        if (!validatePlayerData(playerData, data.playerData)) return { message: "Data mismatch with server", status: 405 };
-        const heroShop = JSON.parse(game.heroShop as string) as PopulatedCardData[];
-        const heroCard = heroShop.filter(c => c.uid===data.card.uid)[0];
-        if (!heroCard) return { message: "Card not in shop", status: 401 };
-        const paymentCards = playerData.cards.filter(cardObj => data.payment.includes(cardObj.card.uid)).map(cardObj => cardObj.card);
-        const isValid = validatePayment(heroCard, paymentCards).success;
+        // Fetch Buy Card data
+        const buyCard = await findCardById(data.buyCardId) as PopulatedCardData;
+        if (!buyCard || !buyCard.inHeroShop) return { message: "Buy Card not in shop", status: 401 };
+        // Fetch Payment Card data
+        const paymentCards = await prisma.card.findMany({
+          where: { 
+            id: {
+              in: data.paymentCardIds,
+            }
+          },
+        }) as PopulatedCardData[];
+        if (!paymentCards || paymentCards.length !== buyCard.cost.length) return { message: "Invalid Payment", status: 401 };
+        // Check payment validity
+        const isValid = validatePayment(buyCard, paymentCards).success;
         if (!isValid) return { message: "Invalid payment", status: 401 };
-        // Successfuly take payment and add the hero card
-        gameUpdates.discardPile = JSON.stringify([...JSON.parse(game.discardPile as string), ...shuffle(paymentCards)]);
-        data.playerData.cards = data.playerData.cards.filter(cardObj => !data.payment.includes(cardObj.card.uid));
-        data.playerData.cards.push({ card:heroCard, hand:true });
-        // Remove card from the shop
-        gameUpdates.heroShop = JSON.stringify(heroShop.filter(c => c.uid!==heroCard.uid));
-        // playerData = data.playerData;
+        // Successfuly take payment
+        await prisma.card.updateMany({
+          where: {
+            id: {
+              in: paymentCards.map(c => c.id),
+            },
+          },
+          data: {
+            inDiscardPile: true,
+            inHand: false,
+          },
+        });
+        // Add BuyCard to player's hand
+        await prisma.card.update({
+          where: { id: buyCard.id },
+          data: {
+            playerId: playerData.id,
+            inHeroShop: false,
+            inHand: true,
+          },
+        });
         break;
       case "battle-attack":
         // Check if a battle is happening
-        if (!game.battling) return { message: "No Battle in progress", status: 401 };
+        if (!gameData.battling) return { message: "No Battle in progress", status: 401 };
         const { selectedCardUid, targetCardUid } = data.battle;
         // Verify the required data is provided
         if (!selectedCardUid || !targetCardUid) return { message: "Invalid Data", status: 401 };
         // Get Battle Data
         let currentBattleIndex = 0;
-        game.battleOrder.forEach((item,i) => {if (item === game.turn) currentBattleIndex = i})
-        const currentBattle = JSON.parse(game.battles[currentBattleIndex] as string) as BattleData;
+        gameData.battleOrder.forEach((item,i) => {if (item === gameData.turn) currentBattleIndex = i})
+        const currentBattle = JSON.parse(gameData.battles[currentBattleIndex] as string) as BattleData;
         if (!currentBattle) return { message: "Battle Not found", status: 401 };
         let currentPlayerIndex = 0;
-        const currentPlayerData = JSON.parse(game.players.filter((p,i) => { if (p.id===playerData.player) {currentPlayerIndex=i; return true} return false })[0].gameData as string) as PlayerData;
+        const currentPlayerData = JSON.parse(gameData.players.filter((p,i) => { if (p.id===playerData.player) {currentPlayerIndex=i; return true} return false })[0].gameData as string) as PlayerData;
         let oponentPlayerIndex = 0;
         const oponentId = currentBattle.players.filter((p,i) => { if (p.id!==user.id) {oponentPlayerIndex=i; return true} return false })[0]?.id;
         if (!oponentId) return { message: "Oponent not found", status: 401 };
         if (currentPlayerIndex===oponentPlayerIndex) return { message: "Error finding players", status: 401 };
-        const oponentData = JSON.parse(game.players.filter(p => p.id===oponentId)[0].gameData as string) as PlayerData;
+        const oponentData = JSON.parse(gameData.players.filter(p => p.id===oponentId)[0].gameData as string) as PlayerData;
         // Check that it is this user's turn in the battle
         if (currentBattle.turnOrder[0]!==user.id) return { message: "It is not your turn", status: 401 };
         // Validate that selected card can attack

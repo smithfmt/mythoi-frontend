@@ -28,7 +28,7 @@ type Props = {
     gameId: number,
 }
 
-const ShopModal = ({ isYourTurn, playerData, shopCards=[], shopOpen, setShopOpen, hand, gameId }:Props) => {
+const ShopModal = ({ isYourTurn, shopCards=[], shopOpen, setShopOpen, hand, gameId }:Props) => {
     const [selected, setSelected] = useState<PopulatedCardData | null>(null);
     const [payment, setPayment] = useState<PopulatedCardData[]>([]);
     
@@ -46,7 +46,7 @@ const ShopModal = ({ isYourTurn, playerData, shopCards=[], shopOpen, setShopOpen
         if (!success) return addError({ message: "Payment unsuccessful" });
         startLoading()
         try {
-            await updateGameById(gameId, "buyCard", { payment:payment.map(card => card.uid), card:selected, playerData });
+            await updateGameById(gameId, "buyCard", { paymentCardIds:payment.map(card => card.id), buyCardId: selected.id });
             setSelected(null);
             setShopOpen(false);
         } catch (error: unknown) {

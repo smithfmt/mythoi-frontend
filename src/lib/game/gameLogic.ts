@@ -1,4 +1,4 @@
-import { PlayerData, PopulatedCardData } from "@data/types";
+import { PopulatedCardData } from "@data/types";
 import { deepEqual } from "@utils/helpers";
 import { extractCardValue } from "./cardUtils";
 
@@ -170,14 +170,11 @@ export const clearConnections = (card:PopulatedCardData) => {
     return card;
 }
 
-export const validatePlayerData = (Old: PlayerData, New: PlayerData) => {
-    // if (Old.player!==New.player) return false;
+export const validatePlayerCards = (Old: PopulatedCardData[], New: PopulatedCardData[]) => {
     let result = true;
-    New.cards.forEach(newCard => {
-        const oldCard = Old.cards.filter(oldCard => oldCard.uid===newCard.uid)[0];
-        if (!oldCard || !deepEqual(oldCard, newCard, ["sides.top.active","sides.right.active","sides.left.active","sides.bottom.active"])) {
-            console.log(oldCard, newCard)
-            console.log(!oldCard, !deepEqual(oldCard, newCard, ["sides.top.active","sides.right.active","sides.left.active","sides.bottom.active"]))
+    New.forEach(newCard => {
+        const oldCard = Old.filter(oldCard => oldCard.uid===newCard.uid)[0];
+        if (!oldCard || !deepEqual(oldCard, newCard, ["top.active","right.active","left.active","bottom.active", "x", "y", "inHand"])) {
             result = false;
         } 
     });
