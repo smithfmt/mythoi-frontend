@@ -45,7 +45,7 @@ type Connection = {
     connect: boolean;
     attribute: Attribute;
     active?: boolean;
-}
+};
 
 export interface CardData {
     uid: string;
@@ -83,11 +83,12 @@ export interface PopulatedCardData extends CardData {
 }
 
 export interface BattleCardData extends CardData {
+    id: number;
     hasCast: boolean;
     currentAtk: number;
     currentHp: number;
     gameCardId: number;
-    gameCard: CardData;
+    gameCard?: CardData;
     inGraveyard: boolean;
 }
 
@@ -145,6 +146,7 @@ export interface GameData {
     battleOrder: number[];
     battles: BattleData[];
     battling: boolean;
+    currentBattleId?: number;
     heroShop?: PopulatedCardData[];
     players: PlayerData[];
 }
@@ -153,7 +155,7 @@ export type BattleData = {
     id: number;
     players: PlayerData[];
     gameId: number;
-    game: GameData;
+    game?: GameData;
     ended: boolean;
     turnOrder: number[];
     turn: number;

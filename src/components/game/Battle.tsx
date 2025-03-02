@@ -1,30 +1,20 @@
-import { ActionType, BattleData, BoardType, CardObjectData, GameData, PlayerData } from "@data/types";
-import { addActiveConnections } from "@lib/game/gameLogic";
+import { ActionType, BattleData, PopulatedBattleCardData } from "@data/types";
 import { useEffect, useRef, useState } from "react";
 import BattleHud from "./BattleHud";
 import BattleBoard from "./BattleBoard";
 import { useLoading } from "@components/providers/LoadingContext";
 import { useErrorHandler } from "@components/providers/ErrorContext";
-import { updateGameById } from "@app/requests";
 import handleError from "@utils/handleError";
+import { updateBattleById } from "@app/requests";
 
 type Props = {
-    gameData: GameData;
+    battleData: BattleData;
     scale: number;
     setScale: (x:number) => void;
     userId: number | null;
 }
 
-
-const findCardsInBoard = (playerData: PlayerData) => {
-    const cardsWithConnections = playerData?.cards ? addActiveConnections(playerData.cards as BoardType) : [];
-    const inBoard: CardObjectData[] = [];
-    const inHand: CardObjectData[] = [];
-    cardsWithConnections.forEach(cardData => cardData.hand ? inHand.push(cardData) : inBoard.push(cardData));
-    return { cardsInBoard:inBoard, cardsInHand: inHand };
-}
-
-const Battle = ({ gameData, scale, setScale, userId } : Props) => {
+const Battle = ({ battleData, scale, setScale, userId } : Props) => {
     const { startLoading, stopLoading } = useLoading();
     const { addError } = useErrorHandler();
     const [dragging, setDragging] = useState(false);
@@ -33,8 +23,8 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
     const [shiftPressed, setShiftPressed] = useState(false);
     const boardRef = useRef<HTMLDivElement | null>(null);
 
-    const [selectedCard, setSelectedCard] = useState<CardObjectData | undefined>(undefined);
-    const [targetCard, setTargetCard] = useState<CardObjectData | undefined>(undefined);
+    const [selectedCard, setSelectedCard] = useState<PopulatedBattleCardData | undefined>(undefined);
+    const [targetCard, setTargetCard] = useState<PopulatedBattleCardData | undefined>(undefined);
 
     const [action, setAction] = useState<ActionType>("attack");
 
@@ -128,14 +118,14 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
         setDragging(false);
     };
 
-    const attack = async (targetCard:CardObjectData) => {
+    const attack = async (targetCard:PopulatedBattleCardData) => {
         if (!selectedCard) return;
         try {
             startLoading();
-            await updateGameById(gameData.id, "battle-attack", { battle: {
-                selectedCardUid: selectedCard.card.uid,
-                targetCardUid: targetCard.card.uid,
-            } });
+            await updateBattleById(battleData.id, "attack", {
+                selectedCardId: selectedCard.id,
+                targetCardId: targetCard.id,
+            });
             setSelectedCard(undefined);
         } catch (error: unknown) {
             addError(handleError(error));
@@ -143,28 +133,13 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
             stopLoading();
         }
     }
-
-    const {
-        battles,
-        battleOrder,
-        turn,
-    } = gameData;
-    let battleIndex = 0;
-    battleOrder.forEach((b,i) => { if (b===turn) battleIndex=i });
-    const currentBattle = JSON.parse(battles[battleIndex] as string) as BattleData;
-    const currentBattlePlayerIds = currentBattle.players.map(p => p.id).sort(p => p === userId ? -1 : 1);
-    const players = gameData.players.map(p => {
-        const playerData = JSON.parse(p.gameData as string) as PlayerData
-        const { cardsInBoard, cardsInHand } = findCardsInBoard(playerData) 
-        return {...p, gameData: playerData, cardsInBoard, cardsInHand };
-    });
     
-    const whoTurn = currentBattle.players.filter(p => p.id === currentBattle.turnOrder[0])[0].id;
+    const whoTurn = battleData.turnOrder[0];
 
     return (
         <div className="w-full h-full flex justify-center gap-16">
             <BattleHud 
-                battleData={currentBattle} 
+                battleData={battleData} 
                 whoTurn={whoTurn} 
                 selectedCard={selectedCard}
                 targetCard={targetCard}
@@ -183,26 +158,11 @@ const Battle = ({ gameData, scale, setScale, userId } : Props) => {
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                 >
-                    <BattleBoard setSelectedCard={setSelectedCard} board={players.filter(p => p.id === currentBattlePlayerIds[0])[0].cardsInBoard as BoardType} />
+                    <BattleBoard setSelectedCard={setSelectedCard} board={battleData.players[0].battleCards.filter(card => !card.inHand)} />
                     <span className="w-4 h-full bg-black">a</span>
-                    <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players.filter(p => p.id === currentBattlePlayerIds[1])[0].cardsInBoard as BoardType}/>
+                    <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={battleData.players[1].battleCards.filter(card => !card.inHand)}/>
                 </div>
                 
-            </div>
-            {/* Modal */}
-            <div className="hidden fixed w-full h-full top-0 left-0 bg-black/50  items-center justify-center z-50">
-                <div className="p-16 bg-white text-black text-2xl font-bold text-center">
-                    <h1>BATTLE</h1>
-                    {currentBattle ? <div>
-                        <h2>Players:</h2>
-                        {currentBattle.players.map((p, i) => <p key={`player${i}`}>{p.name}</p>)}
-                        <br />
-                        <h2>Turn</h2>
-                        <p>{currentBattle.turn}</p>
-                        <h2>Who First?</h2>
-                        <p>{currentBattle.players.filter(p => p.id === currentBattle.turnOrder[0])[0].name}</p>
-                    </div> : <p className="text-red-500">Current Battle not found</p>}
-                </div>
             </div>
         </div>
         

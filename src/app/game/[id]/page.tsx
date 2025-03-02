@@ -3,14 +3,14 @@
 import { useEffect, useMemo, useState } from "react";
 import useUserId from "@hooks/useUserId";
 import useSocket from "@hooks/useSocket";
-import { GameData, PlayerData, PopulatedCardData, sides, UserData } from "@data/types";
+import { BattleData, GameData, PlayerData, PopulatedCardData, sides, UserData } from "@data/types";
 import GameBoard from "@components/game/board";
 import Hand from "@components/game/Hand";
 import { addActiveConnections, getPlaceableSpaces } from "@lib/game/gameLogic";
 import Card from "@components/game/card";
 import GameHud from "@components/game/GameHud";
 import { placeCard } from "@lib/game/gameplay";
-import { fetchCardsByCondition, fetchGameById, fetchPlayerById, fetchUserById, updateGameById } from "@app/requests";
+import { fetchBattleById, fetchCardsByCondition, fetchGameById, fetchPlayerById, fetchUserById, updateGameById } from "@app/requests";
 import useBoardValidation from "@hooks/useBoardValidation";
 import CardCursorTracker from "@components/game/CardCursorTracker";
 import { useErrorHandler } from "@components/providers/ErrorContext";
@@ -26,6 +26,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     const { addError } = useErrorHandler();
     const userId = useUserId();
     const [gameData, setGameData] = useSocket<GameData>(`gameDataUpdate-${id}`);
+    const [battleData, setBattleData] = useSocket<BattleData>(`battleDataUpdate-${gameData?.currentBattleId}`);
     const [userData, setUserData] = useSocket<UserData>(`userDataUpdate-${userId}`);
     const [playerData, setPlayerData] = useSocket<PlayerData>(`playerDataUpdate-${userData?.player?.id}`);
     const [generalCards, setGeneralCards] = useState<PopulatedCardData[]>([]);
@@ -41,14 +42,14 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         const cardsInHand = activeCards.filter(c => c.inHand);
         const spaces = selected.selectedCard ? getPlaceableSpaces(cardsInBoard, selected.selectedCard) : [];
         return { activeCards, cardsInBoard, cardsInHand, spaces };
-    }, [playerData?.cards, selected.selectedCard]); // Dependencies
+    }, [playerData?.cards, selected.selectedCard]);
 
     // Add keybinds
     useEffect(() => {
         const handleKeyDown = (event: KeyboardEvent) => {
             switch (event.code) {
                 case "KeyS":
-                    event.preventDefault(); // Prevent the default spacebar scrolling behavior
+                    event.preventDefault();
                     setShopOpen((prev) => !prev);
                     break;
                 case "Space":
@@ -85,6 +86,10 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 if (gameResponse) setGameData(gameResponse.data.game);
                 if (playerResponse) setPlayerData(playerResponse.data.player);
                 if (generalsResponse) setGeneralCards(generalsResponse.data.cards);
+                if (gameResponse.data.game.battling && gameResponse.data.game.currentBattleId) {
+                    const battleResponse = await fetchBattleById(gameResponse.data.game.currentBattleId);
+                    if (battleResponse) setBattleData(battleResponse.data.battle);
+                }
             } catch (error: unknown) {
                 addError(handleError(error));
             } finally {
@@ -92,7 +97,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             }
         };
         fetchGame();
-    }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData]);
+    }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData, setBattleData]);
 
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
@@ -162,17 +167,17 @@ const GamePage = ({ params }: { params: { id: string } }) => {
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
-            {gameData?.battling ? 
+            {gameData?.battling && battleData ? 
             // Battle
-            <div className="w-full h-full fixed z-50 bg-black/80 text-5xl text-white font-black flex justify-center items-center">
-                BATTLING
-            </div>
-            // <Battle 
-            //     gameData={gameData} 
-            //     scale={scale} 
-            //     setScale={setScale} 
-            //     userId={userId} 
-            // /> 
+            // <div className="w-full h-full fixed z-50 bg-black/80 text-5xl text-white font-black flex justify-center items-center">
+            //     BATTLING
+            // </div>
+            <Battle 
+                battleData={battleData}
+                scale={scale} 
+                setScale={setScale} 
+                userId={userId} 
+            /> 
             :
             // Normal
                 <>

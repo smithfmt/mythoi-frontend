@@ -61,6 +61,7 @@ model Game {
   createdAt  DateTime @default(now())
   players    Player[] 
   cards      Card[]
+  battleCards BattleCard[]
   hostId     Int
   turn       Int      @default(1)
   turnOrder  Int[]
@@ -70,6 +71,7 @@ model Game {
   lobby       Lobby   @relation(fields: [lobbyId], references: [id], onDelete: Cascade)
   
   battling   Boolean  @default(false)
+  currentBattleId Int?
   battleOrder Int[]
   battles    Battle[]
 }
@@ -118,14 +120,27 @@ model Battle {
 model BattleCard {
   id         Int      @id @default(autoincrement())
 
+  uid        String
+  img        String
+  name       String
+  type       String
+  ability    String
+  style      String
+  cost       String[]
+  desc       String
+  inDiscardPile Boolean @default(false)
+
+  gameId     Int
+  game       Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
   playerId   Int
-  player     Player   @relation(fields: [playerId], references: [id])
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   gameCardId Int?
   gameCard   Card?    @relation(fields: [gameCardId], references: [id])
 
   battleId   Int
-  battle     Battle @relation(fields: [battleId], references: [id])
+  battle     Battle @relation(fields: [battleId], references: [id], onDelete: Cascade)
 
   inGraveyard Boolean @default(false)
 
@@ -134,8 +149,8 @@ model BattleCard {
   atk        Int
   hp         Int
 
-  x          Int
-  y          Int
+  x          Int?
+  y          Int?
   inHand     Boolean @default(false)
 
   top        Json

@@ -96,3 +96,26 @@ export const updateCards = async (cards: PopulatedCardData[]) => {
         })
     }))
 }
+
+export const findBattleById = async (id?:number) => {
+    if (!id) return null;
+    const battleData = await prisma.battle.findUnique({
+        where: { id },
+        include: {
+            game: {
+                include: {
+                    players: true,
+                },
+            },
+        },
+    });
+    return battleData;
+}
+
+export const findBattleCardById = async (id?:number) => {
+    if (!id) return null;
+    const battleCardData = await prisma.battleCard.findUnique({
+        where: { id },
+    });
+    return battleCardData;
+}

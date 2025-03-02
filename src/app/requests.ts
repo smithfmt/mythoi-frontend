@@ -139,6 +139,16 @@ export const fetchBattleById = async (id: string | number) => {
     return response;
 }
 
+export const updateBattleById = async (id: string | number, action, data) => {
+    const response = await axios.put(`/api/battle/${id}`, {
+        action,
+        data,
+    }, {
+        headers: { Authorization: `Bearer ${getAuthToken()}` },  
+    });
+    return response;
+}
+
 // Cards //
 
 export const fetchCardsByCondition = async (condition: CardQueryCondition) => {

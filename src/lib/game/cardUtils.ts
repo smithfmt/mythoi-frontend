@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Attribute, PopulatedCardData, RawCardData, sides } from "@data/types";
+import { Attribute, PopulatedBattleCardData, PopulatedCardData, RawCardData, sides } from "@data/types";
 import { Prisma } from "@prisma/client";
 import { shuffle } from "@utils/helpers";
 import { v4 as uuidv4 } from 'uuid';
@@ -103,7 +103,7 @@ export const extractCardValue = (card: PopulatedCardData) => {
     return result;
 };
 
-export const calcConnectedStats = (card?: PopulatedCardData) => {
+export const calcConnectedStats = (card?: PopulatedBattleCardData) => {
     if (!card) return { newAtk: undefined, newHp: undefined };
     let [newAtk, newHp] = [card.atk, card.hp];
     sides.forEach(side => {
