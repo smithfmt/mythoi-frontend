@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Battle" ALTER COLUMN "ended" SET DEFAULT false,
+ALTER COLUMN "turn" SET DEFAULT 1;

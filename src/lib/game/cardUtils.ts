@@ -87,11 +87,10 @@ export const generateCard = (card:RawCardData) => {
 
     const image = type==="basic" ? img[Math.floor(Math.random()*img.length)]: img as string;
 
-    const populatedCard:PopulatedCardData = {
+    const populatedCard = {
         uid: uuidv4(), img: image, name, atk, hp, ability, style, desc, type,
         top, right, bottom, left, cost: costs,
         inHand: false, inDiscardPile: false,
-        gameId: 0
     };
     return populatedCard;
 };

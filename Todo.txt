@@ -4,6 +4,10 @@ for some reason god cost array was only 4
 
 Add Bots to the lobby
 
+Shop cards not updating when a card is bought
+
+Gods costing 4 (Hermes)
+
 Battles:
     In the turn manager, if battles.includes(turn) game.battling = true
         Divide the players into pairs. for each pair, create a battle Object and attach it to the game (game.battles)

@@ -146,6 +146,7 @@ export interface GameData {
     battles: BattleData[];
     battling: boolean;
     heroShop?: PopulatedCardData[];
+    players: PlayerData[];
 }
 
 export type BattleData = {

@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { generateBattleOrder, generatePlayerGenerals } from 'src/lib/game/generation';
-import { calcConnectedStats,generateCard } from 'src/lib/game/cardUtils';
+import { calcConnectedStats, generateCard } from 'src/lib/game/cardUtils';
 import { rotateArray, shuffle } from '@utils/helpers';
 import prisma from '@prisma/prismaClient';
 import { cards } from '@data/cards';
@@ -13,18 +13,13 @@ import { findGameById, findUserById,findPlayerById, findCardById, findHeroShopCa
 import { addActiveConnections, checkValidBoard, validatePayment, validatePlayerCards } from '@lib/game/gameLogic';
 import { JsonValue } from '@prisma/client/runtime/library';
 import { UserType } from '@app/api/types';
+import { createBattle } from '@app/api/battle/[id]/route';
 
 export const createGame = async (lobby: LobbyData) => {
   try {
-    const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
     const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
-    const heroShop = heroDeck.splice(0,3)
-      .map(cardId => generateCard(cards.hero[cardId]))
-      .map(c => ({ ...c, inHeroShop: true }))
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-      .map(({ id, ...card }) => card);
-    
-    const battleDistribution = 15;
+    const initialHeroShop = heroDeck.splice(0,3);
+    const battleDistribution = 5;
     const battleCount = 1;
     const battleOrder = generateBattleOrder(battleCount,battleDistribution);
 
@@ -59,13 +54,17 @@ export const createGame = async (lobby: LobbyData) => {
     })
 
 // Create first Shop Cards and Generals
+    const heroShop = initialHeroShop
+      .map(cardId => generateCard(cards.hero[cardId]))
+      .map(c => ({ ...c, inHeroShop: true, gameId: game.id} as PopulatedCardData))
+    const playerGenerals = generatePlayerGenerals(lobby.players.length).map(arr => arr.map(genId => generateCard(cards.general[genId])));
+    
     await prisma.card.createMany({
       data: [
         ...heroShop,
         ...players
           .map((player,i) => 
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            playerGenerals[i].map(({id, ...genCard}) => ({ ...genCard, playerId: player.id, isGeneralSelection: true })))
+            playerGenerals[i].map(genCard => ({ ...genCard, playerId: player.id, isGeneralSelection: true, gameId: game.id } as PopulatedCardData)))
           .flat(),
       ],
     });
@@ -134,7 +133,6 @@ const manageTurns = async (id: string) => {
     const { players } = game;
     const allPlayersEndedTurn = players.reduce((acc, cur) => acc&&cur.turnEnded,true);
     if (!allPlayersEndedTurn) return;
-
     // Update all players to turnEnded = false;
     await prisma.player.updateMany({
       where: { 
@@ -146,17 +144,21 @@ const manageTurns = async (id: string) => {
         turnEnded: false,
       },
     });
-
+    // Create new shop Cards if needed
     const heroShop = await findHeroShopCards();
     const newHeroShopCards:PopulatedCardData[] = [];
     for (let i = heroShop.length; i<3; i++) {
-      newHeroShopCards.push(generateCard(cards.hero[game.heroDeck[newHeroShopCards.length]]));
+      newHeroShopCards.push({ 
+        inHeroShop: true, 
+        gameId: game.id, 
+        ...generateCard(cards.hero[game.heroDeck[newHeroShopCards.length]]) 
+      } as PopulatedCardData);
     }
-
-    // Add new shop cards
-    await prisma.card.createMany({
-      data: newHeroShopCards,
-    })
+    if (newHeroShopCards.length) {
+      await prisma.card.createMany({
+        data: newHeroShopCards,
+      });
+    }
 
     const battling = game.battleOrder.includes(game.turn+1);
     // const battles = await prisma.battle.findMany({
@@ -169,6 +171,7 @@ const manageTurns = async (id: string) => {
 
     if (battling) {
       // START BATTLE
+      const response = await createBattle(game);
     }
 
     await prisma.game.update({
@@ -234,9 +237,9 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Create Starting Cards
         await prisma.card.createMany({
           data: [
-            { ...drawBasicCard(), playerId: playerData.id },
-            { ...drawBasicCard(), playerId: playerData.id },
-            { ...drawBasicCard(), playerId: playerData.id }
+            { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id },
+            { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id },
+            { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id }
           ]
         });
 
@@ -244,8 +247,8 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         if (updatedGeneralCard.ability=="Royal Wealth") {
           await prisma.card.createMany({
             data: [
-              { ...drawBasicCard(), playerId: playerData.id },
-              { ...drawBasicCard(), playerId: playerData.id }
+              { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id },
+              { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id }
             ]
           });
         }
@@ -275,7 +278,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Draw a Card
         await prisma.card.createMany({
           data: [
-            { ...drawBasicCard(), playerId: playerData.id },
+            { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id },
           ],
         });
         // Set turnEnded
@@ -295,7 +298,7 @@ const updateGame = async (user: UserType, id: string, action: string, data:Updat
         // Check if it is their turn
         await prisma.card.createMany({
           data: [
-            { ...drawBasicCard(), playerId: playerData.id },
+            { ...drawBasicCard(), playerId: playerData.id, gameId: gameData.id },
           ],
         });
         break;

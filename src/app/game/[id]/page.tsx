@@ -164,12 +164,15 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {gameData?.battling ? 
             // Battle
-            <Battle 
-                gameData={gameData} 
-                scale={scale} 
-                setScale={setScale} 
-                userId={userId} 
-            /> 
+            <div className="w-full h-full fixed z-50 bg-black/80 text-5xl text-white font-black flex justify-center items-center">
+                BATTLING
+            </div>
+            // <Battle 
+            //     gameData={gameData} 
+            //     scale={scale} 
+            //     setScale={setScale} 
+            //     userId={userId} 
+            // /> 
             :
             // Normal
                 <>

@@ -1,4 +1,4 @@
-import { PopulatedCardData } from '@data/types';
+import { GameData, PopulatedCardData } from '@data/types';
 import prisma from '@prisma/prismaClient';
 
 export const findUserById = async (id: number) => {
@@ -38,7 +38,7 @@ export const findGameById = async (id: number) => {
             },
         },
     });
-    return gameData;
+    return gameData as GameData;
 }
 
 export const updateGameById = async (id: number, data) => {

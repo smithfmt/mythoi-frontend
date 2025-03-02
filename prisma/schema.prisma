@@ -49,7 +49,6 @@ model Player {
   game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
 
   cards      Card[]
-  battles    Battle[]
   battleCards BattleCard[]
 
   generalSelected Boolean @default(false)
@@ -61,6 +60,7 @@ model Game {
   name       String
   createdAt  DateTime @default(now())
   players    Player[] 
+  cards      Card[]
   hostId     Int
   turn       Int      @default(1)
   turnOrder  Int[]
@@ -79,6 +79,7 @@ model Card {
   playerId   Int?      
   player     Player?   @relation(fields: [playerId], references: [id])
   gameId     Int      
+  game       Game      @relation(fields: [gameId], references: [id], onDelete: Cascade)
   battleCard BattleCard[]
   
   inDiscardPile Boolean @default(false)
@@ -106,12 +107,12 @@ model Card {
 
 model Battle {
   id         Int      @id @default(autoincrement())
-  players    Player[]
+  battleCards BattleCard[]
   gameId     Int
   game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  ended      Boolean  
+  ended      Boolean  @default(false)
   turnOrder  Int[]
-  turn       Int
+  turn       Int      @default(1)
 }
 
 model BattleCard {
@@ -122,6 +123,9 @@ model BattleCard {
 
   gameCardId Int?
   gameCard   Card?    @relation(fields: [gameCardId], references: [id])
+
+  battleId   Int
+  battle     Battle @relation(fields: [battleId], references: [id])
 
   inGraveyard Boolean @default(false)
 
@@ -141,6 +145,3 @@ model BattleCard {
 
   hasCast    Boolean @default(false)
 }
-
-
-
