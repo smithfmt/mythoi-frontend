@@ -1,4 +1,5 @@
-import { GameData, PopulatedCardData } from '@data/types';
+import { Attribute, Connection, GameData, PopulatedBattleCardData, PopulatedCardData } from '@data/types';
+import { Prisma } from '@prisma/client';
 import prisma from '@prisma/prismaClient';
 
 export const findUserById = async (id: number) => {
@@ -118,4 +119,38 @@ export const findBattleCardById = async (id?:number) => {
         where: { id },
     });
     return battleCardData;
+}
+
+export const findBattleCardsByParams = async (
+    params: Prisma.BattleCardWhereInput
+): Promise<PopulatedBattleCardData[]> => {
+    const battleCards = await prisma.battleCard.findMany({ where: params });
+    return battleCards.map(card => ({
+        ...card,
+        top: card.top as Connection,
+        right: card.right as Connection,
+        bottom: card.bottom as Connection,
+        left: card.left as Connection,
+        cost: card.cost as Attribute[],
+        gameCardId: card.gameCardId ?? undefined,
+        x: card.x ?? undefined,
+        y: card.y ?? undefined,
+    }));
+};
+
+export const updateManyBattleCards = async (battleCards: PopulatedBattleCardData[]) => {
+    await prisma.$transaction(
+        battleCards.map(card => {
+            const { id, player, gameCard, ...updateData } = card;
+
+            const dataToUpdate: Prisma.BattleCardUpdateInput = {
+                ...updateData,
+            };
+
+            return prisma.battleCard.update({
+                where: { id },
+                data: dataToUpdate,
+            });
+        }),
+    );
 }

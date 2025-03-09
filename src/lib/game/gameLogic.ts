@@ -1,4 +1,4 @@
-import { PopulatedCardData } from "@data/types";
+import { PopulatedBattleCardData, PopulatedCardData } from "@data/types";
 import { deepEqual } from "@utils/helpers";
 import { extractCardValue } from "./cardUtils";
 
@@ -134,7 +134,7 @@ export const checkValidBoard = (board:PopulatedCardData[]) => {
     return { success: isValid, invalidCards };
 }
 
-export const addActiveConnections = (cards:PopulatedCardData[]) => {
+export const addActiveConnections = (cards:PopulatedCardData[]|PopulatedBattleCardData[]) => {
     const board = cards.filter(c => !c.inHand);
     const updatedCards = cards.map(card => {
         const { x,y,inHand } = card;
@@ -164,7 +164,7 @@ export const addActiveConnections = (cards:PopulatedCardData[]) => {
     return updatedCards;
 }
 
-export const clearConnections = (card:PopulatedCardData) => {
+export const clearConnections = (card:PopulatedCardData | PopulatedBattleCardData) => {
     const sides = Object.keys(dirMap);
     sides.forEach(side => card[side] ? card[side].active = false : "");
     return card;

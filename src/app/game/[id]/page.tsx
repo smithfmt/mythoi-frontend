@@ -166,15 +166,15 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {gameData?.battling && battleData ? 
-            gameData.players ? <Battle 
-                battleData={battleData}
-                players={gameData.players}
-                scale={scale} 
-                setScale={setScale} 
-                userId={userId} 
-            /> : <div className="text-5xl font-black">
-                Loading...
-            </div> 
+                gameData.players ? (
+                    <Battle 
+                    battleData={battleData}
+                    players={gameData.players}
+                    scale={scale} 
+                    setScale={setScale} 
+                    userId={userId} 
+                    />
+                ) : <div className="text-5xl font-black">Loading...</div> 
             :
             // Normal
                 <>

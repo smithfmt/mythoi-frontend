@@ -2,7 +2,9 @@ import { cards } from "@data/cards";
 import { PlayerData, PopulatedCardData, Space } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
 import { generateCard } from "./cardUtils";
+import prisma from '@prisma/prismaClient';
 import { addActiveConnections, clearConnections } from "./gameLogic";
+import { findBattleCardsByParams, updateManyBattleCards } from "@app/api/requests";
 
 export const drawBasicCard = () => {
     // Step 1: Calculate the total weight
@@ -77,16 +79,55 @@ export const sendToGraveyard = (playerData: PlayerData, cardUid: string, graveya
     }
 }
 
-export const sendDeadToGraveyard = (playerData: PlayerData, graveyard: { card:PopulatedCardData, playerId:number }[]) => {
-    const newCards = playerData.cards.map(card => {
-        if (!card.inHand && card.hp === 0) {
-            graveyard.push({ card: clearConnections(card), playerId: playerData.id});
-            return returnToHand(card);
-        }
-        return card;
+export const sendCardToGraveyard = async (battleCardId:number) => {
+    await prisma.battleCard.update({ 
+        where: { id: battleCardId },
+        data: {
+            inGraveyard: true,
+        },
     });
-    return {
-        playerData: { ...playerData, cards: newCards },
-        graveyard,
-    }
+}
+
+export const sendDeadToGraveyard = async (playerId: number, oponentId: number, battleId: number) => {
+    const playerCards = await prisma.battleCard.findMany({
+        where: { playerId, battleId },
+    });
+    const oponentCards = await prisma.battleCard.findMany({
+        where: {
+            playerId: oponentId,
+            battleId,
+        },
+    });
+
+    [...playerCards, ...oponentCards].forEach(battlecard => {
+        if (battlecard.currentHp<=0) {
+            sendCardToGraveyard(battlecard.id)
+        }
+    })
+};
+
+export const updateConnectionsForPlayers = async (playerId: number, oponentId: number, battleId: number) => {
+    const [playerCards, oponentCards] = await Promise.all([
+        findBattleCardsByParams({
+            playerId,
+            battleId,
+            inGraveyard: false,
+            inHand: false,
+            inDiscardPile: false,
+        }),
+        findBattleCardsByParams({
+            playerId: oponentId,
+            battleId,
+            inGraveyard: false,
+            inHand: false,
+            inDiscardPile: false,
+        }),
+    ]);
+
+    const [connectedPlayerCards, connectedOponentCards] = [
+        addActiveConnections(playerCards),
+        addActiveConnections(oponentCards),
+    ];
+
+    await updateManyBattleCards([connectedPlayerCards,...connectedOponentCards]);
 }

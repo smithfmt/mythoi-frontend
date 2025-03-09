@@ -8,6 +8,7 @@ import { shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
 import { findBattleById, findBattleCardById, findPlayerById, findUserById } from "@app/api/requests";
 import { calcConnectedStats } from "@lib/game/cardUtils";
+import { updateConnectionsForPlayers } from "@lib/game/gameplay";
 
 export const createBattle = async (gameData: GameData) => {
   try {
@@ -100,7 +101,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
     if (!isYourTurn) return { message: "It is not your turn", status: 401 };
 
     switch (action) {
-      case "battle-attack":
+      case "attack":
         const { selectedCardId, targetCardId } = data;
         // Verify the required data is provided
         if (!selectedCardId || !targetCardId) return { message: "Invalid Data", status: 401 };
@@ -115,25 +116,27 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         const { newAtk: selectedNewAtk } = calcConnectedStats(selectedCardData);
         const { newHp: targetNewHp } = calcConnectedStats(targetCardData);
         // Update Cards for both Players
+        const newSelectedHp = selectedCardData.currentHp - targetCardData.currentAtk;
         await prisma.battleCard.update({
           where: { id: selectedCardId },
           data: {
-            currentHp: selectedCardData.currentHp - targetCardData.currentAtk,
+            currentHp: newSelectedHp,
+            inGraveyard: newSelectedHp<=0,
           },
-        })
+        });
+        const newTargetHp = (targetNewHp || targetCardData.currentHp) - (selectedNewAtk || selectedCardData.currentAtk)
         await prisma.battleCard.update({
           where: { id: targetCardId },
           data: {
-            currentHp:(targetNewHp || targetCardData.currentHp) - (selectedNewAtk || selectedCardData.currentAtk),
+            currentHp: newTargetHp,
+            inGraveyard: newTargetHp<=0,
           },
         });
-        // UPDATE CONNECTIONS on remaining cards -- do a check if any cards were removed, then run a function to cleanup board & reapply connections
-        
-        // Update battle data with both players
-        // const { playerData: finalCurrentPlayerData, graveyard } = sendDeadToGraveyard(currentPlayerData, currentBattle.graveyard);
-        // const { playerData: finalOponentData, graveyard: finalGraveyard } = sendDeadToGraveyard(currentPlayerData, graveyard);
+
+        await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
+        // TODO : End turn for the player that attacked. Implement a turn manager for the battles
         break;
-      case "battle-cast":
+      case "cast":
         break;
       default:
         return { message: "Invalid action", status: 400 };

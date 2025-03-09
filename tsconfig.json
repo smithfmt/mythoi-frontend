@@ -20,6 +20,8 @@
     "jsx": "preserve",
     "incremental": true,
     "noImplicitAny": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
     "plugins": [
       {
         "name": "next"

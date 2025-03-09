@@ -41,7 +41,7 @@ export type ActionType = "attack" | "cast";
 
 export const sides = ["top", "right", "bottom", "left"];
 
-type Connection = {
+export type Connection = {
     connect: boolean;
     attribute: Attribute;
     active?: boolean;
@@ -87,7 +87,7 @@ export interface BattleCardData extends CardData {
     hasCast: boolean;
     currentAtk: number;
     currentHp: number;
-    gameCardId: number;
+    gameCardId?: number;
     gameCard?: CardData;
     inGraveyard: boolean;
 }
@@ -116,7 +116,7 @@ export interface PlayerData {
     game: GameData
     cards: PopulatedCardData[];
     battles: BattleData[];
-    battleCards: BattleCardData[];
+    battleCards: PopulatedBattleCardData[];
     generalSelected: boolean;
     turnEnded: boolean;
 }

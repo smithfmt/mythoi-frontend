@@ -160,7 +160,7 @@ const Battle = ({ battleData, players, scale, setScale, userId } : Props) => {
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                 >
-                    <BattleBoard setSelectedCard={setSelectedCard} board={players[0].battleCards.filter(card => !card.inHand)} />
+                    <BattleBoard setSelectedCard={setSelectedCard} board={players[0].battleCards.filter(card => !card.inHand&&card.x&&card.y)} />
                     <span className="w-4 h-full bg-black">a</span>
                     <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players[1].battleCards.filter(card => !card.inHand)}/>
                 </div>
