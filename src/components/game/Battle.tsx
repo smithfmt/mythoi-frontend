@@ -1,4 +1,4 @@
-import { ActionType, BattleData, PopulatedBattleCardData } from "@data/types";
+import { ActionType, BattleData, PlayerData, PopulatedBattleCardData } from "@data/types";
 import { useEffect, useRef, useState } from "react";
 import BattleHud from "./BattleHud";
 import BattleBoard from "./BattleBoard";
@@ -9,12 +9,13 @@ import { updateBattleById } from "@app/requests";
 
 type Props = {
     battleData: BattleData;
+    players: PlayerData[];
     scale: number;
     setScale: (x:number) => void;
     userId: number | null;
 }
 
-const Battle = ({ battleData, scale, setScale, userId } : Props) => {
+const Battle = ({ battleData, players, scale, setScale, userId } : Props) => {
     const { startLoading, stopLoading } = useLoading();
     const { addError } = useErrorHandler();
     const [dragging, setDragging] = useState(false);
@@ -140,6 +141,7 @@ const Battle = ({ battleData, scale, setScale, userId } : Props) => {
         <div className="w-full h-full flex justify-center gap-16">
             <BattleHud 
                 battleData={battleData} 
+                players={players}
                 whoTurn={whoTurn} 
                 selectedCard={selectedCard}
                 targetCard={targetCard}
@@ -158,9 +160,9 @@ const Battle = ({ battleData, scale, setScale, userId } : Props) => {
                     onMouseDown={handleMouseDown}
                     onMouseUp={handleMouseUp}
                 >
-                    <BattleBoard setSelectedCard={setSelectedCard} board={battleData.players[0].battleCards.filter(card => !card.inHand)} />
+                    <BattleBoard setSelectedCard={setSelectedCard} board={players[0].battleCards.filter(card => !card.inHand)} />
                     <span className="w-4 h-full bg-black">a</span>
-                    <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={battleData.players[1].battleCards.filter(card => !card.inHand)}/>
+                    <BattleBoard attack={attack} setTargetCard={setTargetCard} selectedCard={selectedCard} right={true} board={players[1].battleCards.filter(card => !card.inHand)}/>
                 </div>
                 
             </div>

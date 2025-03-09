@@ -80,7 +80,11 @@ const getGame = async (id: string) => {
     const game = await prisma.game.findUnique({
       where: { id: parseInt(id) },
       include: {
-        players: true,  // Include player details in the response
+        players: {
+          include: {
+            battleCards: true,
+          }
+        },
       },
     });
 

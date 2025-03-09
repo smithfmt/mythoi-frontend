@@ -1,12 +1,13 @@
-import { ActionType, BattleData, CardObjectData } from "@data/types";
+import { ActionType, BattleData, PlayerData, PopulatedBattleCardData } from "@data/types";
 import Card from "./card";
 import { calcConnectedStats } from "@lib/game/cardUtils";
 
 type Props = {
     battleData: BattleData;
+    players: PlayerData[];
     whoTurn: number;
-    selectedCard?: CardObjectData;
-    targetCard?: CardObjectData;
+    selectedCard?: PopulatedBattleCardData;
+    targetCard?: PopulatedBattleCardData;
     userId: number | null;
     action: ActionType;
     setAction: (action:ActionType) => void;
@@ -14,6 +15,7 @@ type Props = {
 
 const BattleHud = ({ 
     battleData, 
+    players,
     whoTurn, 
     selectedCard, 
     targetCard, 
@@ -21,28 +23,28 @@ const BattleHud = ({
     action, 
     setAction, 
 } : Props) => {
-    const { players,
+    const { 
             // graveyard,
             // ended,
             // turnOrder,
             turn } = battleData;
 
-    const whoTurnName = players.filter(p => p.id===whoTurn)[0].name;
+    const whoTurnName = players.filter(p => p.id===whoTurn)[0].id;
 
     const { 
         newAtk:selectedNewAtk, 
         // newHp:selectedNewHp 
-    } = calcConnectedStats(selectedCard?.card);
+    } = calcConnectedStats(selectedCard);
     const { 
         // newAtk:targetNewAtk, 
         newHp:targetNewHp 
-    } = calcConnectedStats(targetCard?.card);
+    } = calcConnectedStats(targetCard);
 
-    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? Math.max(selectedCard.card.hp - targetCard.card.atk, 0) : undefined };
+    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? Math.max(selectedCard.hp - targetCard.atk, 0) : undefined };
     const targetCardStats = { newHp: targetNewHp&&selectedNewAtk ? Math.max(targetNewHp - selectedNewAtk, 0) : undefined };
 
-    const canCast = selectedCard && whoTurn === userId && selectedCard.card.style === "Bolt";
-    const canAttack = selectedCard && whoTurn === userId && selectedCard.card.atk > 0;
+    const canCast = selectedCard && whoTurn === userId && selectedCard.style === "Bolt";
+    const canAttack = selectedCard && whoTurn === userId && selectedCard.atk > 0;
 
     return (
         <div className="fixed h-screen w-screen inset-0 z-50 pointer-events-none">
@@ -56,7 +58,7 @@ const BattleHud = ({
             {/* Bottom Bar */}
             <div className="absolute bottom-0 w-full flex items-end">
                 <div className="">
-                    {selectedCard&&<Card card={selectedCard.card} updateStats={selectedCardStats}/>}
+                    {selectedCard&&<Card card={selectedCard} updateStats={selectedCardStats}/>}
                 </div>
                 <div className="flex gap-4 p-4 pointer-events-auto">
                     <button className={`dev-button ${canAttack && action==="attack" ? "shadow-glow-white" : ""}`} disabled={!canAttack}
@@ -71,7 +73,7 @@ const BattleHud = ({
                     </button>
                 </div>
                 <div className="ml-auto">
-                    {targetCard&&<Card card={targetCard.card} updateStats={{newHp : targetCardStats.newHp}}/>}
+                    {targetCard&&<Card card={targetCard} updateStats={{newHp : targetCardStats.newHp}}/>}
                 </div>
             </div>
         </div>

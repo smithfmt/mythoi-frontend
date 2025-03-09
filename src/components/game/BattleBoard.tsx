@@ -1,14 +1,14 @@
-import { BoardType, CardObjectData } from "@data/types";
+import { PopulatedBattleCardData } from "@data/types";
 import Card from "./card";
 
 type Props = {
-    board: BoardType;
+    board: PopulatedBattleCardData[];
     right?: boolean; 
-    setSelectedCard?: (card:CardObjectData) => void; 
-    selectedCard?: CardObjectData;
-    setTargetCard?: (card:CardObjectData | undefined) => void;
-    targetCard?: CardObjectData;
-    attack?: (card:CardObjectData) => void;
+    setSelectedCard?: (card:PopulatedBattleCardData) => void; 
+    selectedCard?: PopulatedBattleCardData;
+    setTargetCard?: (card:PopulatedBattleCardData | undefined) => void;
+    targetCard?: PopulatedBattleCardData;
+    attack?: (card:PopulatedBattleCardData) => void;
 }
 
 const BattleBoard = ({ 
@@ -28,16 +28,16 @@ const BattleBoard = ({
 
     const xOffset = right ? 1 - minX : 9 - maxX;
     
-    const handleClick = (card: CardObjectData) => {
+    const handleClick = (card: PopulatedBattleCardData) => {
         if (setSelectedCard) {
             setSelectedCard(card);
         }
-        if (setTargetCard && attack && card.card.hp>0) {
+        if (setTargetCard && attack && card.hp>0) {
             attack(card);
         }
     }
 
-    const handleMouseOver = (card: CardObjectData) => {
+    const handleMouseOver = (card: PopulatedBattleCardData) => {
         if (selectedCard && setTargetCard) {
             return setTargetCard(card);
         }
@@ -49,15 +49,15 @@ const BattleBoard = ({
                 <div className="grid grid-cols-[repeat(11,13rem)] grid-rows-[repeat(11,18rem)] gap-1 border border-gray-300 pointer-events-none"
                     onMouseLeave={() => {if (selectedCard && setTargetCard) setTargetCard(undefined)}}
                 >
-                {board.map((item, i) => (
+                {board.map((card, i) => (
                     <div
                         key={`card-${i}`}
-                        style={{ gridColumn: item.x + xOffset + 1, gridRow: item.y + 1 }}
-                        className={`${setSelectedCard ? "hover:cursor-pointer" : ""} ${setTargetCard && item.card.hp > 0 ? "hover:cursor-pointer" : ""} pointer-events-auto`}
-                        onClick={() => handleClick(item)}
-                        onMouseOver={() => handleMouseOver(item)}
+                        style={{ gridColumn: card.x + xOffset + 1, gridRow: card.y + 1 }}
+                        className={`${setSelectedCard ? "hover:cursor-pointer" : ""} ${setTargetCard && card.hp > 0 ? "hover:cursor-pointer" : ""} pointer-events-auto`}
+                        onClick={() => handleClick(card)}
+                        onMouseOver={() => handleMouseOver(card)}
                     >
-                    <Card card={item.card} />
+                    <Card card={card} />
                     </div>
                 ))}
             

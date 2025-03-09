@@ -20,6 +20,12 @@ export const createBattle = async (gameData: GameData) => {
         turnOrder: shuffle(players.map(p => p.id)),
       },
     })
+    await prisma.game.update({
+      where: { id: gameData.id },
+      data: {
+        currentBattleId: battle.id,
+      },
+    });
     // Create BattleCards for each active card
     const activeCards = await prisma.card.findMany({
       where: {
@@ -31,7 +37,7 @@ export const createBattle = async (gameData: GameData) => {
     await prisma.battleCard.createMany({
       data: [
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        ...activeCards.filter(c => c.playerId).map(({id, inHeroShop, ...card}) => ({
+        ...activeCards.filter(c => c.playerId).map(({id, inHeroShop, isGeneralSelection, ...card}) => ({
           ...card,
           battleId: battle.id,
           currentAtk: card.atk,

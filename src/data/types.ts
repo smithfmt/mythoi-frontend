@@ -153,7 +153,6 @@ export interface GameData {
 
 export type BattleData = {
     id: number;
-    players: PlayerData[];
     gameId: number;
     game?: GameData;
     ended: boolean;

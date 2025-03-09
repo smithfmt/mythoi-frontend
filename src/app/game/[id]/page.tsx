@@ -162,22 +162,19 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.id === gameData.turnOrder[0]);
 
-    if (gameData && playerData) console.log(gameData.heroShop)
-
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
             {gameData?.battling && battleData ? 
-            // Battle
-            // <div className="w-full h-full fixed z-50 bg-black/80 text-5xl text-white font-black flex justify-center items-center">
-            //     BATTLING
-            // </div>
-            <Battle 
+            gameData.players ? <Battle 
                 battleData={battleData}
+                players={gameData.players}
                 scale={scale} 
                 setScale={setScale} 
                 userId={userId} 
-            /> 
+            /> : <div className="text-5xl font-black">
+                Loading...
+            </div> 
             :
             // Normal
                 <>
