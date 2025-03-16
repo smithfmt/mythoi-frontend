@@ -14,23 +14,18 @@ Battles:
 
     Add a Condition so that when there is an unfinished battle, other api requests (end turn etc.) don't work
 
-    In the game page, if game.battling return <Battle /> (no gamehud, just battlehud)
-
-    
 In the Battle, on a user's turn, they want to be able to click on one of their cards then:
     A UI for that card shows up with some toggleable buttons (attack, ability and their name and values);
     
     by default the attacking button is toggled and the user's mouse turns into a target - an event listener is added to the enemy cards, with onhover: setHoveredCard(card)
     another event listener is set on the window: onClick: if(hoveredCard) try to attack / cast on that card.
 
-    using the hoveredCard state, we can realtime show the effected hp values on the user's card and the hoveredCard (and display when someone will be killed - greyed out, or damaged - hp goes red)
-
-If a card is going to be killed, make it have a red overlay
-
 -- Long Term Refactoring --
-Move anything currently stored as Json to have its own db tables (battle player.gameData etc.) - use relationals to link them
+
+add zod to validate types
+move to zustand for global state (gameData / lobbyData etc.)
 
 -- Minor bugs --
 Shop should cycle on its own (not only when people buy)
-Horseman should not be bolt
-When battle starts, the view doesn't change without refresh
+
+When Fetching Data - change everything to use Promise.all();

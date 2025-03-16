@@ -129,5 +129,5 @@ export const updateConnectionsForPlayers = async (playerId: number, oponentId: n
         addActiveConnections(oponentCards),
     ];
 
-    await updateManyBattleCards([connectedPlayerCards,...connectedOponentCards]);
+    await updateManyBattleCards([...connectedPlayerCards,...connectedOponentCards]);
 }

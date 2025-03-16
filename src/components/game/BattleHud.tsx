@@ -29,7 +29,10 @@ const BattleHud = ({
             // turnOrder,
             turn } = battleData;
 
-    const whoTurnName = players.filter(p => p.id===whoTurn)[0].id;
+    const currentPlayerTurn = players.find(p => p.id===whoTurn);
+    if (!currentPlayerTurn) return null;
+    const isYourTurn = currentPlayerTurn.user.id === userId;
+    const whoTurnName = isYourTurn ? "Your turn" : currentPlayerTurn.user.name;
 
     const { 
         newAtk:selectedNewAtk, 
@@ -40,17 +43,16 @@ const BattleHud = ({
         newHp:targetNewHp 
     } = calcConnectedStats(targetCard);
 
-    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? Math.max(selectedCard.hp - targetCard.atk, 0) : undefined };
+    const selectedCardStats = { newAtk: selectedNewAtk, newHp: selectedCard && targetCard ? Math.max(selectedCard.currentHp - targetCard.currentAtk, 0) : undefined };
     const targetCardStats = { newHp: targetNewHp&&selectedNewAtk ? Math.max(targetNewHp - selectedNewAtk, 0) : undefined };
 
-    const canCast = selectedCard && whoTurn === userId && selectedCard.style === "Bolt";
-    const canAttack = selectedCard && whoTurn === userId && selectedCard.atk > 0;
-
+    const canCast = selectedCard && isYourTurn && selectedCard.style === "Bolt";
+    const canAttack = selectedCard && isYourTurn && selectedCard.atk > 0;
     return (
         <div className="fixed h-screen w-screen inset-0 z-50 pointer-events-none">
             {/* Right Sidebar */}
-            <div className="absolute right-0 h-full flex flex-col justify-center">
-                <div className="dev-button p-4">
+            <div className={`absolute right-0 h-full flex flex-col justify-center`}>
+                <div className={`dev-button p-4 ${isYourTurn ? "shadow-glow-white" : ""}`}>
                     <p>{whoTurnName}</p>
                     <p>Turn {turn}</p>
                 </div>

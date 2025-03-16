@@ -105,7 +105,7 @@ export const extractCardValue = (card: PopulatedCardData) => {
 
 export const calcConnectedStats = (card?: PopulatedBattleCardData) => {
     if (!card) return { newAtk: undefined, newHp: undefined };
-    let [newAtk, newHp] = [card.atk, card.hp];
+    let [newAtk, newHp] = [card.currentAtk, card.currentHp];
     sides.forEach(side => {
         if (card[side].active) {
             switch (card[side].attribute) {

@@ -57,7 +57,7 @@ const BattleBoard = ({
                         onClick={() => handleClick(card)}
                         onMouseOver={() => handleMouseOver(card)}
                     >
-                    <Card card={card} />
+                    <Card card={card} battle={true} />
                     </div>
                 ))}
             

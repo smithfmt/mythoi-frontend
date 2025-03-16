@@ -83,7 +83,13 @@ const getGame = async (id: string) => {
         players: {
           include: {
             battleCards: true,
-          }
+            user: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
         },
       },
     });
@@ -178,8 +184,8 @@ const manageTurns = async (id: string) => {
       }
     });
     
-  } catch {
-    console.warn("Error managing turns");
+  } catch (e) {
+    console.error("Error managing turns:", e);
   }
 }
 

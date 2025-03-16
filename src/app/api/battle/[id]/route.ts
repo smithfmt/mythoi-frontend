@@ -4,7 +4,7 @@ import { nextErrorHandler } from "@utils/nextErrorHandler";
 import { NextRequest } from "next/server";
 import prisma from '@prisma/prismaClient';
 import { GameData, PopulatedBattleCardData } from "@data/types";
-import { shuffle } from "@utils/helpers";
+import { rotateArray, shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
 import { findBattleById, findBattleCardById, findPlayerById, findUserById } from "@app/api/requests";
 import { calcConnectedStats } from "@lib/game/cardUtils";
@@ -63,6 +63,23 @@ const getBattle = async (id: string) => {
     try {
       const battle = await prisma.battle.findUnique({
         where: { id: parseInt(id) },
+        include: {
+          game: {
+            select: {
+              players: {
+                include: {
+                  battleCards: true,
+                  user: {
+                    select: {
+                      id: true,
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       });
   
       if (!battle) {
@@ -79,6 +96,38 @@ interface UpdateData {
   selectedCardId: number;
   targetCardId: number;
   abilityId: string;
+}
+
+const manageTurns = async (id: number) => {
+  try {
+    const battleData = await findBattleById(id);
+    if (!battleData) return console.error("No battle found");
+    const { players } = battleData.game;
+    const allPlayersEndedTurn = players.reduce((acc, cur) => acc&&cur.turnEnded,true);
+    if (!allPlayersEndedTurn) return;
+    // Update all players to turnEnded = false;
+    await prisma.player.updateMany({
+      where: { 
+        id: {
+          in: players.map(p => p.id),
+        },
+      },
+      data: {
+        turnEnded: false,
+      },
+    });
+
+    // Update Battle turn value
+    await prisma.battle.update({
+      where: { id },
+      data: {
+        turn: battleData.turn+1,
+      },
+    });
+
+  } catch(e) {
+    console.warn("Error managing turns:", e);
+  }
 }
 
 const updateBattle = async (user: UserType, id: string, action: string, data:UpdateData) => {
@@ -98,7 +147,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
     const oponentData = await findPlayerById(oponentId);
     if (!oponentData) return { message: "Oponent Data not found", status: 404 };
     const isYourTurn = playerData.id===battleData.turnOrder[0];
-    if (!isYourTurn) return { message: "It is not your turn", status: 401 };
+    if (!isYourTurn || playerData.turnEnded === true) return { message: "It is not your turn", status: 401 };
 
     switch (action) {
       case "attack":
@@ -134,13 +183,27 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         });
 
         await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
-        // TODO : End turn for the player that attacked. Implement a turn manager for the battles
+        // End turn for player
+        await prisma.player.update({
+          where: { id: playerData.id },
+          data: {
+            turnEnded: true,
+          },
+        });
+        // Rotate Turn order in battle
+        await prisma.battle.update({
+          where: { id: battleData.id },
+          data: {
+            turnOrder: rotateArray(battleData.turnOrder),
+          },
+        });
         break;
       case "cast":
         break;
       default:
         return { message: "Invalid action", status: 400 };
     }
+    await manageTurns(battleData.id);
     return { message: "Successfully updated game", status: 201 };
   } catch (error: unknown) {
     return nextErrorHandler(error);

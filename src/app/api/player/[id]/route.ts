@@ -11,7 +11,13 @@ const getPlayer = async (id: string) => {
         where: { id: parseInt(id) },
         include: {
           cards: true,
-        }
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
       });
   
       if (!player) {

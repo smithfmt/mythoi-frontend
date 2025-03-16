@@ -99,6 +99,16 @@ const GamePage = ({ params }: { params: { id: string } }) => {
         fetchGame();
     }, [id, setGameData, setUserData, userId, addError, startLoading, stopLoading, setPlayerData, setBattleData]);
 
+    useEffect(() => {
+        const loadBattleData = async () => {
+            if (gameData?.battling && !battleData && gameData.currentBattleId) {
+                const battleResponse = await fetchBattleById(gameData.currentBattleId);
+                if (battleResponse) setBattleData(battleResponse.data.battle);
+            }
+        }
+        loadBattleData();
+    }, [gameData?.battling, battleData, gameData?.currentBattleId, setBattleData])
+
     const handleSelection = async (generalCard:PopulatedCardData) => {
         try {
             startLoading();
@@ -169,7 +179,6 @@ const GamePage = ({ params }: { params: { id: string } }) => {
                 gameData.players ? (
                     <Battle 
                     battleData={battleData}
-                    players={gameData.players}
                     scale={scale} 
                     setScale={setScale} 
                     userId={userId} 

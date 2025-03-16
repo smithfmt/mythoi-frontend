@@ -1,23 +1,24 @@
 /* eslint-disable @next/next/no-img-element */
-import { PopulatedCardData } from "@data/types";
+import { PopulatedBattleCardData, PopulatedCardData } from "@data/types";
 import cardComponents from "@assets/card/cardComponents";
 import Image from "next/image";
 import { CardImages } from "@assets/images";
 import Default from "@assets/card/images/Spare 2.jpeg"
 
 type Props = {
-    card: PopulatedCardData; 
+    card: PopulatedCardData | PopulatedBattleCardData; 
     shop?: boolean;
     updateStats?: {
         newAtk?: number;
         newHp?: number;
     }
+    battle?: boolean;
 }
 
 const Card = ({ 
     card, 
     // shop, 
-    updateStats 
+    updateStats,
 } : Props) => {
     const { img, name, atk, hp, ability, style, cost, top, right, bottom, left, desc } = card;
     const imageKey = `${img}.jpeg`;
@@ -35,6 +36,8 @@ const Card = ({
         Mon:"rgba(15,0,20,0.8)",
         Div:"rgba(255,229,0,0.2)",
     };
+    const attackDisplayed = updateStats?.newAtk || (card.currentAtk ?? atk);
+    const hpDisplayed = updateStats?.newHp || (card.currentHp ?? hp);
 
     return (
         <div className="grid-stack-children relative z-50 w-[13rem] h-[18rem] bg-neutral-50 font-cinzel">
@@ -68,12 +71,12 @@ const Card = ({
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.AtkIcon.src} height={cardComponents.AtkIcon.height} width={cardComponents.AtkIcon.width} alt="atkIcon" />
                     {/* <img className="w-10 h-10" src={cardComponents.AtkIcon.src} alt="atkIcon" /> */}
-                    <p className={`text-center ${updateStats?.newAtk ? `${updateStats.newAtk > card.atk ? "text-green-400 text-glow-green" : updateStats.newAtk < card.atk ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{updateStats?.newAtk ?? atk}</p>
+                    <p className={`text-center ${updateStats?.newAtk ? `${updateStats.newAtk > card.atk ? "text-green-400 text-glow-green" : updateStats.newAtk < card.atk ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{attackDisplayed}</p>
                 </div>
                 <div className="grid-stack-children justify-center items-center">
                     <Image className="w-10 h-10" src={cardComponents.HpIcon.src} height={cardComponents.HpIcon.height} width={cardComponents.HpIcon.width} alt="hpIcon" />
                     {/* <img className="w-10 h-10" src={cardComponents.HpIcon.src} alt="hpIcon" /> */}
-                    <p className={`text-center ${updateStats?.newHp ? `${updateStats.newHp > card.hp ? "text-green-400 text-glow-green" : updateStats.newHp < card.hp ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{updateStats?.newHp ?? hp}</p>
+                    <p className={`text-center ${updateStats?.newHp ? `${updateStats.newHp > card.hp ? "text-green-400 text-glow-green" : updateStats.newHp < card.hp ? "text-red-400 text-glow-red" : "" } font-black` : ""}`}>{hpDisplayed}</p>
                 </div>
             </div>}
 
