@@ -1,5 +1,5 @@
 import { cards } from "@data/cards";
-import { PlayerData, PopulatedCardData, Space } from "@data/types";
+import { PlayerData, PopulatedBattleCardData, PopulatedCardData, Space } from "@data/types";
 import { findIndexByParam } from "@utils/helpers";
 import { generateCard } from "./cardUtils";
 import prisma from '@prisma/prismaClient';
@@ -106,8 +106,53 @@ export const sendDeadToGraveyard = async (playerId: number, oponentId: number, b
     })
 };
 
+const dirMap = {
+    left: "right",
+    right: "left",
+    top: "bottom",
+    bottom: "top",
+};
+
+const sideMapper = {
+    "top": {
+        side: "top",
+        index: 0,
+        xChange: 0,
+        yChange: -1,
+    },
+    "right": {
+        side: "right",
+        index: 1,
+        xChange: 1,
+        yChange: 0,
+    },
+    "bottom": {
+        side: "bottom",
+        index: 2,
+        xChange: 0,
+        yChange: 1,
+    },
+    "left": {
+        side: "left",
+        index: 3,
+        xChange: -1,
+        yChange: 0,
+    },
+}
+
+const getConnectedBattleCards = (cards:PopulatedBattleCardData[], battleCard:PopulatedBattleCardData) => {
+    const { x,y,top,left,right,bottom } = battleCard;
+    if (!x || !y) return []; 
+    return [top,right,bottom,left].map((side, index) => {
+        if (!side.connect) return undefined;
+        const sideMap = Object.values(sideMapper).find(map => map.index === index);
+        if (!sideMap) return undefined;
+        return cards.find(c => c.x === x + sideMap.xChange && c.y === y + sideMap.yChange && c[dirMap[sideMap.side]].connect)
+    }).filter(card => !!card);
+}
+
 export const updateConnectionsForPlayers = async (playerId: number, oponentId: number, battleId: number) => {
-    const [playerCards, oponentCards] = await Promise.all([
+    const cards = await Promise.all([
         findBattleCardsByParams({
             playerId,
             battleId,
@@ -124,9 +169,14 @@ export const updateConnectionsForPlayers = async (playerId: number, oponentId: n
         }),
     ]);
 
+    const [filteredPlayerCards, filteredOponentCards] = cards.map(cardSet => cardSet.map(card => {
+        if (!card.x || !card.y) return card;
+        if (card.ability === "Equipment" && getConnectedBattleCards(cardSet, card).length===0 ) return { ...card, inGraveyard: true };
+        return card;
+    }))
     const [connectedPlayerCards, connectedOponentCards] = [
-        addActiveConnections(playerCards),
-        addActiveConnections(oponentCards),
+        addActiveConnections(filteredPlayerCards),
+        addActiveConnections(filteredOponentCards),
     ];
 
     await updateManyBattleCards([...connectedPlayerCards,...connectedOponentCards]);

@@ -183,6 +183,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         });
 
         await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
+
         // End turn for player
         await prisma.player.update({
           where: { id: playerData.id },

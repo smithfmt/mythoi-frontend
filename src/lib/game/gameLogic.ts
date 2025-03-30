@@ -28,7 +28,7 @@ const dirMap = {
     bottom: "top",
 };
 
-const getAdjacentCards = (board:PopulatedCardData[], x:number, y:number) => {
+export const getAdjacentCards = (board:PopulatedCardData[], x:number, y:number) => {
     return board.map(card => {
         if (card.y===y) {
             if (card.x===x+1) return { ...card, dir: "right" };
