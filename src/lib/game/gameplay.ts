@@ -180,4 +180,10 @@ export const updateConnectionsForPlayers = async (playerId: number, oponentId: n
     ];
 
     await updateManyBattleCards([...connectedPlayerCards,...connectedOponentCards]);
+    const playerDead = connectedPlayerCards.length === 0;
+    const oponentDead = connectedOponentCards.length === 0;
+    if (playerDead && oponentDead) return -1;
+    if (playerDead) return playerId;
+    if (oponentDead) return oponentId;
+    return 0;
 }

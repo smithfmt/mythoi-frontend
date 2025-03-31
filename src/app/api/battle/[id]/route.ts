@@ -3,7 +3,7 @@ import { handleResponse } from "@utils/handleResponse";
 import { nextErrorHandler } from "@utils/nextErrorHandler";
 import { NextRequest } from "next/server";
 import prisma from '@prisma/prismaClient';
-import { GameData, PopulatedBattleCardData } from "@data/types";
+import { BattleData, GameData, PlayerData, PopulatedBattleCardData } from "@data/types";
 import { rotateArray, shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
 import { findBattleById, findBattleCardById, findPlayerById, findUserById } from "@app/api/requests";
@@ -130,21 +130,61 @@ const manageTurns = async (id: number) => {
   }
 }
 
+const endBattle = async (battleData: BattleData, playerData: PlayerData, oponentData: PlayerData, winner: number) => {
+  const { game } = battleData;
+  if (!game) return { message: "No game sent to end battle", status: 404 };
+
+  const gameWinner = game.turn+1 > game.battleOrder[game.battleOrder.length-1] ? winner : undefined; // TODO: CHANGE TO ACTUALLY CHECK THE WINNER BASED ON PAST BATTLES
+
+  await Promise.all([
+    prisma.player.update({
+      where: { id: playerData.id },
+      data: {
+        battleWins: winner === -1 || playerData.id ? playerData.battleWins + 1 : playerData.battleWins,
+        turnEnded: false,
+      }
+    }),
+    prisma.player.update({
+      where: { id: oponentData.id },
+      data: {
+        battleWins: winner === -1 || oponentData.id ? oponentData.battleWins + 1 : oponentData.battleWins,
+        turnEnded: false,
+      }
+    }),  
+    prisma.battle.update({
+      where: { id: battleData.id },
+      data: {
+        ended: true,
+      }
+    }),
+    prisma.game.update({
+      where: { id: game.id },
+      data: {
+        battling: false,
+        turn: game.turn++,
+      }
+    })
+  ]);
+
+  return { message: "Successfully ended battle " + battleData.id, status: 200 };
+}
+
 const updateBattle = async (user: UserType, id: string, action: string, data:UpdateData) => {
   try {
     // Fetch the current game, including playerData
-    const battleData = await findBattleById(parseInt(id));
-    if (!battleData) return { message: "Game not found", status: 404 };
+    const battleData = await findBattleById(parseInt(id)) as BattleData;
+    if (!battleData) return { message: "Battle not found", status: 404 };
     const { game } = battleData;
+    if (!game) return { message: "Game not found", status: 404 };
     if (game.currentBattleId !== battleData.id) return { message: "This is not the current battle", status: 401 };
     if (!game.battling) return { message: "Game is not currently in a battle", status: 401 };
     const userData = await findUserById(user.id);
     if (!userData) return { message: "User Data not found", status: 404 };
-    const playerData = await findPlayerById(userData.player?.id);
+    const playerData = await findPlayerById(userData.player?.id) as PlayerData;
     if (!playerData) return { message: "Player Data not found", status: 404 };
     const oponentId = game.players.find(player => player.id !==playerData.id)?.id;
     if (!oponentId) return { message: "Oponent id not found", status: 404 };
-    const oponentData = await findPlayerById(oponentId);
+    const oponentData = await findPlayerById(oponentId) as PlayerData;
     if (!oponentData) return { message: "Oponent Data not found", status: 404 };
     const isYourTurn = playerData.id===battleData.turnOrder[0];
     if (!isYourTurn || playerData.turnEnded === true) return { message: "It is not your turn", status: 401 };
@@ -182,7 +222,9 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
           },
         });
 
-        await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
+        const winner = await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
+
+        if (winner) return endBattle(battleData, playerData, oponentData, winner);
 
         // End turn for player
         await prisma.player.update({

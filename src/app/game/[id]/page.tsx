@@ -19,6 +19,7 @@ import { useLoading } from "@components/providers/LoadingContext";
 import ShopModal from "@components/game/ShopModal";
 import MenuModal from "@components/game/MenuModal";
 import Battle from "@components/game/Battle";
+import EndGameModal from "@components/game/EndGameModal";
 
 const GamePage = ({ params }: { params: { id: string } }) => {
     const { id } = params;
@@ -172,6 +173,8 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.id === gameData.turnOrder[0]);
 
+    const gameEnded = gameData && gameData.turn > gameData.battleOrder[gameData.battleOrder.length-1];
+
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">
             <MenuModal menuOpen={menuOpen} setMenuOpen={setMenuOpen}/>
@@ -187,6 +190,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
             :
             // Normal
                 <>
+                {gameData && gameEnded && <EndGameModal gameData={gameData} />}
                 {playerData?.generalSelected&&<GameHud isYourTurn={isYourTurn} scale={scale} setScale={setScale} endTurn={handleEndTurn} drawBasicCard={handleDrawBasicCard} boardValidation={valid} handleToggleShop={handleToggleShop} shopOpen={shopOpen}/>}
                 {gameData&&playerData&&<ShopModal isYourTurn={isYourTurn} playerData={playerData} shopOpen={shopOpen} shopCards={gameData.heroShop} setShopOpen={setShopOpen} hand={cardsInHand} gameId={parseInt(id)}/>}
                 {gameData&& (

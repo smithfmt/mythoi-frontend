@@ -1,3 +1,17 @@
+Todo:
+
+- End a battle when a player runs out of cards not in graveyard
+
+- Keep track of who wins the battles (give them a point)
+
+- End game when total number of battles have been completed
+
+
+- Add a cast action when casting is toggled on, and implement system where each card can have a certain ability
+
+- Implement a stage for passive abilities to be active
+
+
 Image flickering on Firefox and/or chrome. dragging too fast on chrome
 
 for some reason god cost array was only 4

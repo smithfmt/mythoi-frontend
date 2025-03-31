@@ -117,6 +117,7 @@ export interface PlayerData {
     cards: PopulatedCardData[];
     battles: BattleData[];
     battleCards: PopulatedBattleCardData[];
+    battleWins: number;
     generalSelected: boolean;
     turnEnded: boolean;
 }
@@ -149,6 +150,7 @@ export interface GameData {
     currentBattleId?: number;
     heroShop?: PopulatedCardData[];
     players: PlayerData[];
+    winner?: number;
 }
 
 export type BattleData = {
