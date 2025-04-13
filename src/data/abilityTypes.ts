@@ -1,8 +1,12 @@
 import { PopulatedBattleCardData } from "./types";
 
+export type BaseAbilityType = {
+    name?: string;
+    condition?:(casterCard:PopulatedBattleCardData) => boolean;
+}
+
 export type BasicTargetableEffect = {
     type: "basicTargetableEffect";
-    name?: string;
     targets: "singleEnemy" | "singleFriend";
     effect: (casterCard:PopulatedBattleCardData, targetCardData?:PopulatedBattleCardData) => ({ 
         effectedCasterCard: PopulatedBattleCardData, effectedTargetCard?: PopulatedBattleCardData 
@@ -11,11 +15,14 @@ export type BasicTargetableEffect = {
 
 export type BasicPowerupEffect = {
     type: "basicPowerupEffect"
-    name?: string;
     targets: "allEnemy" | "allFriend" | "self";
     effect: (casterCard: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[]) => ({
         effectedCasterCard:PopulatedBattleCardData, effectedFriendlyCards?:PopulatedBattleCardData[], effectedEnemyCards?:PopulatedBattleCardData[],
     });
+    resolver?: (casterCard: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[]) => ({
+        resolvedCasterCard:PopulatedBattleCardData, resolvedFriendlyCards?:PopulatedBattleCardData[], resolvedEnemyCards?: PopulatedBattleCardData[],
+    });
+    resolves?: "afterAttack" | "cardMove" | "endTurn";
 }
 
 export type ChoiceTargetableEffect = {
@@ -25,4 +32,4 @@ export type ChoiceTargetableEffect = {
 
 // PASSIVES , AUTOCAST etc.
 
-export type AbilityType = BasicTargetableEffect | BasicPowerupEffect;
+export type AbilityType = BaseAbilityType & (BasicTargetableEffect | BasicPowerupEffect | ChoiceTargetableEffect);

@@ -85,11 +85,13 @@ export interface PopulatedCardData extends CardData {
 export interface BattleCardData extends CardData {
     id: number;
     hasCast: boolean;
+    hasAttacked: boolean;
     currentAtk: number;
     currentHp: number;
     gameCardId?: number;
     gameCard?: CardData;
     inGraveyard: boolean;
+    buffs: string[];
 }
 
 export interface PopulatedBattleCardData extends BattleCardData {
@@ -171,8 +173,4 @@ export type Space = {
     x: number;
     y: number;
     inHand: boolean;
-}
-
-export type Ability = {
-    targets: "singleEnemy" | "singleFriend" | "allEnemy" | "allFriend" | "self"
 }

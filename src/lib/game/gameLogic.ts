@@ -259,4 +259,18 @@ export const validatePayment = (
       match: bestMatch,
     };
 };
+
+export const addBuff = (cards: PopulatedBattleCardData[], buff: string) => {
+    return cards.map(card => ({
+        ...card, 
+        buffs: card.buffs.includes(buff) ? card.buffs : [...card.buffs, buff],
+    }));
+}
+
+export const removeBuff = (cards: PopulatedBattleCardData[], buff: string) => {
+    return cards.map(card => ({
+        ...card, 
+        buffs: card.buffs.filter(b => b !== buff),
+    }));
+}
   

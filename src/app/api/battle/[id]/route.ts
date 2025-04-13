@@ -6,9 +6,10 @@ import prisma from '@prisma/prismaClient';
 import { BattleData, GameData, PlayerData, PopulatedBattleCardData } from "@data/types";
 import { rotateArray, shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
-import { findBattleById, findBattleCardById, findPlayerById, findUserById } from "@app/api/requests";
+import { findBattleById, findBattleCardById, findPlayerById, findUserById, updateBattleCard } from "@app/api/requests";
 import { calcConnectedStats } from "@lib/game/cardUtils";
 import { updateConnectionsForPlayers } from "@lib/game/gameplay";
+import { abilities } from "@data/abilities";
 
 export const createBattle = async (gameData: GameData) => {
   try {
@@ -248,10 +249,25 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         if (!selectedCardId) return { message: "Invalid Data", status: 401 };
         // Validate that selected card can attack
         selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
-        if (!selectedCardData) return { message: "Selected Card not found", status: 401 };
-        
+        if (!selectedCardData) return { message: "Selected Card not found", status: 404 };
+        if (selectedCardData.hasCast) return { message: "Selected card has already cast", status: 401 };
+        const ability = abilities[selectedCardData.ability];
+        if (ability.condition && !ability.condition(selectedCardData)) return { message: "Cast condition not met", status: 401 };
         // Validate that the target card can be attacked
         targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
+        if (targetCardId && !targetCardData) return { message: "Target Card Data not found", status: 404 };
+        switch (ability.type) {
+          case "basicPowerupEffect":
+            const { effectedCasterCard } = ability.effect(selectedCardData);
+            await updateBattleCard(effectedCasterCard);
+            break;
+          case "basicTargetableEffect":
+            break;
+          case "choiceTargetableEffect":
+            break;
+          default:
+            return { message: "Invalid Ability Type", status: 401 };
+        }
         break;
       default:
         return { message: "Invalid action", status: 400 };

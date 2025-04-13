@@ -138,6 +138,19 @@ export const findBattleCardsByParams = async (
     }));
 };
 
+export const updateBattleCard = async (battleCard:PopulatedBattleCardData) => {
+    const { id, player, gameCard, ...updateData } = battleCard;
+    
+    const dataToUpdate: Prisma.BattleCardUpdateInput = {
+        ...updateData,
+    };
+
+    await prisma.battleCard.update({
+        where: { id },
+        data: dataToUpdate,
+    });
+}
+
 export const updateManyBattleCards = async (battleCards: PopulatedBattleCardData[]) => {
     await prisma.$transaction(
         battleCards.map(card => {
