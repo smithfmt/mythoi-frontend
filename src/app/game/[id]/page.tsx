@@ -173,7 +173,7 @@ const GamePage = ({ params }: { params: { id: string } }) => {
 
     const isYourTurn = !!(playerData && gameData && !playerData.turnEnded && playerData.id === gameData.turnOrder[0]);
 
-    const gameEnded = gameData && gameData.turn > gameData.battleOrder[gameData.battleOrder.length-1];
+    const gameEnded = !!gameData?.winner;
 
     return (
         <div className="select-none max-h-screen max-w-screen overflow-hidden flex flex-col items-center justify-center p-8 relative z-40">

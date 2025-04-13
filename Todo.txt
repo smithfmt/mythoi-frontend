@@ -11,6 +11,7 @@ Todo:
 
 - Implement a stage for passive abilities to be active
 
+NEXT TIME: Battle ended without all cards being removed, if connection boost is above effective hp, it looks like you have more health than you do.
 
 Image flickering on Firefox and/or chrome. dragging too fast on chrome
 

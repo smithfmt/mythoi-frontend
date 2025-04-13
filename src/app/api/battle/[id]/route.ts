@@ -140,14 +140,14 @@ const endBattle = async (battleData: BattleData, playerData: PlayerData, oponent
     prisma.player.update({
       where: { id: playerData.id },
       data: {
-        battleWins: winner === -1 || playerData.id ? playerData.battleWins + 1 : playerData.battleWins,
+        battleWins: winner === -1 || winner === playerData.id ? playerData.battleWins + 1 : playerData.battleWins,
         turnEnded: false,
       }
     }),
     prisma.player.update({
       where: { id: oponentData.id },
       data: {
-        battleWins: winner === -1 || oponentData.id ? oponentData.battleWins + 1 : oponentData.battleWins,
+        battleWins: winner === -1 || winner === oponentData.id ? oponentData.battleWins + 1 : oponentData.battleWins,
         turnEnded: false,
       }
     }),  
@@ -162,6 +162,7 @@ const endBattle = async (battleData: BattleData, playerData: PlayerData, oponent
       data: {
         battling: false,
         turn: game.turn++,
+        winner: gameWinner,
       }
     })
   ]);
@@ -188,18 +189,19 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
     if (!oponentData) return { message: "Oponent Data not found", status: 404 };
     const isYourTurn = playerData.id===battleData.turnOrder[0];
     if (!isYourTurn || playerData.turnEnded === true) return { message: "It is not your turn", status: 401 };
-
+    const { selectedCardId, targetCardId } = data;
+    let selectedCardData: PopulatedBattleCardData;
+    let targetCardData: PopulatedBattleCardData;
     switch (action) {
       case "attack":
-        const { selectedCardId, targetCardId } = data;
         // Verify the required data is provided
         if (!selectedCardId || !targetCardId) return { message: "Invalid Data", status: 401 };
         // Validate that selected card can attack
-        const selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
+        selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
         if (!selectedCardData) return { message: "Selected Card not found", status: 401 };
         if (selectedCardData.currentAtk < 1 || selectedCardData.inHand) return { message: "Selected Card cannot attack", status: 401 };
         // Validate that the target card can be attacked
-        const targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
+        targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
         if (!targetCardData || targetCardData.currentHp < 1) return { message: "Target Card cannot be attacked", status: 401 };
         // Calculate Connection Bonuses 
         const { newAtk: selectedNewAtk } = calcConnectedStats(selectedCardData);
@@ -224,7 +226,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
 
         const winner = await updateConnectionsForPlayers(playerData.id, oponentData.id, battleData.id);
 
-        if (winner) return endBattle(battleData, playerData, oponentData, winner);
+        if (!!winner) return endBattle(battleData, playerData, oponentData, winner);
 
         // End turn for player
         await prisma.player.update({
@@ -242,6 +244,14 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         });
         break;
       case "cast":
+        // Verify the required data is provided
+        if (!selectedCardId) return { message: "Invalid Data", status: 401 };
+        // Validate that selected card can attack
+        selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
+        if (!selectedCardData) return { message: "Selected Card not found", status: 401 };
+        
+        // Validate that the target card can be attacked
+        targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
         break;
       default:
         return { message: "Invalid action", status: 400 };

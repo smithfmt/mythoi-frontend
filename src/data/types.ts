@@ -172,3 +172,7 @@ export type Space = {
     y: number;
     inHand: boolean;
 }
+
+export type Ability = {
+    targets: "singleEnemy" | "singleFriend" | "allEnemy" | "allFriend" | "self"
+}
