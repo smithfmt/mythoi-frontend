@@ -3,6 +3,7 @@ import { PopulatedBattleCardData } from "./types";
 export type BaseAbilityType = {
     name?: string;
     condition?:(casterCard:PopulatedBattleCardData) => boolean;
+    resolves?: "cardMove" | "endTurn";
 }
 
 export type BasicTargetableEffect = {
@@ -22,7 +23,7 @@ export type BasicPowerupEffect = {
     resolver?: (casterCard: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[]) => ({
         resolvedCasterCard:PopulatedBattleCardData, resolvedFriendlyCards?:PopulatedBattleCardData[], resolvedEnemyCards?: PopulatedBattleCardData[],
     });
-    resolves?: "afterAttack" | "cardMove" | "endTurn";
+    
 }
 
 export type ChoiceTargetableEffect = {

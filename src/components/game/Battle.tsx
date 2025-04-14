@@ -6,6 +6,7 @@ import { useLoading } from "@components/providers/LoadingContext";
 import { useErrorHandler } from "@components/providers/ErrorContext";
 import handleError from "@utils/handleError";
 import { updateBattleById } from "@app/requests";
+import { abilities } from "@data/abilities";
 
 type Props = {
     battleData: BattleData;
@@ -133,6 +134,27 @@ const Battle = ({ battleData, scale, setScale, userId } : Props) => {
             stopLoading();
         }
     }
+
+    const cast = async () => {
+        if (!selectedCard) return;
+        try {
+            startLoading();
+            const ability = abilities[selectedCard.ability];
+            switch (ability.type) {
+                case "basicPowerupEffect":
+                    await updateBattleById(battleData.id, "cast", {
+                        selectedCardId: selectedCard.id,
+                    });
+                    break;
+                default:
+                    return
+            }
+        } catch (error: unknown) {
+            addError(handleError(error));
+        } finally {
+            stopLoading();
+        }
+    }
     
     const players = battleData.game?.players;
     if (!players) return null;
@@ -156,6 +178,7 @@ const Battle = ({ battleData, scale, setScale, userId } : Props) => {
                 userId={userId}
                 action={action}
                 setAction={setAction}
+                cast={cast}
             />
             <div className="max-w-screen max-h-screen flex justify-center items-center">
                 <div

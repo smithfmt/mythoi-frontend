@@ -10,7 +10,7 @@ export const cards: RawCardsObject = {
         { weight: 2, img : ["Sword 1", "Sword 2"], name : "Sword", atk : 0, hp : 0, connect : 1, red : 0, green : 0, blue : 0, type : "basic", ability : "Equipment", style : "Passive", cost : 0, desc : "A sharp sword",},
     ].sort((a, b) => a.name.localeCompare(b.name)).map((data,i) => ({...data,id:i})),
     hero: [
-        { img : "Heracles", name : "Heracles", atk : 6, hp : 9, connect : 4, red : 3, green : 1, blue : 0, type : "hero", ability : "Strength of the Gods", style : "Bolt", cost : 3, desc : "+3 ATK on first attack",},
+        { img : "Heracles", name : "AAHeracles", atk : 6, hp : 9, connect : 4, red : 3, green : 1, blue : 0, type : "hero", ability : "Strength of the Gods", style : "Bolt", cost : 3, desc : "+3 ATK on first attack",},
         { img : "Perseus", name : "Perseus", atk : 4, hp : 8, connect : 4, red : 1, green : 2, blue : 1, type : "hero", ability : "Medusa's Gaze", style : "Bolt", cost : 4, desc : "Stun 2 Enemies",},
         { img : "Achilles", name : "Achilles", atk : 5, hp : 11, connect : 4, red : 4, green : 0, blue : 0, type : "hero", ability : "Quelling Blade", style : "Passive", cost : 4, desc : "+4 ATK when attacking units who have lost hp",},
         { img : "Jason", name : "Jason", atk : 3, hp : 6, connect : 4, red : 1, green : 1, blue : 2, type : "hero", ability : "Heroic Connections", style : "Passive", cost : 4, desc : "Heroes cost 1 less card to recruit",},

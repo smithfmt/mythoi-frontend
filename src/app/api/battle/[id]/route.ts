@@ -10,6 +10,8 @@ import { findBattleById, findBattleCardById, findPlayerById, findUserById, updat
 import { calcConnectedStats } from "@lib/game/cardUtils";
 import { updateConnectionsForPlayers } from "@lib/game/gameplay";
 import { abilities } from "@data/abilities";
+import { AbilityType } from "@data/abilityTypes";
+import { resolveAbility } from "@lib/game/gameLogic";
 
 export const createBattle = async (gameData: GameData) => {
   try {
@@ -193,6 +195,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
     const { selectedCardId, targetCardId } = data;
     let selectedCardData: PopulatedBattleCardData;
     let targetCardData: PopulatedBattleCardData;
+    let ability: AbilityType;
     switch (action) {
       case "attack":
         // Verify the required data is provided
@@ -229,6 +232,12 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
 
         if (!!winner) return endBattle(battleData, playerData, oponentData, winner);
 
+        // Remove buffs on end turn
+        ability = abilities[selectedCardData.ability];
+        if (ability && ability.resolves === "afterAttack") {
+          await resolveAbility(ability, selectedCardData, playerData.battleCards, oponentData.battleCards);
+        }
+    
         // End turn for player
         await prisma.player.update({
           where: { id: playerData.id },
@@ -251,7 +260,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
         if (!selectedCardData) return { message: "Selected Card not found", status: 404 };
         if (selectedCardData.hasCast) return { message: "Selected card has already cast", status: 401 };
-        const ability = abilities[selectedCardData.ability];
+        ability = abilities[selectedCardData.ability];
         if (ability.condition && !ability.condition(selectedCardData)) return { message: "Cast condition not met", status: 401 };
         // Validate that the target card can be attacked
         targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
@@ -272,6 +281,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
       default:
         return { message: "Invalid action", status: 400 };
     }
+
     await manageTurns(battleData.id);
     return { message: "Successfully updated game", status: 201 };
   } catch (error: unknown) {

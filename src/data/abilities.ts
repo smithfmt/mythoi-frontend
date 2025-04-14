@@ -15,7 +15,7 @@ export const abilities:Record<string, AbilityType> = {
             caster.currentAtk = caster.currentAtk - 3;
             return { resolvedCasterCard: caster };
         },
-        resolves: "endTurn",
+        resolves: "afterAttack",
         condition: (caster) => !caster.hasAttacked,
     }
 }

@@ -11,10 +11,12 @@ type Props = {
     userId: number | null;
     action: ActionType;
     setAction: (action:ActionType) => void;
+    cast: () => void;
 }
 
 const BattleHud = ({ 
     battleData, 
+    cast,
     players,
     whoTurn, 
     selectedCard, 
@@ -69,7 +71,8 @@ const BattleHud = ({
                         Attack{action==="attack" ? "ing" : ""}
                     </button>
                     <button className={`dev-button ${canCast && action==="cast" ? "shadow-glow-white" : ""}`} disabled={!canCast}
-                        onClick={() => canCast && setAction("cast")}
+                        // onClick={() => canCast && setAction("cast")}
+                        onClick={cast}
                     >
                         Cast{action==="cast" ? "ing" : ""}
                     </button>

@@ -1,6 +1,8 @@
 import { PopulatedBattleCardData, PopulatedCardData } from "@data/types";
 import { deepEqual } from "@utils/helpers";
 import { extractCardValue } from "./cardUtils";
+import { AbilityType } from "@data/abilityTypes";
+import { updateManyBattleCards } from "@app/api/requests";
 
 
 const getMinMaxCoordinates = (board: PopulatedCardData[]): [[number, number], [number, number]] => {
@@ -272,5 +274,20 @@ export const removeBuff = (cards: PopulatedBattleCardData[], buff: string) => {
         ...card, 
         buffs: card.buffs.filter(b => b !== buff),
     }));
+}
+
+export const resolveAbility = async (ability: AbilityType, casterCard: PopulatedBattleCardData, friendlyCards: PopulatedBattleCardData[], enemyCards: PopulatedBattleCardData[]) => {
+    if (!ability.resolver) return;
+    const { 
+        resolvedCasterCard, 
+        resolvedFriendlyCards, 
+        resolvedEnemyCards, 
+      } = ability.resolver(casterCard, friendlyCards, enemyCards);
+    const updateCards = [
+    resolvedCasterCard,
+    ...(resolvedFriendlyCards ? resolvedFriendlyCards.filter(c => c.id === resolvedCasterCard.id) : []),
+    ...(resolvedEnemyCards ?? []),
+    ];
+    await updateManyBattleCards(updateCards);
 }
   

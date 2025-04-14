@@ -16,8 +16,9 @@ import { createBattle } from '@app/api/battle/[id]/route';
 
 export const createGame = async (lobby: LobbyData) => {
   try {
-    const heroDeck:number[] = shuffle(cards.hero).map(c => c.id);
+    const heroDeck:number[] = shuffle([...cards.hero]).map(c => c.id);
     const initialHeroShop = heroDeck.splice(0,3);
+    initialHeroShop[0] = 0;
     const battleDistribution = 5;
     const battleCount = 1;
     const battleOrder = generateBattleOrder(battleCount,battleDistribution);
@@ -53,6 +54,7 @@ export const createGame = async (lobby: LobbyData) => {
     })
 
 // Create first Shop Cards and Generals
+    console.log(initialHeroShop)
     const heroShop = initialHeroShop
       .map(cardId => generateCard(cards.hero[cardId]))
       .map(c => ({ ...c, inHeroShop: true, gameId: game.id} as PopulatedCardData))
