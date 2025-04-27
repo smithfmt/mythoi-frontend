@@ -2,28 +2,38 @@ import { PopulatedBattleCardData } from "./types";
 
 export type BaseAbilityType = {
     name?: string;
-    condition?:(casterCard:PopulatedBattleCardData) => boolean;
-    resolves?: "cardMove" | "endTurn";
+    
+    casts?: number;
+    canTargetEquipment?: boolean;
 }
+
+type ResolverType = (data : { card: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[] }) => ({
+    resolvedCard:PopulatedBattleCardData, resolvedFriendlyCards?:PopulatedBattleCardData[], resolvedEnemyCards?: PopulatedBattleCardData[],
+});
+
+type ResolverEvents = "cardMove" | "afterAttack" | "stun";
 
 export type BasicTargetableEffect = {
     type: "basicTargetableEffect";
     targets: "singleEnemy" | "singleFriend";
-    effect: (casterCard:PopulatedBattleCardData, targetCardData?:PopulatedBattleCardData) => ({ 
-        effectedCasterCard: PopulatedBattleCardData, effectedTargetCard?: PopulatedBattleCardData 
+    effect: (data: { casterCard:PopulatedBattleCardData, targetCardData:PopulatedBattleCardData }) => ({ 
+        effectedCasterCard?: PopulatedBattleCardData, effectedTargetCard?: PopulatedBattleCardData 
     });
+    condition?:(casterCard:PopulatedBattleCardData) => boolean;
+    resolver: ResolverType;
+    resolves: ResolverEvents;
+
 }
 
 export type BasicPowerupEffect = {
-    type: "basicPowerupEffect"
+    type: "basicPowerupEffect";
     targets: "allEnemy" | "allFriend" | "self";
-    effect: (casterCard: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[]) => ({
+    effect: (data: { casterCard: PopulatedBattleCardData, friendlyCards:PopulatedBattleCardData[], enemyCards:PopulatedBattleCardData[] }) => ({
         effectedCasterCard:PopulatedBattleCardData, effectedFriendlyCards?:PopulatedBattleCardData[], effectedEnemyCards?:PopulatedBattleCardData[],
     });
-    resolver?: (casterCard: PopulatedBattleCardData, friendlyCards?:PopulatedBattleCardData[], enemyCards?:PopulatedBattleCardData[]) => ({
-        resolvedCasterCard:PopulatedBattleCardData, resolvedFriendlyCards?:PopulatedBattleCardData[], resolvedEnemyCards?: PopulatedBattleCardData[],
-    });
-    
+    condition?:(casterCard:PopulatedBattleCardData) => boolean;
+    resolver: ResolverType;
+    resolves: ResolverEvents;
 }
 
 export type ChoiceTargetableEffect = {
@@ -31,6 +41,16 @@ export type ChoiceTargetableEffect = {
     choices: AbilityType[];
 }
 
+export type PassiveAttackModifier = {
+    type: "passiveAttackModifier";
+    condition: (data: { casterCard:PopulatedBattleCardData, targetCard:PopulatedBattleCardData }) => boolean;
+    effect: (data: { casterCard: PopulatedBattleCardData, targetCard: PopulatedBattleCardData, friendlyCards:PopulatedBattleCardData[], enemyCards:PopulatedBattleCardData[] }) => ({
+        effectedCasterCard:PopulatedBattleCardData, effectedTargetCard?: PopulatedBattleCardData, effectedFriendlyCards?:PopulatedBattleCardData[], effectedEnemyCards?:PopulatedBattleCardData[],
+    });
+    resolver: ResolverType;
+    resolves: ResolverEvents;
+}
+
 // PASSIVES , AUTOCAST etc.
 
-export type AbilityType = BaseAbilityType & (BasicTargetableEffect | BasicPowerupEffect | ChoiceTargetableEffect);
+export type AbilityType = BaseAbilityType & (BasicTargetableEffect | BasicPowerupEffect | ChoiceTargetableEffect | PassiveAttackModifier);

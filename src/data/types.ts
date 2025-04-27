@@ -92,6 +92,8 @@ export interface BattleCardData extends CardData {
     gameCard?: CardData;
     inGraveyard: boolean;
     buffs: string[];
+    isStunned: boolean;
+    isTaunted: boolean;
 }
 
 export interface PopulatedBattleCardData extends BattleCardData {

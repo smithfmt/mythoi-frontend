@@ -166,4 +166,6 @@ model BattleCard {
   hasAttacked Boolean @default(false)
 
   buffs      String[]
+  isStunned  Boolean @default(false)
+  isTaunted  Boolean @default(false)
 }
