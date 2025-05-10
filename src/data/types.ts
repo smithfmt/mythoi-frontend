@@ -84,7 +84,7 @@ export interface PopulatedCardData extends CardData {
 
 export interface BattleCardData extends CardData {
     id: number;
-    hasCast: boolean;
+    hasCast: number;
     hasAttacked: boolean;
     currentAtk: number;
     currentHp: number;

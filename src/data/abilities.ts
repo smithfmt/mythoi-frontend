@@ -16,12 +16,12 @@ export const abilities:Record<string, AbilityType> = {
             return { resolvedCard: caster };
         },
         resolves: "afterAttack",
-        condition: (caster) => !caster.hasAttacked,
+        condition: ({ casterCard: caster }) => !caster.hasAttacked,
     },
     "Medusa's Gaze": {
         type: "basicTargetableEffect",
         targets: "singleEnemy",
-        effect: ({ casterCard: caster, targetCardData: target }) => {
+        effect: ({ casterCard: caster, targetCard: target }) => {
             target = addBuff([target], caster.ability)[0];
             target.isStunned = true;
             return { effectedTargetCard: target };
@@ -32,6 +32,7 @@ export const abilities:Record<string, AbilityType> = {
             return { resolvedCard: card };
         },
         resolves: "stun",
+        charges: 2,
     },
     "Quelling Blade": {
         type: "passiveAttackModifier",

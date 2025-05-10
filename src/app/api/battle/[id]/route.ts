@@ -6,7 +6,7 @@ import prisma from '@prisma/prismaClient';
 import { BattleData, GameData, PlayerData, PopulatedBattleCardData } from "@data/types";
 import { rotateArray, shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
-import { findBattleById, findBattleCardById, findPlayerById, findUserById, updateBattleCard } from "@app/api/requests";
+import { findBattleById, findBattleCardById, findPlayerById, findUserById, updateBattleCard, updateManyBattleCards } from "@app/api/requests";
 import { calcConnectedStats } from "@lib/game/cardUtils";
 import { updateConnectionsForPlayers } from "@lib/game/gameplay";
 import { abilities } from "@data/abilities";
@@ -49,7 +49,7 @@ export const createBattle = async (gameData: GameData) => {
           gameCardId: id,
           playerId: card.playerId ?? 1,
           inGraveyard: false,
-          hasCast: false,
+          hasCast: 0,
           top: card.top ?? {},
           right: card.right ?? {},
           bottom: card.bottom ?? {},
@@ -234,7 +234,7 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
 
         // Remove buffs on end turn
         ability = abilities[selectedCardData.ability];
-        if (ability && ability.resolves === "afterAttack") {
+        if (ability?.resolves && ability.resolves === "afterAttack") {
           await resolveAbility(ability, selectedCardData, playerData.battleCards, oponentData.battleCards);
         }
     
@@ -260,19 +260,52 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
         selectedCardData = await findBattleCardById(selectedCardId)  as unknown as PopulatedBattleCardData;
         if (!selectedCardData) return { message: "Selected Card not found", status: 404 };
         if (selectedCardData.hasCast) return { message: "Selected card has already cast", status: 401 };
-        ability = abilities[selectedCardData.ability];
-        if (ability.condition && !ability.condition(selectedCardData)) return { message: "Cast condition not met", status: 401 };
+        
         // Validate that the target card can be attacked
         targetCardData = await findBattleCardById(targetCardId) as unknown as PopulatedBattleCardData;
         if (targetCardId && !targetCardData) return { message: "Target Card Data not found", status: 404 };
+        
+        ability = abilities[selectedCardData.ability];
+        if (ability.condition && !ability.condition({ casterCard: selectedCardData, targetCard: targetCardData })) return { message: "Cast condition not met", status: 401 };
+        
         switch (ability.type) {
           case "basicPowerupEffect":
-            const { effectedCasterCard } = ability.effect(selectedCardData);
-            await updateBattleCard(effectedCasterCard);
+            const { effectedCasterCard:poweredUpCard } = ability.effect({ 
+              casterCard: selectedCardData, 
+              friendlyCards: playerData.battleCards, 
+              enemyCards: oponentData.battleCards, 
+            });
+            await updateBattleCard(poweredUpCard);
             break;
           case "basicTargetableEffect":
+            const { effectedCasterCard, effectedTargetCard } = ability.effect({
+              casterCard: selectedCardData,
+              targetCard: targetCardData,
+              friendlyCards: playerData.battleCards, 
+              enemyCards: oponentData.battleCards, 
+            });
+            const cardsToUpdate = [
+              effectedCasterCard, effectedTargetCard
+            ].filter(c => !!c);
+            await updateManyBattleCards(cardsToUpdate);
             break;
-          case "choiceTargetableEffect":
+          case "passiveAttackModifier":
+            const { 
+              effectedCasterCard:effectedPassiveCard, 
+              effectedTargetCard:effectedTargetPassiveCard,
+              effectedEnemyCards,
+              effectedFriendlyCards,
+            } = ability.effect({
+              casterCard: selectedCardData,
+              targetCard: targetCardData,
+              friendlyCards: playerData.battleCards, 
+              enemyCards: oponentData.battleCards, 
+            });
+            const updateCards = [
+              effectedPassiveCard, effectedTargetPassiveCard, ...(effectedEnemyCards??[]), ...(effectedFriendlyCards??[])
+            ].filter(c => !!c);
+            await updateManyBattleCards(updateCards);
+            break;
             break;
           default:
             return { message: "Invalid Ability Type", status: 401 };

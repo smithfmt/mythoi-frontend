@@ -162,7 +162,7 @@ model BattleCard {
   bottom     Json
   left       Json
 
-  hasCast    Boolean @default(false)
+  hasCast    Int @default(0)
   hasAttacked Boolean @default(false)
 
   buffs      String[]

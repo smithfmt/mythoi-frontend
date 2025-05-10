@@ -276,16 +276,16 @@ export const removeBuff = (cards: PopulatedBattleCardData[], buff: string) => {
     }));
 }
 
-export const resolveAbility = async (ability: AbilityType, casterCard: PopulatedBattleCardData, friendlyCards: PopulatedBattleCardData[], enemyCards: PopulatedBattleCardData[]) => {
+export const resolveAbility = async (ability: AbilityType, card: PopulatedBattleCardData, friendlyCards: PopulatedBattleCardData[], enemyCards: PopulatedBattleCardData[]) => {
     if (!ability.resolver) return;
     const { 
-        resolvedCasterCard, 
+        resolvedCard, 
         resolvedFriendlyCards, 
         resolvedEnemyCards, 
-      } = ability.resolver(casterCard, friendlyCards, enemyCards);
+      } = ability.resolver({card, friendlyCards, enemyCards});
     const updateCards = [
-    resolvedCasterCard,
-    ...(resolvedFriendlyCards ? resolvedFriendlyCards.filter(c => c.id === resolvedCasterCard.id) : []),
+        resolvedCard,
+    ...(resolvedFriendlyCards ? resolvedFriendlyCards.filter(c => c.id === resolvedCard.id) : []),
     ...(resolvedEnemyCards ?? []),
     ];
     await updateManyBattleCards(updateCards);
