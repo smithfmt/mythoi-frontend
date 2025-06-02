@@ -11,7 +11,7 @@ type ResolverType = (data : { card: PopulatedBattleCardData, friendlyCards?:Popu
     resolvedCard:PopulatedBattleCardData, resolvedFriendlyCards?:PopulatedBattleCardData[], resolvedEnemyCards?: PopulatedBattleCardData[],
 });
 
-type ResolverEvents = "cardMove" | "afterAttack" | "stun";
+export type ResolverEvents = "cardMove" | "afterAttack" | "stun";
 
 export type BasicTargetableEffect = {
     type: "basicTargetableEffect";
@@ -24,9 +24,18 @@ export type BasicTargetableEffect = {
      }) => ({ 
         effectedCasterCard?: PopulatedBattleCardData, effectedTargetCard?: PopulatedBattleCardData 
     });
-    resolver: ResolverType;
-    resolves: ResolverEvents;
+    resolver?: ResolverType;
+    resolves?: ResolverEvents;
+}
 
+export type BasicSwitchEffect = {
+    type: "basicSwitchEffect";
+    effect: (data: {
+        switchCards: PopulatedBattleCardData[],
+        teamCards: PopulatedBattleCardData[],
+    }) => ({
+        switchedCards: PopulatedBattleCardData[],
+    })
 }
 
 export type BasicPowerupEffect = {
@@ -64,4 +73,4 @@ export type PassiveAttackModifier = {
 
 // PASSIVES , AUTOCAST etc.
 
-export type AbilityType = BaseAbilityType & (BasicTargetableEffect | BasicPowerupEffect | PassiveAttackModifier);
+export type AbilityType = BaseAbilityType & (BasicTargetableEffect | BasicPowerupEffect | PassiveAttackModifier | ChoiceTargetableEffect | BasicSwitchEffect);

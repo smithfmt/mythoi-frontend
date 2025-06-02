@@ -1,9 +1,6 @@
 import { PopulatedBattleCardData, PopulatedCardData } from "@data/types";
 import { deepEqual } from "@utils/helpers";
 import { extractCardValue } from "./cardUtils";
-import { AbilityType } from "@data/abilityTypes";
-import { updateManyBattleCards } from "@app/api/requests";
-
 
 const getMinMaxCoordinates = (board: PopulatedCardData[]): [[number, number], [number, number]] => {
     // Initialize min and max values with the first element's x and y
@@ -76,7 +73,7 @@ export const getPlaceableSpaces = (cards:PopulatedCardData[], selectedCard:Popul
     return result
 }
 
-export const checkValidBoard = (board:PopulatedCardData[]) => {
+export const checkValidBoard = (board:PopulatedCardData[] | PopulatedBattleCardData[]) => {
     if (board.length===1) {
         // Allow one card if it is the general
         if (board[0].type==="general") return { success: true };
@@ -136,7 +133,7 @@ export const checkValidBoard = (board:PopulatedCardData[]) => {
     return { success: isValid, invalidCards };
 }
 
-export const addActiveConnections = (cards:PopulatedCardData[]|PopulatedBattleCardData[]) => {
+export const addActiveConnections = <T extends PopulatedCardData | PopulatedBattleCardData>(cards:T[]) => {
     const board = cards.filter(c => !c.inHand);
     const updatedCards = cards.map(card => {
         const { x,y,inHand } = card;
@@ -275,19 +272,3 @@ export const removeBuff = (cards: PopulatedBattleCardData[], buff: string) => {
         buffs: card.buffs.filter(b => b !== buff),
     }));
 }
-
-export const resolveAbility = async (ability: AbilityType, card: PopulatedBattleCardData, friendlyCards: PopulatedBattleCardData[], enemyCards: PopulatedBattleCardData[]) => {
-    if (!ability.resolver) return;
-    const { 
-        resolvedCard, 
-        resolvedFriendlyCards, 
-        resolvedEnemyCards, 
-      } = ability.resolver({card, friendlyCards, enemyCards});
-    const updateCards = [
-        resolvedCard,
-    ...(resolvedFriendlyCards ? resolvedFriendlyCards.filter(c => c.id === resolvedCard.id) : []),
-    ...(resolvedEnemyCards ?? []),
-    ];
-    await updateManyBattleCards(updateCards);
-}
-  

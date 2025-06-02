@@ -140,3 +140,7 @@ export const cleanCardForDB = (card: PopulatedCardData) => {
         left: card.left ?? Prisma.JsonNull,
     };
 }
+
+export const findActiveCardsNotEquipment = (cards: PopulatedBattleCardData[]) => {
+    return cards.filter(c => !c.isStunned && !c.inGraveyard && c.ability==="Equipment");
+}

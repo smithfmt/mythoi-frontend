@@ -7,11 +7,11 @@ import { BattleData, GameData, PlayerData, PopulatedBattleCardData } from "@data
 import { rotateArray, shuffle } from "@utils/helpers";
 import { UserType } from "@app/api/types";
 import { findBattleById, findBattleCardById, findPlayerById, findUserById, updateBattleCard, updateManyBattleCards } from "@app/api/requests";
-import { calcConnectedStats } from "@lib/game/cardUtils";
+import { calcConnectedStats, findActiveCardsNotEquipment } from "@lib/game/cardUtils";
 import { updateConnectionsForPlayers } from "@lib/game/gameplay";
 import { abilities } from "@data/abilities";
 import { AbilityType } from "@data/abilityTypes";
-import { resolveAbility } from "@lib/game/gameLogic";
+import { resolveAllAbilities } from "@lib/game/abilityUtils";
 
 export const createBattle = async (gameData: GameData) => {
   try {
@@ -232,12 +232,55 @@ const updateBattle = async (user: UserType, id: string, action: string, data:Upd
 
         if (!!winner) return endBattle(battleData, playerData, oponentData, winner);
 
-        // Remove buffs on end turn
-        ability = abilities[selectedCardData.ability];
-        if (ability?.resolves && ability.resolves === "afterAttack") {
-          await resolveAbility(ability, selectedCardData, playerData.battleCards, oponentData.battleCards);
+        // Resolve After Attack Abilities
+        await resolveAllAbilities(
+          "afterAttack", 
+          selectedCardData,
+          targetCardData,
+          playerData.battleCards,
+          oponentData.battleCards,
+        );
+
+        // Resolve Card Move abilities
+        if (newTargetHp<=0) {
+          await resolveAllAbilities(
+            "cardMove",
+            targetCardData,
+            selectedCardData,
+            oponentData.battleCards,
+            playerData.battleCards,
+          );
+          // Remove stun if last card
+          if (findActiveCardsNotEquipment(playerData.battleCards).length===2) {
+            await resolveAllAbilities(
+              "stun",
+              targetCardData,
+              selectedCardData,
+              oponentData.battleCards,
+              playerData.battleCards,
+            );
+          }
         }
-    
+        if (newSelectedHp<=0) {
+          await resolveAllAbilities(
+            "cardMove",
+            selectedCardData,
+            targetCardData,
+            playerData.battleCards,
+            oponentData.battleCards,
+          );
+          // Remove stun if last card
+          if (findActiveCardsNotEquipment(playerData.battleCards).length===2) {
+            await resolveAllAbilities(
+              "stun",
+              selectedCardData,
+              targetCardData,
+              playerData.battleCards,
+              oponentData.battleCards,
+            );
+          }
+        }
+
         // End turn for player
         await prisma.player.update({
           where: { id: playerData.id },
